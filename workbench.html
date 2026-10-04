@@ -19,10 +19,10 @@
     <a class="navbtn" href="timegrapher.html">Timegrapher</a>
     <a class="navbtn" href="passport.html">Passport</a>
     <a class="navbtn" href="business.html">Business</a>
-    <a class="navbtn" href="assistant.html">Assistant</a>
+    <a class="navbtn" href="assistant.html">Brief</a>
   </nav>
   <div class="hero">
-    <div><div class="kicker">ACTIVE RESTORATION</div><h2 id="watchTitle">—</h2><p class="muted">Stage notes, measurements and photos. Ask the assistant against this stage only.</p></div>
+    <div><div class="kicker">ACTIVE RESTORATION</div><h2 id="watchTitle">—</h2><p class="muted">Stage notes, measurements and photos.</p></div>
     <div class="hero-stats"><div><span>Progress</span><strong id="progressPct">0%</strong></div><div><span>Saved</span><strong id="saveState">Local</strong></div></div>
   </div>
   <div class="layout">
@@ -51,35 +51,25 @@
         <label>Measurement<input id="stageMeasure" placeholder="arbor 1.20 mm"></label>
       </div>
       <div class="subpanel">
-        <div class="section-head"><div><h3>Stage photos</h3><p class="muted small">Stored with this stage. The model does not see them.</p></div>
+        <div class="section-head"><div><h3>Stage photos</h3><p class="muted small">Stored with this stage, on this phone.</p></div>
           <label class="btn secondary">Add photos<input id="photoInput" type="file" accept="image/*" multiple hidden></label></div>
         <div id="photoGrid" class="photo-grid"></div>
       </div>
-      <div class="ai-box">
-        <div class="section-head"><div><div class="kicker">ASK THIS STAGE</div><h3 style="margin:0">Bench assistant</h3></div></div>
-        <div class="row">
-          <button id="askNext" class="btn brass" type="button">What next</button>
-          <button id="askCheck" class="btn secondary" type="button">What to measure</button>
-          <a class="btn secondary" href="assistant.html">Open full chat</a>
-        </div>
-        <pre id="aiOut" class="small muted">Answers land here and are saved on the job chat.</pre>
-      </div>
       <div class="footer-actions">
-        <button id="prevStage" class="btn secondary">← Previous</button>
+        <button id="prevStage" class="btn secondary" type="button">← Previous</button>
         <span class="autosave" id="statusText">Auto-saves</span>
-        <button id="nextStage" class="btn">Next →</button>
+        <button id="nextStage" class="btn" type="button">Next →</button>
       </div>
     </section>
   </div>
 </div>
 <script type="module">
-import { STAGES, loadState, saveState, current, progress, compressImage, escapeHtml, jobBrief } from "./js/store.js";
-import { ask } from "./js/ai.js";
+import { STAGES, loadState, saveState, current, progress, compressImage } from "./js/store.js";
 const $ = id => document.getElementById(id);
 let state = await loadState();
 let job = current(state);
 let timer;
-function stage(){ return job.stages[job.stage]; }
+function stage(){ return job.stages[job.stage] || job.stages[0]; }
 function capture(){
   job.watchName = $("watchName").value;
   job.jobId = $("jobId").value;
@@ -160,23 +150,6 @@ $("photoInput").onchange = async (e) => {
   await persist("Photos saved");
   paintPhotos();
 };
-async function runAsk(prompt){
-  capture();
-  await saveState(state);
-  $("aiOut").textContent = "Thinking…";
-  const page = "Workbench / " + STAGES[job.stage];
-  try {
-    const text = await ask({ brief: jobBrief(job), page, messages:[{ role:"user", content: prompt }] });
-    $("aiOut").textContent = text;
-    job.chat.push({ role:"user", content: prompt, at: new Date().toISOString(), page });
-    job.chat.push({ role:"assistant", content: text, at: new Date().toISOString(), page });
-    await saveState(state);
-  } catch (err) {
-    $("aiOut").textContent = err.message + "\n\nYou can still copy the job brief from Assistant and paste it into this chat.";
-  }
-}
-$("askNext").onclick = () => runAsk(`I am on ${STAGES[job.stage]}. From the notes already written, what should I do next, in order? Flag anything I have not recorded.`);
-$("askCheck").onclick = () => runAsk(`On ${STAGES[job.stage]}, which measurements are worth taking before I move on, and what would a bad reading look like on a vintage pocket watch?`);
 </script>
 </body>
 </html>
