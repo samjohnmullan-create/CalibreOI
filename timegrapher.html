@@ -2,26 +2,34 @@
 <html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Timegrapher · Calibre & Co.</title><link rel="stylesheet" href="css/app.css">
-<style>#traceCanvas{display:block;width:100%;height:180px;background:#111315;border-radius:5px}</style>
+<style>
+#traceCanvas{display:block;width:100%;height:160px;background:#111315;border-radius:5px}
+.marks{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.mark{border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.mark strong{display:block;font-size:1rem;margin-top:2px}
+.mark.good{border-color:#3e7752;background:#f3f7f4}
+.mark.fair{border-color:#a87a2b;background:#faf6ee}
+.mark.bad{border-color:#a34f47;background:#faf3f2}
+.mark.wait{color:var(--muted)}
+</style>
 </head><body>
 <div class="shell">
 <header class="brandbar"><a class="brand" href="index.html"><div class="brandmark">C&C</div><div><div class="kicker">CALIBRE & CO.</div><h1>Watchmaker's Workbench</h1></div></a></header>
 <nav class="mainnav"><a class="navbtn" href="index.html">Jobs</a><a class="navbtn" href="workbench.html">Workbench</a><a class="navbtn active" href="timegrapher.html">Timegrapher</a><a class="navbtn" href="passport.html">Passport</a><a class="navbtn" href="business.html">Business</a></nav>
-<div class="hero"><div><div class="kicker">ACOUSTIC TIMING</div><h2 id="watchTitle">Timegrapher</h2><p class="muted">Sample clock. Rate and beat error. No amplitude.</p></div><div class="hero-stats"><div><span>Mic</span><strong id="micLabel">Off</strong></div><div><span>Lock</span><strong id="lockLabel">Open</strong></div></div></div>
+<div class="hero"><div><div class="kicker">ACOUSTIC TIMING</div><h2 id="watchTitle">Timegrapher</h2><p class="muted">A tick means leave it. Fair means usable. Look again means do not regulate yet.</p></div></div>
 <section class="card">
 <div class="grid4">
-<label>BPH<select id="targetBph"><option value="auto">Auto</option><option value="18000" selected>18000</option><option value="14400">14400</option><option value="16200">16200</option><option value="19800">19800</option><option value="21600">21600</option><option value="28800">28800</option></select></label>
+<label>BPH<select id="targetBph"><option value="18000" selected>18000</option><option value="14400">14400</option><option value="16200">16200</option><option value="19800">19800</option><option value="21600">21600</option><option value="28800">28800</option><option value="auto">Auto</option></select></label>
 <label>Position<select id="position"><option>Dial up</option><option>Dial down</option><option>Pendant up</option><option>Pendant down</option><option>Pendant left</option><option>Pendant right</option></select></label>
 <label>Session<select id="sessionSeconds"><option value="20" selected>20 sec</option><option value="30">30 sec</option><option value="60">60 sec</option></select></label>
 <label>Sensitivity<input id="sensitivity" type="range" min="1.4" max="4.5" step="0.1" value="2"></label>
 </div>
-<div class="metrics">
-<div class="metric"><span>Rate</span><strong id="rateVal">—</strong><small>s/day</small></div>
-<div class="metric"><span>Beat error</span><strong id="beatErrVal">—</strong><small>ms</small></div>
-<div class="metric"><span>BPH</span><strong id="bphVal">—</strong><small id="bphMode">waiting</small></div>
-<div class="metric"><span>Beats</span><strong id="beatCount">0</strong><small id="signalLevel">signal</small></div>
+<div class="marks">
+<div id="rateMark" class="mark wait"><span>Rate</span><strong id="rateVal">Waiting</strong></div>
+<div id="beatMark" class="mark wait"><span>Beat error</span><strong id="beatErrVal">Waiting</strong></div>
 </div>
-<div class="graph-wrap"><div class="graph-head"><span>Rate trace</span><span id="sessionClock">Ready</span></div><canvas id="traceCanvas" width="900" height="180"></canvas></div>
+<p id="verdict" class="muted small">Need 12 steady beats before a mark.</p>
+<div class="graph-wrap"><div class="graph-head"><span>Trace · centre is on time</span><span id="sessionClock">Ready</span></div><canvas id="traceCanvas" width="900" height="160"></canvas></div>
 <div class="row"><button id="startTiming" class="btn" type="button">Start</button><button id="stopTiming" class="btn secondary" type="button" disabled>Stop</button></div>
 <p id="tgHint" class="muted small">Loading…</p>
 <div id="savedRuns"></div>
@@ -34,32 +42,30 @@ let state, job, stream, ac, node, running = false, beats = [], trace = [], locke
 const mean = a => a.reduce((s,v)=>s+v,0)/a.length;
 const median = a => { const b=[...a].sort((x,y)=>x-y); return b[Math.floor(b.length/2)]; };
 const nearest = n => standards.reduce((best,s)=>Math.abs(s-n)<Math.abs(best-n)?s:best);
-const signed = n => (n>=0?"+":"")+n.toFixed(1);
 function hint(t){ $("tgHint").textContent = t; }
+function band(kind, n){
+  if (kind==="rate") return Math.abs(n)<=20 ? "good" : Math.abs(n)<=45 ? "fair" : "bad";
+  return n<=0.6 ? "good" : n<=1.2 ? "fair" : "bad";
+}
+function word(cls){ return cls==="good" ? "Good" : cls==="fair" ? "Fair" : "Look again"; }
+function setMark(id, cls, text){
+  const el = $(id); el.className = "mark " + cls; el.querySelector("strong").textContent = text;
+}
 function drawTrace(){
   const c = $("traceCanvas"), g = c.getContext("2d"), w = c.width, h = c.height;
   g.fillStyle = "#111315"; g.fillRect(0,0,w,h);
   g.strokeStyle = "#2c343a"; g.beginPath(); g.moveTo(0,h/2); g.lineTo(w,h/2); g.stroke();
-  const pts = trace.slice(-60);
-  if (!pts.length) return;
-  g.strokeStyle = "#c89b49"; g.lineWidth = 2; g.beginPath();
-  pts.forEach((p,i) => {
-    const px = pts.length === 1 ? 24 : i / (pts.length - 1) * (w - 16) + 8;
-    const py = Math.max(10, Math.min(h - 10, h/2 - p * 1.6));
-    i ? g.lineTo(px, py) : g.moveTo(px, py);
-  });
-  g.stroke();
+  const pts = trace.slice(-60); if (!pts.length) return;
   g.fillStyle = "#e6c98a";
   pts.forEach((p,i) => {
-    const px = pts.length === 1 ? 24 : i / (pts.length - 1) * (w - 16) + 8;
-    const py = Math.max(10, Math.min(h - 10, h/2 - p * 1.6));
+    const px = pts.length===1 ? 24 : i/(pts.length-1)*(w-16)+8;
+    const py = Math.max(10, Math.min(h-10, h/2 - p*1.6));
     g.beginPath(); g.arc(px, py, 4, 0, 6.3); g.fill();
   });
 }
 function renderRuns(){
-  const box = $("savedRuns");
   const runs = job && job.timingRuns || [];
-  box.innerHTML = runs.length ? runs.slice(0,8).map(r => `<div class="saved-run"><span class="run-position">${r.position}</span><br><strong>${signed(r.rate)} s/day</strong> · ${r.bph} BPH<br>${r.beatError==null?"beat error n/a":r.beatError.toFixed(2)+" ms"} · ${r.beats} beats</div>`).join("") : "<p class='muted small'>No runs yet.</p>";
+  $("savedRuns").innerHTML = runs.length ? runs.slice(0,6).map(r => `<div class="saved-run"><strong>${r.rateWord||""} rate</strong> · ${r.position}<br>${r.rate>=0?"+":""}${r.rate.toFixed(0)} s/day · beat ${r.beatError==null?"n/a":r.beatError.toFixed(1)+" ms"}</div>`).join("") : "";
 }
 function analyse(){
   if (beats.length < 3) return;
@@ -68,92 +74,75 @@ function analyse(){
   if (ints.length < 2) return;
   const med = median(ints.slice(-30));
   const raw = 3600000/med;
-  const manual = $("targetBph").value !== "auto" ? Number($("targetBph").value) : 0;
+  const manual = $("targetBph").value!=="auto" ? Number($("targetBph").value) : 0;
   const guess = manual || nearest(raw);
-  if (!locked && ints.length >= 5 && Math.abs(raw-guess)/guess < 0.08) locked = guess;
+  if (!locked && ints.length>=5 && Math.abs(raw-guess)/guess<0.08) locked = guess;
   const target = locked || guess;
   const nom = 3600000/target;
-  const clean = ints.slice(-40).filter(x => Math.abs(x-nom) < nom*0.12);
-  const used = clean.length >= 2 ? clean : ints.slice(-8);
-  const meas = mean(used);
+  const used = ints.slice(-40).filter(x => Math.abs(x-nom)<nom*0.12);
+  const sample = used.length>=2 ? used : ints.slice(-8);
+  const meas = mean(sample);
   const rate = (nom/meas - 1) * 86400;
-  const ev = used.filter((_,i)=>i%2===0), od = used.filter((_,i)=>i%2===1);
+  const ev = sample.filter((_,i)=>i%2===0), od = sample.filter((_,i)=>i%2===1);
   const be = (ev.length>1 && od.length>1) ? Math.abs(mean(ev)-mean(od))/2 : null;
-  metrics = { rate, bph: target, beatError: be, beats: beats.length, position: $("position").value, interval: meas };
-  $("rateVal").textContent = signed(rate);
-  $("beatErrVal").textContent = be==null ? "—" : be.toFixed(2);
-  $("bphVal").textContent = String(target);
-  $("bphMode").textContent = locked ? "locked" : "searching";
-  $("lockLabel").textContent = locked ? String(locked) : "Open";
+  const trusted = beats.length>=12 && locked;
+  metrics = { rate, bph: target, beatError: be, beats: beats.length, position: $("position").value };
+  if (!trusted){
+    setMark("rateMark","wait","Need more beats");
+    setMark("beatMark","wait", be==null ? "Waiting" : be.toFixed(1)+" ms");
+    $("verdict").textContent = beats.length+" beats. Marks start at 12.";
+  } else {
+    const rc = band("rate", rate), bc = be==null ? "wait" : band("beat", be);
+    metrics.rateWord = word(rc);
+    setMark("rateMark", rc, word(rc)+" · "+(rate>=0?"+":"")+rate.toFixed(0)+" s/day");
+    setMark("beatMark", bc, be==null ? "Not enough" : word(bc)+" · "+be.toFixed(1)+" ms");
+    $("verdict").textContent = rc==="bad" || bc==="bad" ? "Do not move the regulator on this run." : rc==="good" && bc==="good" ? "Leave it. Check another position." : "Usable. Check the other positions before a move.";
+  }
   trace.push(Math.max(-80, Math.min(80, rate)));
-  if (trace.length > 80) trace.shift();
+  if (trace.length>80) trace.shift();
 }
-function onBeat(t){
-  beats.push(t); if (beats.length>240) beats.shift();
-  $("beatCount").textContent = String(beats.length);
-  analyse();
-  drawTrace();
-}
+function onBeat(t){ beats.push(t); if (beats.length>240) beats.shift(); analyse(); drawTrace(); }
 async function stopAudio(){
   running = false;
   if (stream) stream.getTracks().forEach(t=>t.stop());
   stream = null;
   if (ac && ac.state!=="closed"){ try { await ac.close(); } catch {} }
   ac = null; node = null;
-  $("startTiming").disabled = false; $("stopTiming").disabled = true; $("micLabel").textContent = "Off";
+  $("startTiming").disabled = false; $("stopTiming").disabled = true;
 }
 async function finish(){
   if (!running) return;
-  const ok = metrics.bph && beats.length >= 12;
-  const run = ok ? { ...metrics, at: new Date().toISOString(), duration: Number($("sessionSeconds").value) } : null;
+  const run = metrics.bph && beats.length>=12 ? { ...metrics, at:new Date().toISOString(), duration:Number($("sessionSeconds").value) } : null;
   await stopAudio();
   $("sessionClock").textContent = "Complete";
   if (!run){ hint("Not enough steady beats to save."); return; }
-  job.timingRuns = job.timingRuns || [];
-  job.timingRuns.unshift(run);
-  await saveState(state);
-  renderRuns();
-  hint("Saved " + signed(run.rate) + " s/day, beat error " + (run.beatError==null?"n/a":run.beatError.toFixed(2)+" ms") + ".");
+  job.timingRuns = job.timingRuns || []; job.timingRuns.unshift(run); await saveState(state); renderRuns();
+  hint("Saved on this job.");
 }
 function tick(){
   if (!running) return;
-  const left = Math.max(0, endAt - ac.currentTime);
-  $("sessionClock").textContent = left.toFixed(1)+" s";
-  if (ac.currentTime >= endAt) finish();
-  else requestAnimationFrame(tick);
+  $("sessionClock").textContent = Math.max(0, endAt-ac.currentTime).toFixed(1)+" s";
+  if (ac.currentTime>=endAt) finish(); else requestAnimationFrame(tick);
 }
 $("startTiming").onclick = async () => {
   hint("Asking for the microphone…");
   try {
     stream = await navigator.mediaDevices.getUserMedia({ audio:true });
-    ac = new AudioContext();
-    if (ac.state==="suspended") await ac.resume();
+    ac = new AudioContext(); if (ac.state==="suspended") await ac.resume();
     await ac.audioWorklet.addModule("js/tg-processor.js");
     const src = ac.createMediaStreamSource(stream);
     node = new AudioWorkletNode(ac, "calibre-tick");
-    node.port.onmessage = (e) => {
-      if (!running) return;
-      if (e.data.kind==="level") $("signalLevel").textContent = (e.data.rms*1000).toFixed(1);
-      if (e.data.kind==="beat") onBeat(e.data.t);
-    };
-    node.port.postMessage({ sens: Number($("sensitivity").value)||2 });
-    $("sensitivity").oninput = () => node && node.port.postMessage({ sens: Number($("sensitivity").value)||2 });
+    node.port.onmessage = (e) => { if (!running) return; if (e.data.kind==="beat") onBeat(e.data.t); };
+    node.port.postMessage({ sens:Number($("sensitivity").value)||2 });
+    $("sensitivity").oninput = () => node && node.port.postMessage({ sens:Number($("sensitivity").value)||2 });
     src.connect(node);
-    beats = []; trace = []; locked = $("targetBph").value==="auto" ? 0 : Number($("targetBph").value); metrics = {};
-    drawTrace();
-    running = true;
-    endAt = ac.currentTime + Number($("sessionSeconds").value);
-    $("startTiming").disabled = true; $("stopTiming").disabled = false; $("micLabel").textContent = "Live";
-    $("lockLabel").textContent = locked ? String(locked) : "Open";
-    hint("Listening. Dots appear as beats arrive.");
-    tick();
-  } catch (e) { hint("Microphone or worklet failed: " + (e.name?e.name+" — ":"") + e.message); }
+    beats=[]; trace=[]; locked=$("targetBph").value==="auto"?0:Number($("targetBph").value); metrics={};
+    drawTrace(); running=true; endAt=ac.currentTime+Number($("sessionSeconds").value);
+    $("startTiming").disabled=true; $("stopTiming").disabled=false;
+    hint("Case back on the mic."); tick();
+  } catch(e){ hint("Microphone or worklet failed: "+(e.name?e.name+" — ":"")+e.message); }
 };
 $("stopTiming").onclick = () => stopAudio().then(()=>hint("Stopped."));
-state = await loadState();
-job = current(state);
-$("watchTitle").textContent = job.watchName;
-renderRuns();
-drawTrace();
-hint("Ready. Start asks for the microphone.");
+state = await loadState(); job = current(state); $("watchTitle").textContent = job.watchName; renderRuns(); drawTrace();
+hint("Ready. A phone mic is a guide, not a timing machine.");
 </script></body></html>
