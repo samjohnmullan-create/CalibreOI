@@ -20,11 +20,11 @@
     <a class="navbtn" href="timegrapher.html">Timegrapher</a>
     <a class="navbtn" href="passport.html">Passport</a>
     <a class="navbtn" href="business.html">Business</a>
-    <a class="navbtn" href="assistant.html">Assistant</a>
+    <a class="navbtn" href="assistant.html">Brief</a>
   </nav>
   <div class="hero">
-    <div><div class="kicker">SHOP</div><h2>Jobs on the bench</h2><p class="muted">Each watch is its own record. The assistant reads the one you have open.</p></div>
-    <div class="hero-stats"><div><span>Open</span><strong id="openCount">0</strong></div><div><span>AI</span><strong id="aiState">—</strong></div></div>
+    <div><div class="kicker">SHOP</div><h2>Jobs on the bench</h2><p class="muted">Each watch is its own record. Paste a filled job from chat when you have one.</p></div>
+    <div class="hero-stats"><div><span>Open</span><strong id="openCount">0</strong></div></div>
   </div>
   <div class="split">
     <section class="card">
@@ -39,18 +39,17 @@
         <label>Maker<input id="newMaker"></label>
         <label>Calibre<input id="newCalibre"></label>
       </div>
-      <p class="muted small">Photos, stage notes and timing stay on this device until you export the job. The model only sees a text brief, never the photos, unless you paste them into the assistant yourself.</p>
-      <div class="row"><a class="btn secondary" href="settings.html">AI settings</a><button id="exportAll" class="btn secondary">Export all jobs</button></div>
+      <p class="muted small">Photos, stage notes and timing stay on this phone.</p>
+      <label>Paste a job from chat<textarea id="prefill" rows="6" placeholder='{"watchName":"Olma Caravelle","passport":{"maker":"Olma","calibre":""}}'></textarea></label>
+      <div class="row"><button id="importJob" class="btn brass" type="button">Open pasted job</button><button id="exportAll" class="btn secondary">Export all jobs</button></div>
     </section>
   </div>
   <div class="statusbar"><span id="statusText">Local</span><a class="textbtn" href="settings.html">Settings</a></div>
 </div>
 <script type="module">
-import { loadState, saveState, blankJob, current, progress, escapeHtml } from "./js/store.js";
-import { readyLabel } from "./js/ai.js";
+import { loadState, saveState, blankJob, current, progress, escapeHtml, STAGES } from "./js/store.js";
 const $ = id => document.getElementById(id);
 let state = await loadState();
-$("aiState").textContent = readyLabel().includes("not") ? "Off" : "Ready";
 function paint(){
   const cur = current(state);
   $("headerWatch").textContent = cur.watchName;
@@ -83,6 +82,27 @@ $("exportAll").onclick = () => {
   a.href = URL.createObjectURL(blob);
   a.download = "calibre-jobs.json";
   a.click();
+};
+$("importJob").onclick = async () => {
+  let raw;
+  try { raw = JSON.parse($("prefill").value); }
+  catch { $("statusText").textContent = "That paste is not valid JSON."; return; }
+  const stages = STAGES.map((name, i) => {
+    const src = (raw.stages || []).find(s => s.name === name) || (raw.stages || [])[i] || {};
+    return { notes: src.notes || "", condition: src.condition || "", parts: src.parts || "", measure: src.measure || "", complete: !!src.complete, photos: [], updatedAt: src.notes ? new Date().toISOString() : null };
+  });
+  const job = blankJob({
+    watchName: raw.watchName || "Untitled watch",
+    jobId: raw.jobId,
+    status: raw.status || "on the bench",
+    passport: raw.passport || {},
+    business: raw.business || {},
+    stages
+  });
+  state.jobs.unshift(job);
+  state.currentId = job.id;
+  await saveState(state);
+  location.href = "workbench.html";
 };
 </script>
 </body>
