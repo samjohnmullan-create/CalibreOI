@@ -9,14 +9,16 @@
 <div class="hero"><div><div class="kicker">OPEN WATCH</div><h2 id="watchTitle">Loading</h2><p id="watchMeta" class="muted"></p></div></div>
 <section class="card">
 <a class="btn" href="workbench.html">Continue on the bench</a>
-<p class="muted small" style="margin-top:14px">Jobs still open</p>
-<div id="jobList" class="jobs"></div>
-<div class="row">
-<button id="newJob" class="btn secondary" type="button">New job</button>
-<label class="btn secondary">Import<input id="jobFile" type="file" accept=".calibrejob,application/json" hidden></label>
+<div class="row" style="margin-top:14px">
+<a class="btn secondary" href="inventory.html">Stock <span id="stockCount"></span></a>
+<a class="btn secondary" href="summary.html">Sheet</a>
 </div>
-<p id="statusText" class="muted small"></p>
-</section></div>
+</section>
+<section class="card"><h3>Still open</h3><div id="jobList" class="jobs"></div>
+<div class="row"><button id="newJob" class="btn secondary" type="button">New job</button><label class="btn secondary">Import<input id="jobFile" type="file" accept=".calibrejob,application/json" hidden></label></div>
+<p id="statusText" class="muted small"></p></section>
+<section class="card"><h3>Inventory</h3><p class="muted small">Finished watches and the ones that became parts.</p><div id="stockList" class="jobs"></div></section>
+</div>
 <script src="js/nav.js"></script>
 <script type="module">
 import { loadState, saveState, blankJob, current, importCard } from "./js/store.js";
@@ -25,12 +27,15 @@ const job = current(state);
 document.getElementById("watchTitle").textContent = job.watchName;
 document.getElementById("watchMeta").textContent = [job.decision, job.passport.maker, job.passport.calibre].filter(Boolean).join(" · ") || "No decision yet";
 const open = state.jobs.filter(j => j.status !== "complete" && j.status !== "sold" && j.status !== "spares");
-document.getElementById("jobList").innerHTML = open.map(j => `<a class="job-card" data-id="${j.id}" href="workbench.html"><div><strong>${j.watchName}</strong><div class="muted small">${j.decision || j.status || "on the bench"}</div></div></a>`).join("") || "<p class='muted'>No open jobs.</p>";
+const stock = state.jobs.filter(j => j.status === "complete" || j.status === "sold" || j.status === "spares");
+document.getElementById("stockCount").textContent = stock.length ? "("+stock.length+")" : "";
+document.getElementById("jobList").innerHTML = open.map(j => `<a class="job-card" data-id="${j.id}" href="workbench.html"><div><strong>${j.watchName}</strong><div class="muted small">${j.decision || "on the bench"}</div></div></a>`).join("") || "<p class='muted'>No open jobs.</p>";
+document.getElementById("stockList").innerHTML = stock.map(j => `<a class="job-card" data-id="${j.id}" href="summary.html"><div><strong>${j.watchName}</strong><div class="muted small">${j.status === "spares" ? (j.writeOff || "Spares") : "Complete"}</div></div><div><span class="badge">${j.status}</span></div></a>`).join("") || "<p class='muted'>Nothing finished or written off yet.</p>";
 document.querySelectorAll(".job-card").forEach(a => a.onclick = async () => { state.currentId = a.dataset.id; await saveState(state); });
 document.getElementById("newJob").onclick = async () => { const n = blankJob({ watchName:"Untitled watch" }); state.jobs.unshift(n); state.currentId = n.id; await saveState(state); location.href = "workbench.html"; };
 document.getElementById("jobFile").onchange = async (e) => {
   const file = e.target.files[0]; if (!file) return;
-  try { const raw = JSON.parse(await file.text()); const n = importCard(raw); state.jobs.unshift(n); state.currentId = n.id; await saveState(state); location.href = "workbench.html"; }
+  try { const n = importCard(JSON.parse(await file.text())); state.jobs.unshift(n); state.currentId = n.id; await saveState(state); location.href = "workbench.html"; }
   catch { document.getElementById("statusText").textContent = "That card could not be read."; }
 };
 </script></body></html>
