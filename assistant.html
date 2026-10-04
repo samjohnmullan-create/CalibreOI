@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Brief · Calibre & Co.</title>
-<link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/app.css?v=4">
 </head>
 <body>
 <div class="shell">
@@ -12,7 +12,7 @@
     <a class="brand" href="index.html"><div class="brandmark">C&C</div><div><div class="kicker">CALIBRE & CO.</div><h1>Watchmaker's Workbench</h1></div></a>
     <div class="watch-pill"><span class="dot"></span><div><small>Current watch</small><strong id="headerWatch">—</strong></div></div>
   </header>
-  <nav class="mainnav"></nav>
+  <nav class="mainnav"><a class="navbtn" href="index.html">Start</a><a class="navbtn" href="workbench.html">Bench</a><a class="navbtn" href="timegrapher.html">Time</a><a class="navbtn" href="passport.html">Identity</a><a class="navbtn" href="business.html">Cost</a><a class="navbtn" href="summary.html">Sheet</a><a class="navbtn" href="inventory.html">Stock</a><a class="navbtn" href="suppliers.html">Parts</a></nav>
   <div class="hero"><div><div class="kicker">BRIEF</div><h2 id="watchTitle">Job brief</h2><p class="muted">Copy this into the account chat. There is no model call in the app.</p></div></div>
   <section class="card">
     <pre id="brief" class="small"></pre>
@@ -20,7 +20,7 @@
     <p id="err" class="muted small"></p>
   </section>
 </div>
-<script src="js/nav.js"></script>
+<script src="js/nav.js?v=4"></script>
 <script type="module">
 import { loadState, current, jobBrief } from "./js/store.js";
 const $ = id => document.getElementById(id);

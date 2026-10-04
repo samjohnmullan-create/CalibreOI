@@ -26,8 +26,8 @@ a{color:inherit}
 .watch-pill{display:flex;align-items:center;gap:8px;font-size:.78rem}
 .watch-pill small{display:block;color:var(--muted);font-size:.65rem}
 .dot{width:7px;height:7px;border-radius:50%;background:var(--ok)}
-.mainnav{margin:14px 0 16px;display:flex;gap:4px;background:var(--nav);border-radius:10px;padding:4px;overflow:auto}
-.navbtn{min-height:40px;border:0;background:transparent;color:#aeb3b6;padding:8px 13px;border-radius:7px;white-space:nowrap;text-decoration:none;display:inline-flex;align-items:center}
+.mainnav{margin:14px 0 16px;display:flex;flex-wrap:wrap;gap:4px;background:var(--nav);border-radius:10px;padding:4px}
+.navbtn{flex:1 1 4.5rem;justify-content:center;min-height:40px;border:0;background:transparent;color:#aeb3b6;padding:8px 10px;border-radius:7px;white-space:nowrap;text-decoration:none;display:inline-flex;align-items:center}
 .navbtn.active{background:#fff;color:var(--ink);font-weight:800}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px}
 .hero{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--line)}
