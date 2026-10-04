@@ -14,45 +14,11 @@
   <nav class="mainnav">
     <a class="navbtn" href="index.html">Jobs</a>
     <a class="navbtn" href="workbench.html">Workbench</a>
-    <a class="navbtn" href="assistant.html">Assistant</a>
+    <a class="navbtn" href="assistant.html">Brief</a>
     <a class="navbtn active" href="settings.html">Settings</a>
   </nav>
-  <div class="hero"><div><div class="kicker">CHATGPT</div><h2 id="state">ChatGPT not connected</h2><p class="muted">The phone sends the open job. The key stays on the small API, not on this device.</p></div></div>
-  <div class="split">
-    <section class="card">
-      <label>Secure endpoint<input id="endpoint" placeholder="https://your-api.example/api/ai" autocomplete="off"></label>
-      <div class="row"><button id="save" class="btn">Save</button><button id="test" class="btn secondary" type="button">Test</button></div>
-      <p id="msg" class="muted small"></p>
-    </section>
-    <section class="card">
-      <div class="kicker">HOW IT TALKS</div>
-      <h3>One path</h3>
-      <p class="small">GitHub Pages cannot hold a key. The endpoint is a small function that calls OpenAI’s Responses API with <strong>OPENAI_API_KEY</strong>. ChatGPT Plus does not cover that call. API use is billed separately.</p>
-      <p class="small">Every ask already includes the job brief: maker, calibre, stage notes, timing. You do not re-explain the watch. Photos can be sent with an ask once the endpoint is live.</p>
-      <p class="small">Until the endpoint answers, Assistant can still copy the brief.</p>
-    </section>
-  </div>
+  <div class="hero"><div><div class="kicker">LOCAL</div><h2>No model in the app</h2><p class="muted">Jobs stay on this phone. A new watch can be pasted in from chat on the Jobs page.</p></div></div>
+  <section class="card"><p class="small">Paste a job JSON into Jobs, then Open pasted job. Photos are not in that paste. Export all jobs writes a backup file.</p></section>
 </div>
-<script type="module">
-import { loadSettings, saveSettings, ask, readyLabel } from "./js/ai.js";
-const $ = id => document.getElementById(id);
-const s = loadSettings();
-$("endpoint").value = s.endpoint || "";
-$("state").textContent = readyLabel();
-$("save").onclick = () => {
-  saveSettings({ endpoint: $("endpoint").value });
-  $("state").textContent = readyLabel();
-  $("msg").textContent = "Saved on this phone.";
-};
-$("test").onclick = async () => {
-  $("save").click();
-  $("msg").textContent = "Testing…";
-  try {
-    const text = await ask({ brief: "Test job. No watch loaded.", page: "Settings", messages: [{ role: "user", content: "Reply with the single word ready." }] });
-    $("state").textContent = "ChatGPT connected";
-    $("msg").textContent = "Connected. Model said: " + text.slice(0, 180);
-  } catch (err) { $("msg").textContent = err.message; }
-};
-</script>
 </body>
 </html>
