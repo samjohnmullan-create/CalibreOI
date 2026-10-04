@@ -1,12 +1,12 @@
 <!doctype html>
 <html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Business · Calibre & Co.</title><link rel="stylesheet" href="css/app.css">
+<title>Cost · Calibre & Co.</title><link rel="stylesheet" href="css/app.css">
 </head><body>
 <div class="shell">
 <header class="brandbar"><a class="brand" href="index.html"><div class="brandmark">C&C</div><div><div class="kicker">CALIBRE & CO.</div><h1>Watchmaker's Workbench</h1></div></a></header>
-<nav class="mainnav"><a class="navbtn" href="index.html">Jobs</a><a class="navbtn" href="workbench.html">Workbench</a><a class="navbtn" href="timegrapher.html">Timegrapher</a><a class="navbtn" href="passport.html">Passport</a><a class="navbtn active" href="business.html">Business</a></nav>
-<div class="hero"><div><div class="kicker">BUSINESS</div><h2 id="watchTitle">Cost and sale</h2></div></div>
+<nav class="mainnav"></nav>
+<div class="hero"><div><div class="kicker">THIS WATCH</div><h2 id="watchTitle">Cost and sale</h2></div></div>
 <section class="card">
 <div class="grid2">
 <label>Purchase price (AUD)<input id="purchasePrice" type="number" step="0.01"></label>
@@ -23,40 +23,25 @@
 <div><span>Profit</span><strong id="profitVal">$0.00</strong></div>
 <div><span>Margin</span><strong id="marginVal">0%</strong></div>
 </div>
-<label>Headline<input id="title"></label>
-<label>Listing<textarea id="text" rows="5"></textarea></label>
 <p id="statusText" class="muted small">Loading…</p>
-<p class="muted small">Profit and margin use the actual sale if there is one, otherwise the target.</p>
 </section></div>
+<script src="js/nav.js"></script>
 <script type="module">
 import { loadState, saveState, current, money, labourCost, investment } from "./js/store.js";
 const $ = id => document.getElementById(id);
-const keys = ["purchasePrice","partsCost","labourMinutes","labourRate","otherCost","targetSale","actualSale","title","text"];
+const keys = ["purchasePrice","partsCost","labourMinutes","labourRate","otherCost","targetSale","actualSale"];
 let state = await loadState();
 let job = current(state);
 let timer;
-function paint(){
-  job = current(state);
-  $("watchTitle").textContent = job.watchName;
-  keys.forEach(k => $(k).value = job.business[k] || "");
-  figure();
-  $("statusText").textContent = "Ready";
-}
 function figure(){
   keys.forEach(k => job.business[k] = $(k).value);
-  const labour = labourCost(job.business);
-  const total = investment(job.business);
+  const labour = labourCost(job.business), total = investment(job.business);
   const sale = Number(job.business.actualSale) || Number(job.business.targetSale) || 0;
   const profit = sale - total;
-  $("labourVal").textContent = money(labour);
-  $("investVal").textContent = money(total);
-  $("profitVal").textContent = money(profit);
-  $("marginVal").textContent = sale ? Math.round(profit / sale * 100)+"%" : "0%";
+  $("labourVal").textContent = money(labour); $("investVal").textContent = money(total);
+  $("profitVal").textContent = money(profit); $("marginVal").textContent = sale ? Math.round(profit / sale * 100)+"%" : "0%";
 }
-keys.forEach(k => $(k).addEventListener("input", () => {
-  figure();
-  clearTimeout(timer);
-  timer = setTimeout(async () => { await saveState(state); $("statusText").textContent = "Saved"; }, 400);
-}));
+function paint(){ job = current(state); $("watchTitle").textContent = job.watchName; keys.forEach(k => $(k).value = job.business[k] || ""); figure(); $("statusText").textContent = "Ready"; }
+keys.forEach(k => $(k).addEventListener("input", () => { figure(); clearTimeout(timer); timer = setTimeout(async () => { await saveState(state); $("statusText").textContent = "Saved"; }, 400); }));
 paint();
 </script></body></html>
