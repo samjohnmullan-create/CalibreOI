@@ -6,19 +6,24 @@
 <div class="shell">
 <header class="brandbar"><a class="brand" href="index.html"><div class="brandmark">C&C</div><div><div class="kicker">CALIBRE & CO.</div><h1>Watchmaker's Workbench</h1></div></a></header>
 <nav class="mainnav"><a class="navbtn" href="index.html">Jobs</a><a class="navbtn" href="workbench.html">Workbench</a><a class="navbtn" href="summary.html">Summary</a><a class="navbtn active" href="inventory.html">Inventory</a><a class="navbtn" href="business.html">Business</a></nav>
-<div class="hero"><div><div class="kicker">FINISHED</div><h2>Inventory</h2><p class="muted">Watches marked complete. Open one to see the sheet.</p></div><div class="hero-stats"><div><span>Done</span><strong id="doneCount">0</strong></div></div></div>
-<section class="card"><div id="list" class="jobs"></section>
+<div class="hero"><div><div class="kicker">STOCK</div><h2>Inventory</h2><p class="muted">Finished watches, then the ones that did not come back.</p></div></div>
+<section class="card"><h3>Complete <span id="doneCount" class="muted"></span></h3><div id="done" class="jobs"></div></section>
+<section class="card"><h3>Spares <span id="spareCount" class="muted"></span></h3><p class="muted small">Not recovered, or damaged in the repair. Parts only.</p><div id="spares" class="jobs"></div></section>
 </div>
 <script type="module">
 import { loadState, saveState, money, investment } from "./js/store.js";
 const state = await loadState();
-const done = state.jobs.filter(j => j.status === "complete" || j.status === "sold");
-document.getElementById("doneCount").textContent = String(done.length);
-document.getElementById("list").innerHTML = done.length ? done.map(j => {
+function row(j, badge){
   const b = j.business || {};
   const sale = Number(b.actualSale) || 0;
-  const profit = sale ? sale - investment(b) : null;
-  return `<a class="job-card" data-id="${j.id}" href="summary.html"><div><strong>${j.watchName}</strong><div class="muted small">${j.decision || "No decision"} · ${j.passport.maker || ""} ${j.passport.calibre || ""}</div><div class="muted small">${j.completedAt ? new Date(j.completedAt).toLocaleDateString() : ""} · ${sale ? money(sale) : "not sold"}${profit!=null ? " · "+money(profit) : ""}</div></div><div><span class="badge">${j.status}</span></div></a>`;
-}).join("") : "<p class='muted'>Nothing complete yet. Finish a job, then mark it complete on the summary.</p>";
+  const extra = j.status === "spares" ? (j.writeOff || "No reason written") : (sale ? money(sale)+" · "+money(sale-investment(b)) : "not sold");
+  return `<a class="job-card" data-id="${j.id}" href="summary.html"><div><strong>${j.watchName}</strong><div class="muted small">${j.decision || ""} · ${j.passport.maker || ""} ${j.passport.calibre || ""}</div><div class="muted small">${extra}</div></div><div><span class="badge">${badge}</span></div></a>`;
+}
+const done = state.jobs.filter(j => j.status === "complete" || j.status === "sold");
+const spares = state.jobs.filter(j => j.status === "spares");
+document.getElementById("doneCount").textContent = String(done.length);
+document.getElementById("spareCount").textContent = String(spares.length);
+document.getElementById("done").innerHTML = done.length ? done.map(j => row(j, "complete")).join("") : "<p class='muted'>Nothing complete yet.</p>";
+document.getElementById("spares").innerHTML = spares.length ? spares.map(j => row(j, "spares")).join("") : "<p class='muted'>None written off.</p>";
 document.querySelectorAll(".job-card").forEach(a => a.onclick = async () => { state.currentId = a.dataset.id; await saveState(state); });
 </script></body></html>
