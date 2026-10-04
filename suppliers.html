@@ -14,6 +14,10 @@
 <nav class="mainnav"><a class="navbtn" href="index.html">Start</a><a class="navbtn" href="workbench.html">Bench</a><a class="navbtn" href="timegrapher.html">Time</a><a class="navbtn" href="passport.html">Identity</a><a class="navbtn" href="business.html">Cost</a><a class="navbtn" href="summary.html">Sheet</a><a class="navbtn" href="inventory.html">Stock</a><a class="navbtn active" href="suppliers.html" aria-current="page">Parts</a></nav>
 <div class="hero"><div><div class="kicker">PARTS</div><h2>Spares</h2><p class="muted">A written-off watch stays here as a donor. Another maker is only a candidate when the pillar plates are the same size, and you still measure the part.</p></div></div>
 <section class="card">
+<label>Search<input id="q" autocomplete="off" enterkeyhint="search" placeholder="Serial, brand, part, calibre"></label>
+<div id="found" class="jobs"></div>
+</section>
+<section class="card">
 <h3>In the drawer</h3>
 <div id="donorList"></div>
 </section>
@@ -46,6 +50,7 @@
 <script type="module">
 import { loadState, saveState, current, escapeHtml } from "./js/store.js?v=5";
 import { SPARE_PARTS, matchPart } from "./js/match.js?v=5";
+import { fillResults, searchTerms, searchJobs } from "./js/search.js?v=6";
 const $ = id => document.getElementById(id);
 let state = await loadState();
 let timer;
@@ -65,16 +70,21 @@ function noted(job){
   return (job.stages || []).map(s => [s.parts, s.measure].filter(Boolean).join(" · ")).filter(Boolean);
 }
 function paintDonors(){
-  const donors = state.jobs.filter(j => j.status === "spares");
+  const filtering = searchTerms($("q").value).length > 0;
+  const hitIds = new Set(searchJobs(state.jobs, $("q").value).map(r => r.job.id));
+  const donors = state.jobs.filter(j => j.status === "spares" && (!filtering || hitIds.has(j.id)));
   const box = $("donorList");
   box.innerHTML = "";
   if (!donors.length){
-    box.innerHTML = "<p class='muted'>Nothing written off. Mark a watch as spares on the bench and its parts land here.</p>";
+    box.innerHTML = filtering
+      ? "<p class='muted'>No donor matches that search.</p>"
+      : "<p class='muted'>Nothing written off. Mark a watch as spares on the bench and its parts land here.</p>";
     return;
   }
   donors.forEach(job => {
     const art = document.createElement("article");
     art.className = "donor";
+    art.id = "donor-" + job.id;
     const kept = (job.sparesParts || []).filter(p => p.keep).length;
     art.innerHTML = `<strong>${escapeHtml(job.watchName)}</strong><div class="muted small">${escapeHtml(meta(job) || "No identity yet")} · ${kept} kept</div><p class="small">${escapeHtml(job.writeOff || "No reason written")}</p>`;
     const notes = noted(job);
@@ -139,6 +149,21 @@ function paintMatch(){
   $("matchOut").innerHTML = html;
 }
 function paint(){ paintDonors(); paintMatch(); }
+function paintSearch(){
+  fillResults($("found"), state.jobs, $("q").value, async (job) => {
+    state.currentId = job.id;
+    await saveState(state);
+    if (job.status === "spares") {
+      paint();
+      const node = document.getElementById("donor-" + job.id);
+      if (node) node.scrollIntoView({ block:"nearest" });
+      return;
+    }
+    location.href = (job.status === "complete" || job.status === "sold") ? "summary.html" : "workbench.html";
+  });
+  paintDonors();
+}
 pick.onchange = paintMatch;
+$("q").addEventListener("input", paintSearch);
 paint();
 </script></body></html>
