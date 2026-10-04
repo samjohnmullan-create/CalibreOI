@@ -4,36 +4,25 @@
   "jobId": "CCO-0041",
   "watchName": "Olma Caravelle 41j",
   "status": "on the bench",
+  "importUrl": "https://samjohnmullan-create.github.io/CalibreOI/?card=olma-caravelle-41j",
   "passport": {
     "maker": "Olma",
+    "model": "Caravelle",
     "calibre": "",
+    "jewels": "41",
+    "movementType": "",
     "year": "",
     "serial": "",
+    "caseNumber": "",
+    "reference": "",
     "caseMaterial": "",
     "escapement": "lever",
-    "notes": "Caravelle, 41 jewels. Wind slips. Hook and bridle not yet checked."
+    "notes": "Wind slips. Hook and bridle not yet checked."
   },
-  "business": {
-    "purchasePrice": "",
-    "repairCost": "",
-    "otherCost": "",
-    "salePrice": "",
-    "title": "",
-    "text": ""
-  },
+  "business": { "purchasePrice": "", "partsCost": "", "labourMinutes": "", "labourRate": "", "otherCost": "", "targetSale": "", "actualSale": "" },
   "timingRuns": [],
   "stages": [
     { "name": "Intake", "notes": "Arrived running. Wind slips.", "condition": "Needs attention", "complete": false },
-    { "name": "Demagnetising", "notes": "", "complete": false },
-    { "name": "Strip-down", "notes": "", "complete": false },
-    { "name": "Inspection", "notes": "", "complete": false },
-    { "name": "Cleaning", "notes": "", "complete": false },
-    { "name": "Barrel & Mainspring", "notes": "Check hook and bridle before replacing the spring.", "condition": "Needs attention", "complete": false },
-    { "name": "Train Test", "notes": "", "complete": false },
-    { "name": "Escapement", "notes": "", "complete": false },
-    { "name": "Balance", "notes": "", "complete": false },
-    { "name": "Lubrication", "notes": "", "complete": false },
-    { "name": "Regulation", "notes": "", "complete": false },
-    { "name": "Final QC", "notes": "", "complete": false }
+    { "name": "Barrel & Mainspring", "notes": "Check hook and bridle before replacing the spring.", "condition": "Needs attention", "complete": false }
   ]
 }
