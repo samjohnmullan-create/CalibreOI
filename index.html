@@ -23,7 +23,7 @@
     <a class="navbtn" href="assistant.html">Brief</a>
   </nav>
   <div class="hero">
-    <div><div class="kicker">SHOP</div><h2>Jobs on the bench</h2><p class="muted">Each watch is its own record. Paste a filled job from chat when you have one.</p></div>
+    <div><div class="kicker">SHOP</div><h2>Jobs on the bench</h2><p class="muted">Each watch is its own record. Open a .calibrejob to start a filled job.</p></div>
     <div class="hero-stats"><div><span>Open</span><strong id="openCount">0</strong></div></div>
   </div>
   <div class="split">
@@ -39,9 +39,12 @@
         <label>Maker<input id="newMaker"></label>
         <label>Calibre<input id="newCalibre"></label>
       </div>
-      <p class="muted small">Photos, stage notes and timing stay on this phone.</p>
-      <label>Paste a job from chat<textarea id="prefill" rows="6" placeholder='{"watchName":"Olma Caravelle","passport":{"maker":"Olma","calibre":""}}'></textarea></label>
-      <div class="row"><button id="importJob" class="btn brass" type="button">Open pasted job</button><button id="exportAll" class="btn secondary">Export all jobs</button></div>
+      <p class="muted small">Photos stay on this phone. A job card is a .calibrejob file.</p>
+      <div class="row">
+        <label class="btn brass">Open .calibrejob<input id="jobFile" type="file" accept=".calibrejob,application/json" hidden></label>
+        <button id="exportJob" class="btn secondary" type="button">Save open job</button>
+        <button id="exportAll" class="btn secondary" type="button">Export all</button>
+      </div>
     </section>
   </div>
   <div class="statusbar"><span id="statusText">Local</span><a class="textbtn" href="settings.html">Settings</a></div>
@@ -76,22 +79,19 @@ $("newJob").onclick = async () => {
   await saveState(state);
   location.href = "workbench.html";
 };
-$("exportAll").onclick = () => {
-  const blob = new Blob([JSON.stringify(state.jobs, null, 2)], { type:"application/json" });
+function download(name, data){
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type:"application/json" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = "calibre-jobs.json";
+  a.download = name;
   a.click();
-};
-$("importJob").onclick = async () => {
-  let raw;
-  try { raw = JSON.parse($("prefill").value); }
-  catch { $("statusText").textContent = "That paste is not valid JSON."; return; }
+}
+function fromCard(raw){
   const stages = STAGES.map((name, i) => {
     const src = (raw.stages || []).find(s => s.name === name) || (raw.stages || [])[i] || {};
     return { notes: src.notes || "", condition: src.condition || "", parts: src.parts || "", measure: src.measure || "", complete: !!src.complete, photos: [], updatedAt: src.notes ? new Date().toISOString() : null };
   });
-  const job = blankJob({
+  return blankJob({
     watchName: raw.watchName || "Untitled watch",
     jobId: raw.jobId,
     status: raw.status || "on the bench",
@@ -99,6 +99,31 @@ $("importJob").onclick = async () => {
     business: raw.business || {},
     stages
   });
+}
+$("exportAll").onclick = () => download("calibre-jobs.json", state.jobs);
+$("exportJob").onclick = () => {
+  const job = current(state);
+  const card = {
+    type: "calibrejob",
+    watchName: job.watchName,
+    jobId: job.jobId,
+    status: job.status,
+    passport: job.passport,
+    business: job.business,
+    stages: job.stages.map((s, i) => ({ name: STAGES[i], notes: s.notes, condition: s.condition, parts: s.parts, measure: s.measure, complete: s.complete }))
+  };
+  const slug = (job.watchName || "watch").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "watch";
+  download(slug + ".calibrejob", card);
+};
+$("jobFile").onchange = async (e) => {
+  const file = e.target.files[0];
+  e.target.value = "";
+  if (!file) return;
+  let raw;
+  try { raw = JSON.parse(await file.text()); }
+  catch { $("statusText").textContent = "That .calibrejob could not be read."; return; }
+  if (raw.type && raw.type !== "calibrejob"){ $("statusText").textContent = "Not a calibre job card."; return; }
+  const job = fromCard(raw);
   state.jobs.unshift(job);
   state.currentId = job.id;
   await saveState(state);
