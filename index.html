@@ -23,7 +23,7 @@
     <a class="navbtn" href="assistant.html">Brief</a>
   </nav>
   <div class="hero">
-    <div><div class="kicker">SHOP</div><h2>Jobs on the bench</h2><p class="muted">Each watch is its own record. Open a .calibrejob to start a filled job.</p></div>
+    <div><div class="kicker">SHOP</div><h2>Jobs on the bench</h2><p class="muted">Each watch is its own record. Import a .calibrejob to open a filled job.</p></div>
     <div class="hero-stats"><div><span>Open</span><strong id="openCount">0</strong></div></div>
   </div>
   <div class="split">
@@ -39,9 +39,9 @@
         <label>Maker<input id="newMaker"></label>
         <label>Calibre<input id="newCalibre"></label>
       </div>
-      <p class="muted small">Photos stay on this phone. A job card is a .calibrejob file.</p>
+      <p class="muted small">Photos stay on this phone. Import job reads a .calibrejob into the local job store.</p>
       <div class="row">
-        <label class="btn brass">Open .calibrejob<input id="jobFile" type="file" accept=".calibrejob,application/json" hidden></label>
+        <label class="btn brass">Import job<input id="jobFile" type="file" accept=".calibrejob,application/json" hidden></label>
         <button id="exportJob" class="btn secondary" type="button">Save open job</button>
         <button id="exportAll" class="btn secondary" type="button">Export all</button>
       </div>
@@ -89,7 +89,7 @@ function download(name, data){
 function fromCard(raw){
   const stages = STAGES.map((name, i) => {
     const src = (raw.stages || []).find(s => s.name === name) || (raw.stages || [])[i] || {};
-    return { notes: src.notes || "", condition: src.condition || "", parts: src.parts || "", measure: src.measure || "", complete: !!src.complete, photos: [], updatedAt: src.notes ? new Date().toISOString() : null };
+    return { notes: src.notes || "", condition: src.condition || "", parts: src.parts || "", measure: src.measure || "", complete: !!src.complete, photos: src.photos || [], updatedAt: src.notes ? new Date().toISOString() : null };
   });
   return blankJob({
     watchName: raw.watchName || "Untitled watch",
@@ -97,6 +97,7 @@ function fromCard(raw){
     status: raw.status || "on the bench",
     passport: raw.passport || {},
     business: raw.business || {},
+    timingRuns: raw.timingRuns || [],
     stages
   });
 }
@@ -110,6 +111,7 @@ $("exportJob").onclick = () => {
     status: job.status,
     passport: job.passport,
     business: job.business,
+    timingRuns: job.timingRuns || [],
     stages: job.stages.map((s, i) => ({ name: STAGES[i], notes: s.notes, condition: s.condition, parts: s.parts, measure: s.measure, complete: s.complete }))
   };
   const slug = (job.watchName || "watch").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "watch";
