@@ -19,19 +19,19 @@
     <a class="navbtn active" href="timegrapher.html">Timegrapher</a>
     <a class="navbtn" href="passport.html">Passport</a>
     <a class="navbtn" href="business.html">Business</a>
-    <a class="navbtn" href="assistant.html">Assistant</a>
+    <a class="navbtn" href="assistant.html">Brief</a>
   </nav>
   <div class="hero">
-    <div><div class="kicker">ACOUSTIC TIMING</div><h2>Timegrapher</h2><p class="muted">Phone mic, positional sessions. Rate is the useful number. Amplitude stays an estimate.</p></div>
+    <div><div class="kicker">ACOUSTIC TIMING</div><h2>Timegrapher</h2><p class="muted">Phone mic. Rate is the useful number. Amplitude stays an estimate.</p></div>
     <div class="hero-stats"><div><span>Mic</span><strong id="micLabel">Off</strong></div><div><span>Confidence</span><strong id="confidenceVal">0%</strong></div></div>
   </div>
   <div class="timing-layout">
     <section class="card">
       <div class="grid4">
-        <label>BPH<select id="targetBph"><option value="auto">Auto</option><option>14400</option><option>18000</option><option>19800</option><option>21600</option><option>25200</option><option>28800</option><option>36000</option></select></label>
+        <label>BPH<select id="targetBph"><option value="auto">Auto</option><option>14400</option><option>18000</option><option selected>18000</option><option>19800</option><option>21600</option><option>25200</option><option>28800</option><option>36000</option></select></label>
         <label>Lift angle<input id="liftAngle" type="number" min="30" max="70" value="52"></label>
         <label>Position<select id="position"><option>Dial up</option><option>Dial down</option><option>Crown up</option><option>Crown down</option><option>Crown left</option><option>Crown right</option></select></label>
-        <label>Session<select id="sessionSeconds"><option value="30">30 sec</option><option value="60" selected>60 sec</option><option value="120">120 sec</option></select></label>
+        <label>Session<select id="sessionSeconds"><option value="20">20 sec</option><option value="30" selected>30 sec</option><option value="60">60 sec</option></select></label>
       </div>
       <div class="metrics">
         <div class="metric"><span>Rate</span><strong id="rateVal">—</strong><small>s/day</small></div>
@@ -44,13 +44,9 @@
       <div class="row">
         <button id="startTiming" class="btn">Start timed session</button>
         <button id="stopTiming" class="btn secondary" disabled>Stop</button>
-        <label class="checkline">Sensitivity<input id="sensitivity" type="range" min="1.7" max="8" step="0.1" value="3.3"></label>
+        <label class="checkline">Sensitivity<input id="sensitivity" type="range" min="1.4" max="6" step="0.1" value="2.2"></label>
       </div>
-      <p id="tgHint" class="muted small">Watch against the phone mic, quiet room. A contact pickup will beat the phone mic. Needs HTTPS — a file opened from disk usually blocks the microphone.</p>
-      <div class="ai-box">
-        <button id="askRuns" class="btn brass" type="button">Read these runs</button>
-        <pre id="aiOut" class="small muted">Compares dial positions and flags a dirty signal. Does not invent a rate.</pre>
-      </div>
+      <p id="tgHint" class="muted small">Case back against the mic, quiet room. Chrome must be allowed to use the microphone.</p>
     </section>
     <aside class="card">
       <div class="kicker">SESSION</div><h3>Live analysis</h3>
@@ -65,14 +61,14 @@
   </div>
 </div>
 <script type="module">
-import { STAGES, loadState, saveState, current, jobBrief } from "./js/store.js";
-import { ask } from "./js/ai.js";
+import { STAGES, loadState, saveState, current } from "./js/store.js";
 const $ = id => document.getElementById(id);
 let state = await loadState();
 let job = current(state);
+job.timingRuns = job.timingRuns || [];
 $("headerWatch").textContent = job.watchName;
 const standards = [14400,18000,19800,21600,25200,28800,36000];
-let stream, ac, an, raf, running = false, beats = [], transients = [], trace = [], noise = 0.004, lastBeat = 0, lastTransient = 0, metrics = {}, startTime = 0, endTime = 0;
+let stream, ac, an, raf, running = false, beats = [], transients = [], trace = [], noise = 0.002, lastBeat = 0, lastTransient = 0, metrics = {}, endTime = 0;
 const mean = a => a.reduce((s,v) => s+v, 0) / a.length;
 const median = a => { const b=[...a].sort((x,y)=>x-y); return b[Math.floor(b.length/2)]; };
 const nearest = n => standards.reduce((best, s) => Math.abs(s-n) < Math.abs(best-n) ? s : best);
@@ -84,40 +80,30 @@ function renderRuns(){
 }
 renderRuns();
 function analyse(){
-  if (beats.length < 8) return;
+  if (beats.length < 6) return;
   const ints = [];
-  for (let i = 1; i < beats.length; i++){ const d = beats[i]-beats[i-1]; if (d > 75 && d < 650) ints.push(d); }
-  if (ints.length < 6) return;
-  const med = median(ints.slice(-45));
+  for (let i = 1; i < beats.length; i++){ const d = beats[i]-beats[i-1]; if (d > 80 && d < 700) ints.push(d); }
+  if (ints.length < 4) return;
+  const med = median(ints.slice(-40));
   const raw = 3600000 / med;
   const target = $("targetBph").value === "auto" ? nearest(raw) : Number($("targetBph").value);
   const nom = 3600000 / target;
-  const clean = ints.slice(-60).filter(x => Math.abs(x-med) < med * 0.1);
+  const clean = ints.slice(-50).filter(x => Math.abs(x-med) < med * 0.18);
+  if (clean.length < 4) return;
   const meas = mean(clean);
-  if (!Number.isFinite(meas)) return;
   const rate = (nom / meas - 1) * 86400;
   const ev = clean.filter((_, i) => i % 2 === 0), od = clean.filter((_, i) => i % 2 === 1);
-  const be = (ev.length > 3 && od.length > 3) ? Math.abs(mean(ev) - mean(od)) / 2 : null;
-  const spans = [];
-  for (const bt of beats.slice(-24)){
-    const near = transients.filter(x => x >= bt && x <= bt + 34);
-    if (near.length >= 2){ const sp = near.at(-1) - near[0]; if (sp >= 5 && sp <= 27) spans.push(sp); }
-  }
-  const lift = spans.length >= 3 ? median(spans) : null;
-  const angle = Math.max(30, Math.min(70, Number($("liftAngle").value) || 52));
-  let amp = lift ? angle * 7200000 / (2 * Math.PI * target * lift) : null;
-  if (amp && (amp < 80 || amp > 420)) amp = null;
+  const be = (ev.length > 2 && od.length > 2) ? Math.abs(mean(ev) - mean(od)) / 2 : null;
   const sd = Math.sqrt(mean(clean.map(x => (x-meas) ** 2))) || 999;
-  const conf = Math.round(Math.max(0, Math.min(100, 100 - (sd / nom * 750) - Math.abs(raw - target) / target * 1000)));
-  metrics = { rate, bph: target, beatError: be, amplitude: amp, confidence: conf, interval: meas, liftTime: lift, position: $("position").value };
+  const conf = Math.round(Math.max(0, Math.min(100, 100 - (sd / nom * 500))));
+  metrics = { rate, bph: target, beatError: be, amplitude: null, confidence: conf, interval: meas, position: $("position").value };
   $("rateVal").textContent = signed(rate);
   $("bphVal").textContent = target;
   $("bphMode").textContent = $("targetBph").value === "auto" ? "auto lock" : "manual";
   $("beatErrVal").textContent = be == null ? "—" : be.toFixed(2);
-  $("ampVal").textContent = amp ? Math.round(amp) : "—";
+  $("ampVal").textContent = "—";
   $("confidenceVal").textContent = conf + "%";
-  $("intervalVal").textContent = meas.toFixed(2) + " ms";
-  $("liftTimeVal").textContent = lift ? lift.toFixed(1) + " ms" : "—";
+  $("intervalVal").textContent = meas.toFixed(1) + " ms";
   trace.push({ t: performance.now(), rate });
   if (trace.length > 260) trace.shift();
 }
@@ -132,25 +118,25 @@ function graph(){
   x.clearRect(0,0,w,h); x.strokeStyle = "#283036";
   for (let y = 35; y < h; y += 35){ x.beginPath(); x.moveTo(0,y); x.lineTo(w,y); x.stroke(); }
   const mid = h/2; x.strokeStyle = "#c89b49"; x.lineWidth = 1.5; x.beginPath();
-  trace.slice(-220).forEach((p,i) => { const px = i/219*w, py = Math.max(8, Math.min(h-8, mid - p.rate*2.4)); i ? x.lineTo(px, py) : x.moveTo(px, py); });
+  trace.slice(-220).forEach((p,i) => { const px = i/219*w, py = Math.max(8, Math.min(h-8, mid - p.rate*1.6)); i ? x.lineTo(px, py) : x.moveTo(px, py); });
   x.stroke();
 }
 function frame(){
-  if (!running) return;
+  if (!running || !an) return;
   const buf = new Float32Array(an.fftSize);
   an.getFloatTimeDomainData(buf);
   let rms = 0, pk = 0;
   for (const v of buf){ const a = Math.abs(v); rms += a*a; if (a > pk) pk = a; }
   rms = Math.sqrt(rms / buf.length);
-  noise = noise * 0.99 + rms * 0.01;
-  const th = Math.max(0.007, noise * (Number($("sensitivity").value) || 3.3));
+  noise = noise * 0.985 + rms * 0.015;
+  const th = Math.max(0.004, noise * (Number($("sensitivity").value) || 2.2));
   const now = performance.now();
   $("snrVal").textContent = (pk / Math.max(noise, 0.0001)).toFixed(1) + "×";
   wave(buf, rms);
-  if (pk > th && now - lastTransient > 7){
+  if (pk > th && now - lastTransient > 8){
     lastTransient = now; transients.push(now);
     if (transients.length > 700) transients.shift();
-    if (now - lastBeat > 70){ lastBeat = now; beats.push(now); if (beats.length > 240) beats.shift(); $("beatCount").textContent = beats.length; analyse(); }
+    if (now - lastBeat > 90){ lastBeat = now; beats.push(now); if (beats.length > 240) beats.shift(); $("beatCount").textContent = beats.length; analyse(); }
   }
   graph();
   const left = Math.max(0, endTime - now);
@@ -161,53 +147,65 @@ function frame(){
 async function stopAudio(){
   running = false; cancelAnimationFrame(raf);
   if (stream) stream.getTracks().forEach(t => t.stop());
-  if (ac) try { await ac.close(); } catch {}
+  stream = null;
+  if (ac && ac.state !== "closed"){ try { await ac.close(); } catch {} }
+  ac = null; an = null;
   $("startTiming").disabled = false; $("stopTiming").disabled = true; $("micLabel").textContent = "Off";
 }
 async function finishSession(){
   if (!running) return;
+  const ok = metrics.bph && metrics.confidence >= 20;
   await stopAudio();
   $("sessionClock").textContent = "Complete";
   $("sessionState").textContent = "Complete";
-  if (metrics.bph && metrics.confidence >= 25){
+  if (ok){
     const run = { ...metrics, at: new Date().toISOString(), duration: Number($("sessionSeconds").value), liftAngle: Number($("liftAngle").value) || 52 };
     job.timingRuns.unshift(run);
     job.timingRuns = job.timingRuns.slice(0, 40);
     const ri = STAGES.indexOf("Regulation");
-    const line = `${new Date().toLocaleString()} · ${run.position}: ${signed(run.rate)} s/day, ${run.bph} BPH, ${run.beatError == null ? "BE n/a" : run.beatError.toFixed(2)+" ms"}, ${run.amplitude ? Math.round(run.amplitude)+"° est." : "amp n/a"}, confidence ${run.confidence}%`;
-    job.stages[ri].notes = (job.stages[ri].notes ? job.stages[ri].notes + "\n" : "") + line;
-    job.stages[ri].updatedAt = new Date().toISOString();
+    if (ri >= 0){
+      const line = `${new Date().toLocaleString()} · ${run.position}: ${signed(run.rate)} s/day, ${run.bph} BPH, ${run.beatError == null ? "BE n/a" : run.beatError.toFixed(2)+" ms"}, confidence ${run.confidence}%`;
+      job.stages[ri].notes = (job.stages[ri].notes ? job.stages[ri].notes + "\n" : "") + line;
+      job.stages[ri].updatedAt = new Date().toISOString();
+    }
     await saveState(state);
     renderRuns();
-    $("tgHint").textContent = "Saved onto this job and into the Regulation stage.";
-  } else $("tgHint").textContent = "Not saved — signal was not clean enough.";
+    $("tgHint").textContent = "Saved onto this job and into Regulation.";
+  } else $("tgHint").textContent = "Mic ran, but the tick was not steady enough to save. Case back on the mic, sensitivity down, try again.";
+}
+async function openMic(){
+  const tries = [
+    { audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } },
+    { audio: true }
+  ];
+  let last;
+  for (const constraints of tries){
+    try { return await navigator.mediaDevices.getUserMedia(constraints); }
+    catch (err) { last = err; }
+  }
+  throw last;
 }
 $("startTiming").onclick = async () => {
+  $("tgHint").textContent = "Asking for the microphone…";
   try {
-    stream = await navigator.mediaDevices.getUserMedia({ audio:{ echoCancellation:false, noiseSuppression:false, autoGainControl:false } });
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) throw new Error("This browser will not open the microphone. Use Chrome on the https address.");
+    stream = await openMic();
     ac = new (window.AudioContext || window.webkitAudioContext)();
+    if (ac.state === "suspended") await ac.resume();
     const src = ac.createMediaStreamSource(stream);
-    const hp = ac.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = 900;
     an = ac.createAnalyser(); an.fftSize = 2048; an.smoothingTimeConstant = 0;
-    src.connect(hp); hp.connect(an);
-    beats = []; transients = []; trace = []; noise = 0.004; lastBeat = 0; lastTransient = 0; metrics = {};
-    running = true; startTime = performance.now(); endTime = startTime + Number($("sessionSeconds").value) * 1000;
+    src.connect(an);
+    beats = []; transients = []; trace = []; noise = 0.002; lastBeat = 0; lastTransient = 0; metrics = {};
+    running = true; endTime = performance.now() + Number($("sessionSeconds").value) * 1000;
     $("startTiming").disabled = true; $("stopTiming").disabled = false; $("micLabel").textContent = "Live"; $("sessionState").textContent = "Measuring";
-    $("tgHint").textContent = "Session running — keep the watch and phone still.";
+    $("tgHint").textContent = "Listening. Hold the case back on the mic and keep still.";
     frame();
-  } catch (e) { $("tgHint").textContent = "Microphone unavailable: " + e.message; }
+  } catch (e) {
+    $("micLabel").textContent = "Blocked";
+    $("tgHint").textContent = "Microphone unavailable: " + (e.name ? e.name + " — " : "") + e.message;
+  }
 };
 $("stopTiming").onclick = async () => { await stopAudio(); $("sessionState").textContent = "Stopped"; $("sessionClock").textContent = "Stopped"; };
-$("askRuns").onclick = async () => {
-  $("aiOut").textContent = "Reading runs…";
-  try {
-    const text = await ask({ brief: jobBrief(job), page: "Timegrapher", messages:[{ role:"user", content: "Read the saved timing runs. Compare positions. Say what is trustworthy and what is just noise. Do not suggest a regulation move if confidence is under 50." }] });
-    $("aiOut").textContent = text;
-    job.chat.push({ role:"user", content:"Read the timing runs", at:new Date().toISOString(), page:"Timegrapher" });
-    job.chat.push({ role:"assistant", content:text, at:new Date().toISOString(), page:"Timegrapher" });
-    await saveState(state);
-  } catch (err) { $("aiOut").textContent = err.message; }
-};
 </script>
 </body>
 </html>
