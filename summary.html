@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Summary · Calibre & Co.</title><link rel="stylesheet" href="css/app.css?v=4">
+<title>Summary · Calibre & Co.</title><link rel="stylesheet" href="css/app.css?v=8">
 <style>@media print { .mainnav,.footer-actions,.no-print{display:none!important} body{background:#fff} .card{box-shadow:none} } .line{display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px solid var(--line)} .line span{color:var(--muted)}</style></head><body>
 <div class="shell">
 <header class="brandbar"><a class="brand" href="index.html"><div class="brandmark">C&C</div><div><div class="kicker">CALIBRE & CO.</div><h1>Watchmaker's Workbench</h1></div></a></header>
@@ -20,7 +20,7 @@
 <script src="js/nav.js?v=4"></script>
 <script type="module">
 import { STAGES, loadState, saveState, current, exportCard, money, labourCost, investment, markSpares } from "./js/store.js?v=5";
-import { STAGE_COPY } from "./js/stages.js";
+import { STAGE_COPY } from "./js/stages.js?v=8";
 const $ = id => document.getElementById(id);
 const state = await loadState();
 const job = current(state);
@@ -31,7 +31,16 @@ $("watchTitle").textContent = job.watchName;
 if (job.status === "complete" || job.status === "sold") $("completeJob").textContent = "Completed";
 if (job.status === "spares") $("writeOff").textContent = "Written off";
 const lines = [["Decision", job.decision],["Status", job.status],["Write-off", job.writeOff],["Maker", p.maker],["Model", p.model],["Calibre", p.calibre],["Jewels", p.jewels],["Serial", p.serial],["Case", [p.caseMaterial, p.caseNumber].filter(Boolean).join(" ")],["Purchase", b.purchasePrice?money(b.purchasePrice):""],["Parts", b.partsCost?money(b.partsCost):""],["Labour", labourCost(b)?money(labourCost(b)):""],["Investment", money(total)],["Sale", sale?money(sale):""],["Profit", sale?money(sale-total):""]].filter(x => x[1]);
-const stages = job.stages.map((s,i) => { const title = (STAGE_COPY[STAGES[i]]&&STAGE_COPY[STAGES[i]].title)||STAGES[i]; const bits = [s.condition,s.measure,s.parts,s.notes].filter(Boolean).join(" · "); if (!bits && !s.complete) return ""; return `<div class='line'><span>${title}</span><strong>${s.complete?"Done. ":""}${bits||"Opened"}</strong></div>`; }).join("");
+const stages = job.stages.map((s,i) => {
+  const copy = STAGE_COPY[STAGES[i]] || {};
+  const title = copy.title || STAGES[i];
+  const answers = (copy.steps || []).map((q,n) => ({ q, a: s.checks && (s.checks[n] === true ? "yes" : s.checks[n]) })).filter(x => x.a === "yes" || x.a === "no" || x.a === "na");
+  const tally = answers.length ? ["yes","no","na"].map(k => { const n = answers.filter(x => x.a === k).length; return n ? (k === "na" ? "N/A " : k[0].toUpperCase()+k.slice(1)+" ") + n : ""; }).filter(Boolean).join(" · ") : "";
+  const nos = answers.filter(x => x.a === "no").map(x => x.q).join(" ");
+  const bits = [s.condition,s.measure,s.parts,s.notes,tally,nos].filter(Boolean).join(" · ");
+  if (!bits && !s.complete) return "";
+  return `<div class='line'><span>${title}</span><strong>${s.complete?"Done. ":""}${bits||"Opened"}</strong></div>`;
+}).join("");
 const runs = (job.timingRuns||[]).slice(0,4).map(r => `<div class='line'><span>${r.position}</span><strong>${r.rate>=0?"+":""}${Number(r.rate).toFixed(0)} s/day</strong></div>`).join("");
 $("sheet").innerHTML = `<div class='kicker'>CALIBRE & CO.</div><h2>${job.watchName}</h2><p class='muted small'>${job.jobId}</p>`+lines.map(x=>`<div class='line'><span>${x[0]}</span><strong>${x[1]}</strong></div>`).join("")+(p.notes?`<p>${p.notes}</p>`:"")+`<h3>Work</h3>`+(stages||"<p class='muted'>No stage notes.</p>")+(runs?`<h3>Timing</h3>${runs}`:"");
 function download(name, data){ const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:"application/json"})); a.download = name; a.click(); }

@@ -50,6 +50,11 @@ a{color:inherit}
 .stage-num{font-size:.66rem;color:var(--brass);font-weight:800}
 .stage-dot{width:7px;height:7px;border-radius:50%;background:#bbb7ae}
 label{display:grid;gap:6px;color:#5e6468;font-size:.78rem;font-weight:700}
+.yn{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--line)}
+.yn p{margin:0;flex:1 1 14rem;line-height:1.35}
+.yn-btns{display:flex;gap:4px}
+.yn-btns button{min-height:36px;min-width:52px;padding:6px 10px;border-radius:7px;border:1px solid var(--line);background:#fff;color:var(--ink);font-weight:700}
+.yn-btns button.on{background:var(--nav);color:#fff;border-color:var(--nav)}
 .checkline{display:flex;align-items:center;gap:7px}
 .checkline input{width:18px;height:18px}
 .grid2,.grid3,.grid4{display:grid;gap:12px;margin-bottom:12px}
