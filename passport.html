@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Passport · Calibre & Co.</title>
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<div class="shell">
+  <header class="brandbar">
+    <a class="brand" href="index.html"><div class="brandmark">C&C</div><div><div class="kicker">CALIBRE & CO.</div><h1>Watchmaker's Workbench</h1></div></a>
+    <div class="watch-pill"><span class="dot"></span><div><small>Current watch</small><strong id="headerWatch">—</strong></div></div>
+  </header>
+  <nav class="mainnav">
+    <a class="navbtn" href="index.html">Jobs</a>
+    <a class="navbtn" href="workbench.html">Workbench</a>
+    <a class="navbtn" href="timegrapher.html">Timegrapher</a>
+    <a class="navbtn active" href="passport.html">Passport</a>
+    <a class="navbtn" href="business.html">Business</a>
+    <a class="navbtn" href="assistant.html">Assistant</a>
+  </nav>
+  <div class="hero"><div><div class="kicker">WATCH PASSPORT</div><h2>Identity and restoration record</h2><p class="muted">What the watch is, and the trail of what was done to it.</p></div></div>
+  <div class="split">
+    <section class="card">
+      <h3>Identification</h3>
+      <div class="grid2">
+        <label>Maker<input id="maker"></label>
+        <label>Calibre<input id="calibre"></label>
+        <label>Approx. year<input id="year" placeholder="c. 1900"></label>
+        <label>Serial / case number<input id="serial"></label>
+        <label>Case material<input id="caseMaterial" placeholder="0.800 silver"></label>
+        <label>Escapement<input id="escapement" placeholder="cylinder, lever"></label>
+      </div>
+      <label>Identification notes<textarea id="passportNotes" rows="5"></textarea></label>
+      <div class="ai-box">
+        <button id="askId" class="btn brass" type="button">Check the identification</button>
+        <pre id="aiOut" class="small muted">Asks what is still missing before you treat the maker and calibre as settled.</pre>
+      </div>
+    </section>
+    <section class="card">
+      <h3>Restoration timeline</h3>
+      <div id="timeline"></div>
+    </section>
+  </div>
+  <div class="statusbar"><span id="statusText">Auto-saves</span></div>
+</div>
+<script type="module">
+import { STAGES, loadState, saveState, current, escapeHtml, jobBrief } from "./js/store.js";
+import { ask } from "./js/ai.js";
+const $ = id => document.getElementById(id);
+let state = await loadState();
+let job = current(state);
+let timer;
+function capture(){
+  job.passport = { maker:$("maker").value, calibre:$("calibre").value, year:$("year").value, serial:$("serial").value, caseMaterial:$("caseMaterial").value, escapement:$("escapement").value, notes:$("passportNotes").value };
+}
+function paint(){
+  job = current(state);
+  $("headerWatch").textContent = job.watchName;
+  const p = job.passport;
+  ["maker","calibre","year","serial","caseMaterial","escapement"].forEach(k => $(k).value = p[k] || "");
+  $("passportNotes").value = p.notes || "";
+  const items = [];
+  job.stages.forEach((s, i) => { if (s.updatedAt || s.notes) items.push({ at: s.updatedAt, label: STAGES[i], text: [s.condition, s.measure, s.notes].filter(Boolean).join(" · ") }); });
+  items.sort((a,b) => String(b.at).localeCompare(String(a.at)));
+  $("timeline").innerHTML = items.length ? items.map(it => `<div class="timeline-item"><span>${it.at ? new Date(it.at).toLocaleDateString() : "—"}</span><div><strong>${escapeHtml(it.label)}</strong><div>${escapeHtml(it.text || "Opened")}</div></div></div>`).join("") : '<p class="muted small">Nothing recorded yet.</p>';
+}
+paint();
+document.querySelectorAll("input,textarea").forEach(el => el.addEventListener("input", () => { clearTimeout(timer); timer = setTimeout(async () => { capture(); await saveState(state); $("statusText").textContent = "Saved"; }, 400); }));
+$("askId").onclick = async () => {
+  capture(); await saveState(state);
+  $("aiOut").textContent = "Checking…";
+  try {
+    const text = await ask({ brief: jobBrief(job), page:"Passport", messages:[{ role:"user", content:"Review the identification. List what is still unknown, and what I should look at on the movement or case before I lock the maker and calibre. Do not guess a year." }] });
+    $("aiOut").textContent = text;
+    job.chat.push({ role:"user", content:"Check identification", at:new Date().toISOString(), page:"Passport" });
+    job.chat.push({ role:"assistant", content:text, at:new Date().toISOString(), page:"Passport" });
+    await saveState(state);
+  } catch (err) { $("aiOut").textContent = err.message; }
+};
+</script>
+</body>
+</html>
