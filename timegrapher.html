@@ -2,6 +2,7 @@
 <html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Timegrapher · Calibre & Co.</title><link rel="stylesheet" href="css/app.css">
+<style>#traceCanvas{display:block;width:100%;height:180px;background:#111315;border-radius:5px}</style>
 </head><body>
 <div class="shell">
 <header class="brandbar"><a class="brand" href="index.html"><div class="brandmark">C&C</div><div><div class="kicker">CALIBRE & CO.</div><h1>Watchmaker's Workbench</h1></div></a></header>
@@ -35,45 +36,63 @@ const median = a => { const b=[...a].sort((x,y)=>x-y); return b[Math.floor(b.len
 const nearest = n => standards.reduce((best,s)=>Math.abs(s-n)<Math.abs(best-n)?s:best);
 const signed = n => (n>=0?"+":"")+n.toFixed(1);
 function hint(t){ $("tgHint").textContent = t; }
+function drawTrace(){
+  const c = $("traceCanvas"), g = c.getContext("2d"), w = c.width, h = c.height;
+  g.fillStyle = "#111315"; g.fillRect(0,0,w,h);
+  g.strokeStyle = "#2c343a"; g.beginPath(); g.moveTo(0,h/2); g.lineTo(w,h/2); g.stroke();
+  const pts = trace.slice(-60);
+  if (!pts.length) return;
+  g.strokeStyle = "#c89b49"; g.lineWidth = 2; g.beginPath();
+  pts.forEach((p,i) => {
+    const px = pts.length === 1 ? 24 : i / (pts.length - 1) * (w - 16) + 8;
+    const py = Math.max(10, Math.min(h - 10, h/2 - p * 1.6));
+    i ? g.lineTo(px, py) : g.moveTo(px, py);
+  });
+  g.stroke();
+  g.fillStyle = "#e6c98a";
+  pts.forEach((p,i) => {
+    const px = pts.length === 1 ? 24 : i / (pts.length - 1) * (w - 16) + 8;
+    const py = Math.max(10, Math.min(h - 10, h/2 - p * 1.6));
+    g.beginPath(); g.arc(px, py, 4, 0, 6.3); g.fill();
+  });
+}
 function renderRuns(){
   const box = $("savedRuns");
   const runs = job && job.timingRuns || [];
   box.innerHTML = runs.length ? runs.slice(0,8).map(r => `<div class="saved-run"><span class="run-position">${r.position}</span><br><strong>${signed(r.rate)} s/day</strong> · ${r.bph} BPH<br>${r.beatError==null?"beat error n/a":r.beatError.toFixed(2)+" ms"} · ${r.beats} beats</div>`).join("") : "<p class='muted small'>No runs yet.</p>";
 }
 function analyse(){
-  if (beats.length < 6) return;
+  if (beats.length < 3) return;
   const ints = [];
   for (let i=1;i<beats.length;i++){ const d=(beats[i]-beats[i-1])*1000; if (d>80 && d<700) ints.push(d); }
-  if (ints.length < 5) return;
+  if (ints.length < 2) return;
   const med = median(ints.slice(-30));
   const raw = 3600000/med;
   const manual = $("targetBph").value !== "auto" ? Number($("targetBph").value) : 0;
   const guess = manual || nearest(raw);
-  if (!locked && Math.abs(raw-guess)/guess < 0.08) locked = guess;
+  if (!locked && ints.length >= 5 && Math.abs(raw-guess)/guess < 0.08) locked = guess;
   const target = locked || guess;
   const nom = 3600000/target;
-  const clean = ints.slice(-40).filter(x => Math.abs(x-nom) < nom*0.08);
-  if (clean.length < 5) return;
-  const meas = mean(clean);
+  const clean = ints.slice(-40).filter(x => Math.abs(x-nom) < nom*0.12);
+  const used = clean.length >= 2 ? clean : ints.slice(-8);
+  const meas = mean(used);
   const rate = (nom/meas - 1) * 86400;
-  const ev = clean.filter((_,i)=>i%2===0), od = clean.filter((_,i)=>i%2===1);
-  const be = (ev.length>2 && od.length>2) ? Math.abs(mean(ev)-mean(od))/2 : null;
+  const ev = used.filter((_,i)=>i%2===0), od = used.filter((_,i)=>i%2===1);
+  const be = (ev.length>1 && od.length>1) ? Math.abs(mean(ev)-mean(od))/2 : null;
   metrics = { rate, bph: target, beatError: be, beats: beats.length, position: $("position").value, interval: meas };
   $("rateVal").textContent = signed(rate);
   $("beatErrVal").textContent = be==null ? "—" : be.toFixed(2);
   $("bphVal").textContent = String(target);
   $("bphMode").textContent = locked ? "locked" : "searching";
   $("lockLabel").textContent = locked ? String(locked) : "Open";
-  trace.push(rate); if (trace.length>180) trace.shift();
-  const c = $("traceCanvas"), x = c.getContext("2d"), w=c.width, h=c.height;
-  x.clearRect(0,0,w,h); x.strokeStyle="#c89b49"; x.beginPath();
-  trace.forEach((p,i)=>{ const px=i/179*w, py=Math.max(8,Math.min(h-8,h/2-p*1.4)); i?x.lineTo(px,py):x.moveTo(px,py); });
-  x.stroke();
+  trace.push(Math.max(-80, Math.min(80, rate)));
+  if (trace.length > 80) trace.shift();
 }
 function onBeat(t){
   beats.push(t); if (beats.length>240) beats.shift();
   $("beatCount").textContent = String(beats.length);
   analyse();
+  drawTrace();
 }
 async function stopAudio(){
   running = false;
@@ -121,11 +140,12 @@ $("startTiming").onclick = async () => {
     $("sensitivity").oninput = () => node && node.port.postMessage({ sens: Number($("sensitivity").value)||2 });
     src.connect(node);
     beats = []; trace = []; locked = $("targetBph").value==="auto" ? 0 : Number($("targetBph").value); metrics = {};
+    drawTrace();
     running = true;
     endAt = ac.currentTime + Number($("sessionSeconds").value);
     $("startTiming").disabled = true; $("stopTiming").disabled = false; $("micLabel").textContent = "Live";
     $("lockLabel").textContent = locked ? String(locked) : "Open";
-    hint("Listening on the sample clock. Case back on the mic.");
+    hint("Listening. Dots appear as beats arrive.");
     tick();
   } catch (e) { hint("Microphone or worklet failed: " + (e.name?e.name+" — ":"") + e.message); }
 };
@@ -134,5 +154,6 @@ state = await loadState();
 job = current(state);
 $("watchTitle").textContent = job.watchName;
 renderRuns();
+drawTrace();
 hint("Ready. Start asks for the microphone.");
 </script></body></html>
