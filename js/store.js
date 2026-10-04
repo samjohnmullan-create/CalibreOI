@@ -1,3 +1,4 @@
+import { ensureSpares } from "./match.js";
 export const STAGES = [
   "Intake","Demagnetising","Strip-down","Inspection","Cleaning",
   "Barrel & Mainspring","Train Test","Escapement","Balance",
@@ -36,7 +37,7 @@ export function uid(){ return "job-" + Math.random().toString(36).slice(2, 8) + 
 export function slugify(s){ return String(s || "watch").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "watch"; }
 export function blankStage(){ return { notes:"", condition:"", parts:"", measure:"", complete:false, photos:[], checks:{}, updatedAt:null }; }
 export function blankPassport(){
-  return { maker:"", model:"", calibre:"", jewels:"", movementType:"", year:"", serial:"", caseNumber:"", reference:"", caseMaterial:"", width:"", height:"", thickness:"", escapement:"", notes:"", history:"", photos:[] };
+  return { maker:"", model:"", calibre:"", jewels:"", movementType:"", movementMm:"", year:"", serial:"", caseNumber:"", reference:"", caseMaterial:"", width:"", height:"", thickness:"", escapement:"", notes:"", history:"", photos:[] };
 }
 export function blankBusiness(){
   return { purchasePrice:"", partsCost:"", labourMinutes:"", labourRate:"", otherCost:"", targetSale:"", actualSale:"", title:"", text:"" };
@@ -70,6 +71,13 @@ export function normalise(job){
   job.timingRuns = job.timingRuns || [];
   job.chat = job.chat || [];
   job.stage = Math.max(0, Math.min(11, job.stage || 0));
+  if (job.status === "spares") ensureSpares(job);
+  else if (typeof job.fitsNote !== "string") job.fitsNote = "";
+  return job;
+}
+export function markSpares(job){
+  job.status = "spares";
+  ensureSpares(job);
   return job;
 }
 function phenix(){
@@ -130,6 +138,9 @@ export function importCard(raw){
     watchName: raw.watchName || "Untitled watch",
     jobId: raw.jobId,
     status: raw.status || "on the bench",
+    writeOff: raw.writeOff || "",
+    fitsNote: raw.fitsNote || "",
+    sparesParts: raw.sparesParts || [],
     passport: raw.passport || {},
     business: raw.business || {},
     timingRuns: raw.timingRuns || [],
@@ -144,6 +155,9 @@ export function exportCard(job){
     jobId: job.jobId,
     watchName: job.watchName,
     status: job.status,
+    writeOff: job.writeOff || "",
+    fitsNote: job.fitsNote || "",
+    sparesParts: job.sparesParts || [],
     importUrl: "https://samjohnmullan-create.github.io/CalibreOI/?card=" + encodeURIComponent(pushId),
     passport: job.passport,
     business: job.business,

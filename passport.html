@@ -10,12 +10,13 @@
 <section class="card">
 <div class="grid2">
 <label>Maker<input id="maker"></label><label>Model<input id="model"></label>
-<label>Calibre<input id="calibre"></label><label>Jewel count<input id="jewels"></label>
-<label>Movement type<input id="movementType" placeholder="bar, 3/4 plate, lever"></label><label>Escapement<input id="escapement"></label>
-<label>Approx. year<input id="year"></label><label>Movement serial<input id="serial"></label>
-<label>Case number<input id="caseNumber"></label><label>Case reference<input id="reference"></label>
-<label>Case material<input id="caseMaterial"></label><label>Width mm<input id="width"></label>
-<label>Height mm<input id="height"></label><label>Thickness mm<input id="thickness"></label>
+<label>Calibre<input id="calibre"></label><label>Movement mm<input id="movementMm" inputmode="decimal" placeholder="pillar plate, not the case"></label>
+<label>Jewel count<input id="jewels"></label><label>Movement type<input id="movementType" placeholder="bar, 3/4 plate, lever"></label>
+<label>Escapement<input id="escapement"></label><label>Approx. year<input id="year"></label>
+<label>Movement serial<input id="serial"></label><label>Case number<input id="caseNumber"></label>
+<label>Case reference<input id="reference"></label><label>Case material<input id="caseMaterial"></label>
+<label>Width mm<input id="width"></label><label>Height mm<input id="height"></label>
+<label>Thickness mm<input id="thickness"></label>
 </div>
 <label>Identification notes<textarea id="notes" rows="3"></textarea></label>
 <label>Research / history<textarea id="history" rows="4"></textarea></label>
@@ -23,9 +24,9 @@
 </section></div>
 <script src="js/nav.js?v=4"></script>
 <script type="module">
-import { loadState, saveState, current } from "./js/store.js";
+import { loadState, saveState, current } from "./js/store.js?v=5";
 const $ = id => document.getElementById(id);
-const keys = ["maker","model","calibre","jewels","movementType","escapement","year","serial","caseNumber","reference","caseMaterial","width","height","thickness","notes","history"];
+const keys = ["maker","model","calibre","movementMm","jewels","movementType","escapement","year","serial","caseNumber","reference","caseMaterial","width","height","thickness","notes","history"];
 let state = await loadState();
 let job = current(state);
 let timer;

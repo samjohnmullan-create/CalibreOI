@@ -27,7 +27,7 @@
 </section></div>
 <script src="js/nav.js?v=4"></script>
 <script type="module">
-import { STAGES, loadState, saveState, current } from "./js/store.js";
+import { STAGES, loadState, saveState, current, markSpares } from "./js/store.js?v=5";
 import { STAGE_COPY } from "./js/stages.js";
 const $ = id => document.getElementById(id);
 let state = await loadState();
@@ -82,8 +82,8 @@ $("writeOff").onclick = async () => {
   capture();
   const reason = prompt("What was lost or damaged?", job.writeOff || "Keyless works lost. Movement is spares.");
   if (!reason) return;
-  job.status = "spares"; job.writeOff = reason; job.completedAt = new Date().toISOString();
-  await saveState(state); location.href = "inventory.html";
+  job.writeOff = reason; markSpares(job); job.completedAt = new Date().toISOString();
+  await saveState(state); location.href = "suppliers.html";
 };
 paint();
 </script></body></html>
