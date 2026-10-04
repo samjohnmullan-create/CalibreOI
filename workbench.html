@@ -21,17 +21,18 @@
     <a class="navbtn" href="assistant.html">Brief</a>
   </nav>
   <div class="hero">
-    <div><div class="kicker">ACTIVE RESTORATION</div><h2 id="watchTitle">Loading</h2><p class="muted" id="watchSub">Stage notes stay on this phone.</p></div>
+    <div><div class="kicker">ACTIVE RESTORATION</div><h2 id="watchTitle">Loading</h2><p class="muted">Pocket-watch order. Tick a step when it is done.</p></div>
     <div class="hero-stats"><div><span>Stage</span><strong id="stageCounter">1/12</strong></div></div>
   </div>
   <div id="stageList" class="stage-list" style="display:flex;gap:6px;overflow:auto;margin-bottom:12px"></div>
   <section class="card">
     <div class="section-head">
       <div><div id="stageEyebrow" class="kicker">STAGE 01</div><h2 id="stageTitle">Intake</h2></div>
-      <label class="checkline"><input id="stageComplete" type="checkbox"><span>Complete</span></label>
+      <label class="checkline"><input id="stageComplete" type="checkbox"><span>Stage complete</span></label>
     </div>
+    <div id="steps"></div>
     <label>Watch name<input id="watchName"></label>
-    <label>Notes<textarea id="stageNotes" rows="6" placeholder="What you found, what you did, what to revisit."></textarea></label>
+    <label>Notes<textarea id="stageNotes" rows="5" placeholder="What you found on this stage."></textarea></label>
     <label>Measurement<input id="stageMeasure" placeholder="arbor 1.20 mm"></label>
     <div class="footer-actions">
       <button id="prevStage" class="btn secondary" type="button">Previous</button>
@@ -43,9 +44,97 @@
 <script>
 (function(){
   var STAGES = ["Intake","Demagnetising","Strip-down","Inspection","Cleaning","Barrel & Mainspring","Train Test","Escapement","Balance","Lubrication","Regulation","Final QC"];
+  var STEPS = {
+    "Intake": [
+      "Record maker, calibre, serial, case marks and jewel count",
+      "Wind and set. Note slip, knock, or a stop",
+      "Check dial up and pendant up before it comes apart",
+      "Photograph dial, case back, movement and markings",
+      "Note hands, crystal, bow and stem"
+    ],
+    "Demagnetising": [
+      "Pass the movement through the coil and draw it out slowly",
+      "Keep the watch moving. Do not stop it in the field",
+      "Check a compass or a free hairspring for residual pull",
+      "Demagnetise again after assembly"
+    ],
+    "Strip-down": [
+      "Let the mainspring down before the ratchet screw comes out",
+      "Hands off, then dial off. Keep dial-foot screws with the dial",
+      "Motion works, then the train. Balance last",
+      "Screws stay with their own bridge",
+      "Photograph each bridge before it lifts"
+    ],
+    "Inspection": [
+      "Peg each jewel hole and look for a pit, a crack or dried oil",
+      "Pivots: bent, scored, or in need of burnishing",
+      "Endshake and sideshake on the train",
+      "Escape teeth, pallet stones and the guard pin",
+      "Staff pivots, roller jewel, hairspring flat and round",
+      "Barrel hook, bridle and wall"
+    ],
+    "Cleaning": [
+      "Peg jewel holes with pegwood until the peg comes out clean",
+      "Pith the pivots",
+      "Hand-clean plates and steel in lighter fluid or naphtha, then rinse",
+      "Isopropyl on unlacquered brass and steel only",
+      "Keep isopropyl off the dial and off shellac",
+      "Ultrasonic in a watch solution. Plates and steel only",
+      "Do not ultrasonic the dial, the pallet fork, or a shellacked hairspring",
+      "Rinse, dry warm, then peg the jewels again",
+      "Hairspring: one-dip or naphtha, then dry it flat"
+    ],
+    "Barrel & Mainspring": [
+      "Fully let down before the cover comes off",
+      "Check the barrel hook and the cover snap",
+      "Blued steel spring: look for set, rust and a tired hook. Oil the wall only",
+      "White alloy spring: do not oil it. Replace it if it is set or the bridle slips",
+      "Slipping wind: bridle dry, over-oiled, or the wall polished",
+      "Close, wind one turn, and confirm it has hooked"
+    ],
+    "Train Test": [
+      "Train in, balance out",
+      "One turn of wind. It should run down freely",
+      "Endshake on each arbor",
+      "No tight hole and no wheel rubbing a bridge"
+    ],
+    "Escapement": [
+      "Lock, drop and draw on both stones",
+      "Guard pin clearance through the passing hollow",
+      "Roller jewel upright and firm in the shellac",
+      "Set the beat before you trust a rate"
+    ],
+    "Balance": [
+      "Staff pivots straight. Burnish if they are scored",
+      "Hairspring flat, round and centred at the collet",
+      "Overcoil clear of the stud and the balance arm",
+      "Poise if the rate changes by position"
+    ],
+    "Lubrication": [
+      "Train pivots: 9010, a small dose, not on the leaves",
+      "Pallet stones: 9415",
+      "Escape teeth: a film only",
+      "Barrel wall: HP1300 only if the spring is blued steel",
+      "Keyless sliding parts: D5 or 9501, not on the clutch teeth",
+      "Do not oil the hairspring"
+    ],
+    "Regulation": [
+      "Dial up, dial down, pendant up, pendant down",
+      "Rate first, beat error second. Amplitude from the phone is an estimate",
+      "Move the regulator a little, then run it again",
+      "A dirty signal does not get a regulation move"
+    ],
+    "Final QC": [
+      "Wind and set through a full turn of the hands",
+      "Hands clear the dial and each other",
+      "Case screws tight, dust cover seated",
+      "Demagnetise again",
+      "Leave it running a day before you call it done"
+    ]
+  };
   var $ = function(id){ return document.getElementById(id); };
   var state = null, job = null;
-  function blank(){ return { notes:"", condition:"", parts:"", measure:"", complete:false, photos:[], updatedAt:null }; }
+  function blank(){ return { notes:"", condition:"", parts:"", measure:"", complete:false, photos:[], updatedAt:null, checks:{} }; }
   function hint(t){ $("statusText").textContent = t; }
   function openDB(){
     return new Promise(function(res, rej){
@@ -87,6 +176,31 @@
     s.complete = $("stageComplete").checked;
     s.updatedAt = new Date().toISOString();
   }
+  function paintSteps(){
+    var name = STAGES[job.stage];
+    var s = job.stages[job.stage];
+    s.checks = s.checks || {};
+    var box = $("steps");
+    box.innerHTML = "";
+    (STEPS[name] || []).forEach(function(text, i){
+      var id = "step-" + i;
+      var label = document.createElement("label");
+      label.className = "checkline";
+      label.style.margin = "8px 0";
+      var input = document.createElement("input");
+      input.type = "checkbox";
+      input.checked = !!s.checks[i];
+      input.onchange = function(){
+        s.checks[i] = input.checked;
+        writeState().then(function(){ hint("Step saved"); });
+      };
+      var span = document.createElement("span");
+      span.textContent = text;
+      label.appendChild(input);
+      label.appendChild(span);
+      box.appendChild(label);
+    });
+  }
   function paint(){
     job = current();
     if (!job){ hint("No job on this phone."); return; }
@@ -102,15 +216,16 @@
     $("stageNotes").value = s.notes || "";
     $("stageMeasure").value = s.measure || "";
     $("stageComplete").checked = !!s.complete;
-    var box = $("stageList");
-    box.innerHTML = "";
+    paintSteps();
+    var list = $("stageList");
+    list.innerHTML = "";
     STAGES.forEach(function(name, i){
       var b = document.createElement("button");
       b.type = "button";
       b.className = "stage-btn" + (i === job.stage ? " active" : "");
       b.textContent = String(i + 1).padStart(2, "0") + " " + name;
       b.onclick = function(){ go(i); };
-      box.appendChild(b);
+      list.appendChild(b);
     });
     hint("On " + STAGES[job.stage]);
   }
