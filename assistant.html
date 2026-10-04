@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Assistant · Calibre & Co.</title>
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<div class="shell">
+  <header class="brandbar">
+    <a class="brand" href="index.html"><div class="brandmark">C&C</div><div><div class="kicker">CALIBRE & CO.</div><h1>Watchmaker's Workbench</h1></div></a>
+    <div class="watch-pill"><span class="dot"></span><div><small>Current watch</small><strong id="headerWatch">—</strong></div></div>
+  </header>
+  <nav class="mainnav">
+    <a class="navbtn" href="index.html">Jobs</a>
+    <a class="navbtn" href="workbench.html">Workbench</a>
+    <a class="navbtn" href="timegrapher.html">Timegrapher</a>
+    <a class="navbtn" href="passport.html">Passport</a>
+    <a class="navbtn" href="business.html">Business</a>
+    <a class="navbtn active" href="assistant.html">Assistant</a>
+  </nav>
+  <div class="hero">
+    <div><div class="kicker">ASSISTANT</div><h2 id="watchTitle">Bench chat</h2><p class="muted">Tied to the open job. Every page that asks a question writes into this thread.</p></div>
+    <div class="hero-stats"><div><span>Link</span><strong id="aiState">—</strong></div></div>
+  </div>
+  <div class="split">
+    <section class="card">
+      <div id="log" class="chat-log"></div>
+      <label style="margin-top:12px">Ask about this watch<textarea id="prompt" rows="3" placeholder="Balance is out of flat after the staff. What should I check before I true it?"></textarea></label>
+      <div class="row">
+        <button id="send" class="btn brass">Send</button>
+        <button id="copyBrief" class="btn secondary" type="button">Copy job brief</button>
+        <a class="btn secondary" href="settings.html">Connect a model</a>
+      </div>
+      <p id="err" class="muted small"></p>
+    </section>
+    <aside class="card">
+      <div class="kicker">WHAT THE MODEL SEES</div>
+      <h3>Job brief</h3>
+      <p class="muted small">Text only. Photos stay on the device. Paste this brief into any chat if the API is not connected yet.</p>
+      <pre id="brief" class="small"></pre>
+    </aside>
+  </div>
+</div>
+<script type="module">
+import { loadState, saveState, current, escapeHtml, jobBrief } from "./js/store.js";
+import { ask, readyLabel } from "./js/ai.js";
+const $ = id => document.getElementById(id);
+let state = await loadState();
+let job = current(state);
+$("headerWatch").textContent = job.watchName;
+$("watchTitle").textContent = job.watchName;
+$("aiState").textContent = readyLabel().includes("not") ? "Off" : "On";
+function paint(){
+  $("brief").textContent = jobBrief(job);
+  $("log").innerHTML = job.chat.length ? job.chat.map(m => `<div class="chat-bubble ${m.role}"><div class="who">${m.role === "user" ? "YOU" : "BENCH"}${m.page ? " · " + escapeHtml(m.page) : ""}</div>${escapeHtml(m.content)}</div>`).join("") : '<p class="muted small">No questions yet. Ask from here, or use the buttons on Workbench, Timegrapher, Passport and Business.</p>';
+  $("log").scrollTop = $("log").scrollHeight;
+}
+paint();
+$("copyBrief").onclick = async () => { await navigator.clipboard.writeText(jobBrief(job)); $("err").textContent = "Brief copied."; };
+$("send").onclick = async () => {
+  const content = $("prompt").value.trim();
+  if (!content) return;
+  $("err").textContent = "";
+  $("send").disabled = true;
+  job.chat.push({ role:"user", content, at:new Date().toISOString(), page:"Assistant" });
+  $("prompt").value = "";
+  paint();
+  try {
+    const history = job.chat.slice(-12).map(m => ({ role: m.role === "assistant" ? "assistant" : "user", content: m.content }));
+    const text = await ask({ brief: jobBrief(job), page:"Assistant", messages: history });
+    job.chat.push({ role:"assistant", content:text, at:new Date().toISOString(), page:"Assistant" });
+    await saveState(state);
+  } catch (err) {
+    $("err").textContent = err.message;
+  }
+  $("send").disabled = false;
+  paint();
+};
+</script>
+</body>
+</html>
