@@ -17,45 +17,39 @@
     <a class="navbtn" href="assistant.html">Assistant</a>
     <a class="navbtn active" href="settings.html">Settings</a>
   </nav>
-  <div class="hero"><div><div class="kicker">CONNECTION</div><h2>How the assistant talks</h2><p class="muted">Pages never call a model directly. They go through <code>js/ai.js</code>. Change the provider here, or replace that file.</p></div></div>
+  <div class="hero"><div><div class="kicker">CHATGPT</div><h2 id="state">ChatGPT not connected</h2><p class="muted">The phone sends the open job. The key stays on the small API, not on this device.</p></div></div>
   <div class="split">
     <section class="card">
-      <label>Mode
-        <select id="mode">
-          <option value="proxy">Server proxy — key stays on Vercel</option>
-          <option value="direct">Direct — key stays on this phone</option>
-        </select>
-      </label>
-      <label>Base URL<input id="baseUrl" placeholder="https://api.x.ai/v1"></label>
-      <label>Model<input id="model" placeholder="grok-4"></label>
-      <label>API key<input id="apiKey" type="password" placeholder="Only used in direct mode" autocomplete="off"></label>
-      <label>Proxy path<input id="proxyPath" placeholder="/api/ai"></label>
+      <label>Secure endpoint<input id="endpoint" placeholder="https://your-api.example/api/ai" autocomplete="off"></label>
       <div class="row"><button id="save" class="btn">Save</button><button id="test" class="btn secondary" type="button">Test</button></div>
       <p id="msg" class="muted small"></p>
     </section>
     <section class="card">
-      <div class="kicker">DROP-IN</div>
-      <h3>Two ways in</h3>
-      <p class="small">Proxy: deploy this folder to Vercel and set <strong>XAI_API_KEY</strong>. Optional <strong>AI_BASE_URL</strong> and <strong>AI_MODEL</strong>. The function is <code>api/ai.js</code>.</p>
-      <p class="small">Direct: any OpenAI-compatible endpoint. Grok is <code>https://api.x.ai/v1</code>. A local model is usually <code>http://localhost:11434/v1</code> if it speaks that API. Browser calls can be blocked by CORS — if the test fails that way, use the proxy.</p>
-      <p class="small">Until a key is connected, Assistant can still copy the job brief. Paste that brief here and I will work the watch with you.</p>
+      <div class="kicker">HOW IT TALKS</div>
+      <h3>One path</h3>
+      <p class="small">GitHub Pages cannot hold a key. The endpoint is a small function that calls OpenAI’s Responses API with <strong>OPENAI_API_KEY</strong>. ChatGPT Plus does not cover that call. API use is billed separately.</p>
+      <p class="small">Every ask already includes the job brief: maker, calibre, stage notes, timing. You do not re-explain the watch. Photos can be sent with an ask once the endpoint is live.</p>
+      <p class="small">Until the endpoint answers, Assistant can still copy the brief.</p>
     </section>
   </div>
 </div>
 <script type="module">
-import { loadSettings, saveSettings, ask } from "./js/ai.js";
+import { loadSettings, saveSettings, ask, readyLabel } from "./js/ai.js";
 const $ = id => document.getElementById(id);
 const s = loadSettings();
-$("mode").value = s.mode; $("baseUrl").value = s.baseUrl; $("model").value = s.model; $("apiKey").value = s.apiKey; $("proxyPath").value = s.proxyPath;
+$("endpoint").value = s.endpoint || "";
+$("state").textContent = readyLabel();
 $("save").onclick = () => {
-  saveSettings({ mode:$("mode").value, baseUrl:$("baseUrl").value.trim(), model:$("model").value.trim(), apiKey:$("apiKey").value.trim(), proxyPath:$("proxyPath").value.trim() || "/api/ai" });
-  $("msg").textContent = "Saved on this device.";
+  saveSettings({ endpoint: $("endpoint").value });
+  $("state").textContent = readyLabel();
+  $("msg").textContent = "Saved on this phone.";
 };
 $("test").onclick = async () => {
   $("save").click();
   $("msg").textContent = "Testing…";
   try {
-    const text = await ask({ brief:"Test job. No watch loaded.", page:"Settings", messages:[{ role:"user", content:"Reply with the single word ready." }] });
+    const text = await ask({ brief: "Test job. No watch loaded.", page: "Settings", messages: [{ role: "user", content: "Reply with the single word ready." }] });
+    $("state").textContent = "ChatGPT connected";
     $("msg").textContent = "Connected. Model said: " + text.slice(0, 180);
   } catch (err) { $("msg").textContent = err.message; }
 };
