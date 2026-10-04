@@ -1,4 +1,3 @@
-/* Shared job store. Pages talk to this, never to each other. */
 export const STAGES = [
   "Intake","Demagnetising","Strip-down","Inspection","Cleaning",
   "Barrel & Mainspring","Train Test","Escapement","Balance",
@@ -20,46 +19,61 @@ function openDB(){
 }
 function get(k){
   return openDB().then(db => new Promise((res, rej) => {
-    const r = db.transaction(STORE).objectStore(STORE).get(k);
-    r.onsuccess = () => res(r.result);
-    r.onerror = () => rej(r.error);
+    const q = db.transaction(STORE).objectStore(STORE).get(k);
+    q.onsuccess = () => res(q.result);
+    q.onerror = () => rej(q.error);
   }));
 }
 function put(k, v){
   return openDB().then(db => new Promise((res, rej) => {
     const tx = db.transaction(STORE, "readwrite");
     tx.objectStore(STORE).put(v, k);
-    tx.oncomplete = res;
+    tx.oncomplete = () => res();
     tx.onerror = () => rej(tx.error);
   }));
 }
 export function uid(){ return "job-" + Math.random().toString(36).slice(2, 8) + Date.now().toString(36).slice(-4); }
-export function blankStage(){ return { notes:"", condition:"", parts:"", measure:"", complete:false, photos:[], updatedAt:null }; }
+export function slugify(s){ return String(s || "watch").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "watch"; }
+export function blankStage(){ return { notes:"", condition:"", parts:"", measure:"", complete:false, photos:[], checks:{}, updatedAt:null }; }
+export function blankPassport(){
+  return { maker:"", model:"", calibre:"", jewels:"", movementType:"", year:"", serial:"", caseNumber:"", reference:"", caseMaterial:"", width:"", height:"", thickness:"", escapement:"", notes:"", history:"", photos:[] };
+}
+export function blankBusiness(){
+  return { purchasePrice:"", partsCost:"", labourMinutes:"", labourRate:"", otherCost:"", targetSale:"", actualSale:"", title:"", text:"" };
+}
 export function blankJob(partial = {}){
   const stages = STAGES.map(() => blankStage());
-  return {
+  const job = {
     id: uid(),
+    pushId: partial.pushId || "",
     jobId: partial.jobId || "CCO-" + String(Math.floor(Math.random()*9000)+1000),
     watchName: partial.watchName || "Untitled watch",
     status: "on the bench",
     stage: 0,
     stages,
     timingRuns: [],
-    passport: { maker:"", calibre:"", year:"", serial:"", caseMaterial:"", escapement:"", notes:"" },
-    business: { purchasePrice:"", repairCost:"", otherCost:"", salePrice:"", title:"", text:"" },
+    passport: blankPassport(),
+    business: blankBusiness(),
     chat: [],
     createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    ...partial,
-    stages: partial.stages || stages
+    updatedAt: new Date().toISOString()
   };
+  return normalise(Object.assign(job, partial, { stages: partial.stages || stages, passport: Object.assign(blankPassport(), partial.passport), business: Object.assign(blankBusiness(), partial.business) }));
+}
+export function normalise(job){
+  job.stages = Array.isArray(job.stages) ? job.stages : [];
+  while (job.stages.length < STAGES.length) job.stages.push(blankStage());
+  job.stages = job.stages.slice(0, STAGES.length).map(s => Object.assign(blankStage(), s, { photos: s.photos || [], checks: s.checks || {} }));
+  job.passport = Object.assign(blankPassport(), job.passport, { photos: (job.passport && job.passport.photos) || [] });
+  job.business = Object.assign(blankBusiness(), job.business);
+  if (!job.business.partsCost && job.business.repairCost) job.business.partsCost = job.business.repairCost;
+  job.timingRuns = job.timingRuns || [];
+  job.chat = job.chat || [];
+  job.stage = Math.max(0, Math.min(11, job.stage || 0));
+  return job;
 }
 function phenix(){
-  return blankJob({
-    jobId: "CCO-0001",
-    watchName: "Ph\u00e9nix 180 Pocket Watch",
-    passport: { maker:"Ph\u00e9nix", calibre:"180", year:"", serial:"", caseMaterial:"", escapement:"", notes:"" }
-  });
+  return blankJob({ jobId:"CCO-0001", watchName:"Ph\u00e9nix 180 Pocket Watch", passport:{ maker:"Ph\u00e9nix", calibre:"180" } });
 }
 export async function loadState(){
   let state = await get("state");
@@ -68,25 +82,17 @@ export async function loadState(){
     state.currentId = state.jobs[0].id;
     await put("state", state);
   }
+  state.jobs = state.jobs.map(normalise);
   if (!state.jobs.find(j => j.id === state.currentId)) state.currentId = state.jobs[0].id;
-  state.jobs.forEach(normalise);
   return state;
 }
-function normalise(job){
-  job.stages = job.stages || [];
-  while (job.stages.length < STAGES.length) job.stages.push(blankStage());
-  job.passport = Object.assign({ maker:"", calibre:"", year:"", serial:"", caseMaterial:"", escapement:"", notes:"" }, job.passport);
-  job.business = Object.assign({ purchasePrice:"", repairCost:"", otherCost:"", salePrice:"", title:"", text:"" }, job.business);
-  job.timingRuns = job.timingRuns || [];
-  job.chat = job.chat || [];
-}
 export async function saveState(state){
-  state.jobs.forEach(j => j.updatedAt = j.updatedAt || new Date().toISOString());
+  state.jobs.forEach(j => { j.updatedAt = new Date().toISOString(); });
   await put("state", state);
 }
 export function current(state){ return state.jobs.find(j => j.id === state.currentId) || state.jobs[0]; }
 export function progress(job){
-  const done = job.stages.filter(s => s.complete).length;
+  const done = (job.stages || []).filter(s => s.complete).length;
   return Math.round(done / STAGES.length * 100);
 }
 export function money(n){
@@ -95,7 +101,55 @@ export function money(n){
   return v.toLocaleString("en-AU", { style:"currency", currency:"AUD" });
 }
 export function escapeHtml(s){
-  return String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&","<":"<",">":">","\"":""","'":"&#39;" }[c]));
+  return String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;" }[c]));
+}
+export function labourCost(b){
+  const mins = Number(b.labourMinutes) || 0;
+  const rate = Number(b.labourRate) || 0;
+  return mins / 60 * rate;
+}
+export function investment(b){
+  return (Number(b.purchasePrice)||0) + (Number(b.partsCost)||0) + (Number(b.otherCost)||0) + labourCost(b);
+}
+export function importCard(raw){
+  const stages = STAGES.map((name, i) => {
+    const src = (raw.stages || []).find(s => s && s.name === name) || (raw.stages || [])[i] || {};
+    return Object.assign(blankStage(), {
+      notes: src.notes || "",
+      condition: src.condition || "",
+      parts: src.parts || "",
+      measure: src.measure || "",
+      complete: !!src.complete,
+      checks: src.checks || {},
+      updatedAt: src.notes ? new Date().toISOString() : null
+    });
+  });
+  const pushId = raw.pushId || slugify(raw.watchName || raw.jobId || "watch");
+  return blankJob({
+    pushId,
+    watchName: raw.watchName || "Untitled watch",
+    jobId: raw.jobId,
+    status: raw.status || "on the bench",
+    passport: raw.passport || {},
+    business: raw.business || {},
+    timingRuns: raw.timingRuns || [],
+    stages
+  });
+}
+export function exportCard(job){
+  const pushId = job.pushId || slugify(job.watchName);
+  return {
+    type: "calibrejob",
+    pushId,
+    jobId: job.jobId,
+    watchName: job.watchName,
+    status: job.status,
+    importUrl: "https://samjohnmullan-create.github.io/CalibreOI/?card=" + encodeURIComponent(pushId),
+    passport: job.passport,
+    business: job.business,
+    timingRuns: job.timingRuns || [],
+    stages: job.stages.map((s, i) => ({ name: STAGES[i], notes: s.notes, condition: s.condition, parts: s.parts, measure: s.measure, complete: s.complete, checks: s.checks || {} }))
+  };
 }
 export async function compressImage(file){
   const url = URL.createObjectURL(file);
@@ -108,23 +162,4 @@ export async function compressImage(file){
     c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
     return c.toDataURL("image/jpeg", 0.72);
   } finally { URL.revokeObjectURL(url); }
-}
-export function jobBrief(job){
-  const st = job.stages.map((s, i) => {
-    const bits = [s.complete ? "done" : "open", s.condition, s.parts, s.measure, s.notes].filter(Boolean);
-    return bits.length ? `${i+1}. ${STAGES[i]}: ${bits.join(" | ")}` : null;
-  }).filter(Boolean);
-  const runs = (job.timingRuns || []).slice(0, 6).map(r =>
-    `${r.position}: ${Number(r.rate).toFixed(1)} s/d, ${r.bph} BPH, BE ${r.beatError == null ? "n/a" : Number(r.beatError).toFixed(2)+" ms"}, amp ${r.amplitude ? Math.round(r.amplitude)+"\u00b0 est." : "n/a"}, ${r.confidence}%`
-  );
-  const p = job.passport, b = job.business;
-  return [
-    `Job ${job.jobId} \u2014 ${job.watchName} (${job.status})`,
-    `Maker ${p.maker || "?"} \u00b7 calibre ${p.calibre || "?"} \u00b7 year ${p.year || "?"} \u00b7 serial ${p.serial || "?"} \u00b7 case ${p.caseMaterial || "?"} \u00b7 escapement ${p.escapement || "?"}`,
-    p.notes ? `Passport notes: ${p.notes}` : "",
-    st.length ? "Service:\n" + st.join("\n") : "Service: no stage notes yet.",
-    runs.length ? "Timing:\n" + runs.join("\n") : "Timing: no saved runs.",
-    `Costs AUD purchase ${b.purchasePrice || 0}, parts ${b.repairCost || 0}, other ${b.otherCost || 0}, expected sale ${b.salePrice || 0}.`,
-    b.text ? `Listing draft: ${b.text}` : ""
-  ].filter(Boolean).join("\n");
 }
