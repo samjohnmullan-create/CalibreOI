@@ -77,7 +77,7 @@ export function partsCost(job){
 }
 export function coverPhoto(job){
   const shots = job && job.photos || {};
-  for (const key of ["hero", "finished", "dial", "intake", "caseback", "movement", "damage", "progress"]) {
+  for (const key of ["intake", "hero", "finished", "dial", "caseback", "movement", "damage", "progress"]) {
     if (shots[key] && shots[key][0]) return shots[key][0];
   }
   if (job && job.passport && job.passport.photos && job.passport.photos[0]) return job.passport.photos[0];
