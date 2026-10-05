@@ -109,6 +109,7 @@ function paintTimer(){
   $("timerBtn").textContent = job.labour.running ? "Pause timer" : "Start timer";
   $("timerRead").textContent = Math.round(booked + live) + " min on cost" + (job.status === "waiting parts" ? " · awaiting parts" : "");
 }
+function paint(){
   job = current(state);
   const names = path();
   const name = names[job.stage];
