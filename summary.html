@@ -42,7 +42,7 @@ const stages = job.stages.map((s,i) => {
   return `<div class='line'><span>${title}</span><strong>${s.complete?"Done. ":""}${bits||"Opened"}</strong></div>`;
 }).join("");
 const runs = (job.timingRuns||[]).slice(0,4).map(r => `<div class='line'><span>${r.position}</span><strong>${r.rate>=0?"+":""}${Number(r.rate).toFixed(0)} s/day</strong></div>`).join("");
-$("sheet").innerHTML = `<img class="wordmark" src="assets/wordmark.png?v=3" alt="Calibre vintage watches"><h2>${job.watchName}</h2><p class='muted small'>${job.jobId}</p>`+lines.map(x=>`<div class='line'><span>${x[0]}</span><strong>${x[1]}</strong></div>`).join("")+(p.notes?`<p>${p.notes}</p>`:"")+`<h3>Work</h3>`+(stages||"<p class='muted'>No stage notes.</p>")+(runs?`<h3>Timing</h3>${runs}`:"");
+$("sheet").innerHTML = `<img class="wordmark" src="assets/wordmark.png?v=4" alt="Calibre vintage watches" style="display:block;width:100%;max-width:420px;height:auto;margin:0 auto 12px"><h2>${job.watchName}</h2><p class='muted small'>${job.jobId}</p>`+lines.map(x=>`<div class='line'><span>${x[0]}</span><strong>${x[1]}</strong></div>`).join("")+(p.notes?`<p>${p.notes}</p>`:"")+`<h3>Work</h3>`+(stages||"<p class='muted'>No stage notes.</p>")+(runs?`<h3>Timing</h3>${runs}`:"");
 function download(name, data){ const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:"application/json"})); a.download = name; a.click(); }
 $("completeJob").onclick = async () => {
   if (!confirm("Mark "+job.watchName+" complete?")) return;
