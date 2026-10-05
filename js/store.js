@@ -78,10 +78,10 @@ export function coverPhoto(job){
   return "";
 }
 export function blankPassport(){
-  return { maker:"", model:"", country:"", year:"", confidence:"Unknown", dialMarkings:"", movementMaker:"", calibre:"", calibreFamily:"", beatRate:"", powerReserve:"", settingType:"", jewels:"", movementType:"", movementMm:"", escapement:"", serial:"", caseNumber:"", reference:"", caseMaterial:"", caseStyle:"", casebackType:"", crystalType:"", crownType:"", lugWidth:"", width:"", height:"", thickness:"", complications:"", waterMark:"", strap:"", hallmarks:"", engravings:"", notes:"", history:"", photos:[] };
+  return { maker:"", model:"", country:"", year:"", confidence:"Unknown", dialMarkings:"", movementMaker:"", calibre:"", calibreFamily:"", beatRate:"", powerReserve:"", settingType:"", jewels:"", movementType:"", movementMm:"", escapement:"", serial:"", caseNumber:"", reference:"", caseMaterial:"", caseStyle:"", casebackType:"", crystalType:"", crownType:"", lugWidth:"", width:"", height:"", thickness:"", complications:"", waterMark:"", strap:"", hallmarks:"", engravings:"", notes:"", history:"", warnings:"", auctionHouse:"", lotNumber:"", auctionDate:"", seller:"", invoiceNumber:"", listingText:"", invoicePhoto:"", sources:[], photos:[] };
 }
 export function blankBusiness(){
-  return { purchasePrice:"", partsCost:"", labourMinutes:"", labourRate:"", otherCost:"", targetSale:"", actualSale:"", title:"", text:"" };
+  return { purchasePrice:"", buyerPremium:"", postage:"", strapCost:"", batteryCost:"", partsCost:"", consumables:"", externalService:"", marketplaceFees:"", shippingToBuyer:"", otherCost:"", labourMinutes:"", labourRate:"", targetSale:"", actualSale:"", minSale:"", title:"", text:"" };
 }
 export function blankJob(partial = {}){
   const stages = STAGES.map(() => blankStage());
@@ -113,7 +113,7 @@ export function normalise(job){
     byName[name] = Object.assign(blankStage(), s, { name, photos: (s && s.photos) || [], checks: (s && s.checks) || {} });
   });
   job.stages = path.map(name => byName[name] || Object.assign(blankStage(), { name }));
-  job.passport = Object.assign(blankPassport(), job.passport, { photos: (job.passport && job.passport.photos) || [] });
+  job.passport = Object.assign(blankPassport(), job.passport, { photos: (job.passport && job.passport.photos) || [], sources: Array.isArray(job.passport && job.passport.sources) ? job.passport.sources : [] });
   job.photos = Object.assign(blankPhotos(), job.photos || {});
   PHOTO_SLOTS.forEach(([key]) => { job.photos[key] = Array.isArray(job.photos[key]) ? job.photos[key] : []; });
   job.business = Object.assign(blankBusiness(), job.business);
@@ -173,9 +173,14 @@ export function labourCost(b){
   const rate = Number(b.labourRate) || 0;
   return mins / 60 * rate;
 }
-export function investment(b){
-  return (Number(b.purchasePrice)||0) + (Number(b.partsCost)||0) + (Number(b.otherCost)||0) + labourCost(b);
+export function cashOut(b){
+  return ["purchasePrice","buyerPremium","postage","strapCost","batteryCost","partsCost","consumables","externalService","marketplaceFees","shippingToBuyer","otherCost"].reduce((n, k) => n + (Number(b[k]) || 0), 0);
 }
+export function investment(b){ return cashOut(b); }
+export function salePrice(b){ return Number(b.actualSale) || Number(b.targetSale) || 0; }
+export function cashProfit(b){ const sale = salePrice(b); return sale ? sale - cashOut(b) : 0; }
+export function profitAfterLabour(b){ return cashProfit(b) - labourCost(b); }
+export function roi(b){ const out = cashOut(b); return out ? cashProfit(b) / out : 0; }
 export function importCard(raw){
   const stages = STAGES.map((name, i) => {
     const src = (raw.stages || []).find(s => s && s.name === name) || (raw.stages || [])[i] || {};

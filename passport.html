@@ -63,20 +63,50 @@
 <label>Hallmarks<textarea id="hallmarks" rows="2"></textarea></label>
 <label>Engravings<textarea id="engravings" rows="2"></textarea></label>
 <label>Identification notes<textarea id="notes" rows="3"></textarea></label>
+<h3>Provenance</h3>
+<div class="grid2">
+<label>Auction house<input id="auctionHouse"></label>
+<label>Lot number<input id="lotNumber"></label>
+<label>Auction date<input id="auctionDate" type="date"></label>
+<label>Seller<input id="seller"></label>
+<label>Invoice number<input id="invoiceNumber"></label>
+</div>
+<label>Original listing<textarea id="listingText" rows="3"></textarea></label>
+<div class="row"><button id="takeInvoice" class="btn secondary" type="button">Invoice photo</button><button id="dropInvoice" class="btn secondary" type="button">Remove invoice</button></div>
+<img id="invoiceImg" alt="" style="display:none;width:120px;height:120px;object-fit:cover;border-radius:8px;margin-top:8px">
+<input id="invoiceFile" type="file" accept="image/*" hidden>
+<h3>Sources</h3>
+<div id="sources"></div>
+<label>Known incorrect / warnings<textarea id="warnings" rows="3" placeholder="Listings that misname the calibre or the date"></textarea></label>
 <label>Research / history<textarea id="history" rows="3"></textarea></label>
 <p id="statusText" class="muted small">Loading…</p>
 </section></div>
 <script src="js/nav.js?v=10"></script>
 <script type="module">
-import { loadState, saveState, current, PHOTO_SLOTS, compressImage, escapeHtml } from "./js/store.js?v=12";
+import { loadState, saveState, current, PHOTO_SLOTS, compressImage, escapeHtml } from "./js/store.js?v=13";
 const $ = id => document.getElementById(id);
-const keys = ["confidence","maker","model","country","year","dialMarkings","complications","strap","movementMaker","calibre","calibreFamily","beatRate","powerReserve","settingType","jewels","movementType","escapement","movementMm","serial","caseStyle","caseMaterial","caseNumber","reference","casebackType","crystalType","crownType","lugWidth","width","height","thickness","waterMark","hallmarks","engravings","notes","history"];
+const keys = ["confidence","maker","model","country","year","dialMarkings","complications","strap","movementMaker","calibre","calibreFamily","beatRate","powerReserve","settingType","jewels","movementType","escapement","movementMm","serial","caseStyle","caseMaterial","caseNumber","reference","casebackType","crystalType","crownType","lugWidth","width","height","thickness","waterMark","hallmarks","engravings","notes","warnings","auctionHouse","lotNumber","auctionDate","seller","invoiceNumber","listingText","history"];
+const SOURCE_KINDS = ["URL","Book","Ranfft","Mikrolisk","Catalogue","Auction listing","Serial database","Other"];
 let state = await loadState();
 let job = current(state);
 let timer;
 function hint(t){ $("statusText").textContent = t; }
 function capture(){ keys.forEach(k => job.passport[k] = $(k).value); }
-function paint(){ job = current(state); $("watchTitle").textContent = job.watchName; keys.forEach(k => $(k).value = job.passport[k] || ""); paintSlots(); hint("Ready"); }
+function paint(){ job = current(state); $("watchTitle").textContent = job.watchName; keys.forEach(k => $(k).value = job.passport[k] || ""); paintSlots(); paintSources(); paintInvoice(); hint("Ready"); }
+function paintInvoice(){
+  const src = job.passport.invoicePhoto;
+  $("invoiceImg").style.display = src ? "block" : "none";
+  if (src) $("invoiceImg").src = src;
+}
+function paintSources(){
+  const rows = (job.passport.sources || []).map((s, i) => `<div class="row"><select class="sk" data-i="${i}">${SOURCE_KINDS.map(k => `<option${k===s.kind?" selected":""}>${k}</option>`).join("")}</select><input class="st" data-i="${i}" value="${escapeHtml(s.title || "")}" placeholder="Title, page, or URL"><button class="btn secondary sx" data-i="${i}" type="button">Remove</button></div>`).join("");
+  $("sources").innerHTML = rows + `<button id="addSource" class="btn secondary" type="button">Add source</button>`;
+  $("sources").querySelectorAll(".sk").forEach(el => el.onchange = () => { job.passport.sources[el.dataset.i].kind = el.value; scheduleSave(); });
+  $("sources").querySelectorAll(".st").forEach(el => el.oninput = () => { job.passport.sources[el.dataset.i].title = el.value; scheduleSave(); });
+  $("sources").querySelectorAll(".sx").forEach(b => b.onclick = async () => { job.passport.sources.splice(Number(b.dataset.i), 1); await saveState(state); paintSources(); });
+  $("addSource").onclick = async () => { job.passport.sources.push({ kind:"URL", title:"" }); await saveState(state); paintSources(); };
+}
+function scheduleSave(){ clearTimeout(timer); timer = setTimeout(async () => { capture(); await saveState(state); hint("Saved"); }, 400); }
 function paintSlots(){
   $("slots").innerHTML = PHOTO_SLOTS.map(([key, label]) => {
     const src = (job.photos[key] || [])[0] || "";
@@ -103,6 +133,9 @@ function paintSlots(){
     hint("Removed");
   });
 }
-keys.forEach(k => $(k).addEventListener("input", () => { clearTimeout(timer); timer = setTimeout(async () => { capture(); await saveState(state); hint("Saved"); }, 400); }));
+keys.forEach(k => $(k).addEventListener("input", scheduleSave));
+$("takeInvoice").onclick = () => $("invoiceFile").click();
+$("invoiceFile").onchange = async () => { const file = $("invoiceFile").files && $("invoiceFile").files[0]; if (!file) return; job.passport.invoicePhoto = await compressImage(file); await saveState(state); paintInvoice(); hint("Invoice saved"); };
+$("dropInvoice").onclick = async () => { job.passport.invoicePhoto = ""; await saveState(state); paintInvoice(); };
 paint();
 </script></body></html>
