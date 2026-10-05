@@ -69,6 +69,16 @@ catch (err) { $("stageList").innerHTML = "<p class='muted'>Bench could not read 
 let job = current(state);
 if (!job) { $("watchTitle").textContent = "No watch open"; $("statusText").textContent = "Pick a job on Jobs."; }
 else {
+document.getElementById("jobTypes").onclick = async (e) => {
+  const b = e.target.closest(".type");
+  if (!b) return;
+  job.jobType = b.dataset.type;
+  normalise(job);
+  job.stage = 0;
+  await saveState(state);
+  paint();
+  $("statusText").textContent = "Path set: " + b.textContent;
+};
 let timer;
 const path = () => stagesFor(job);
 const stage = () => job.stages[job.stage];
