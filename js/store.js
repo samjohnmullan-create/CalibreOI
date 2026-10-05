@@ -156,7 +156,7 @@ export async function loadState(){
     state.currentId = state.jobs[0].id;
     await put("state", state);
   }
-  state.jobs = state.jobs.map(normalise);
+  state.jobs = state.jobs.map(j => { try { return normalise(j); } catch (err) { j.status = j.status || "On bench"; j.stages = j.stages || []; j._error = err.message; return j; } });
   if (!state.jobs.length){ state.currentId = null; return state; }
   if (!state.jobs.find(j => j.id === state.currentId)) state.currentId = state.jobs[0].id;
   return state;

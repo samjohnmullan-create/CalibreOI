@@ -19,11 +19,15 @@
 </div>
 <script src="js/nav.js?v=10"></script>
 <script type="module">
-import { STAGES, loadState, saveState, current, exportCard, money, labourCost, investment, markSpares, PHOTO_SLOTS } from "./js/store.js?v=15";
+import { STAGES, loadState, saveState, current, exportCard, money, labourCost, investment, markSpares, PHOTO_SLOTS } from "./js/store.js?v=16";
 import { STAGE_COPY } from "./js/stages.js?v=9";
 const $ = id => document.getElementById(id);
 const state = await loadState();
 const job = current(state);
+if (!job) {
+  $("sheet").innerHTML = "<p class='muted'>No watch is open. Pick one on Start.</p>";
+  $("statusText").textContent = "No open watch.";
+} else {
 const p = job.passport || {}, b = job.business || {};
 const sale = Number(b.actualSale) || Number(b.targetSale) || 0;
 const total = investment(b);
@@ -31,7 +35,7 @@ $("watchTitle").textContent = job.watchName;
 if (job.status === "complete" || job.status === "sold") $("completeJob").textContent = "Completed";
 if (job.status === "spares") $("writeOff").textContent = "Written off";
 const lines = [["Decision", job.decision],["Status", job.status],["Write-off", job.writeOff],["Maker", p.maker],["Model", p.model],["Calibre", p.calibre],["Jewels", p.jewels],["Serial", p.serial],["Case", [p.caseMaterial, p.caseNumber].filter(Boolean).join(" ")],["Purchase", b.purchasePrice?money(b.purchasePrice):""],["Parts", b.partsCost?money(b.partsCost):""],["Labour", labourCost(b)?money(labourCost(b)):""],["Investment", money(total)],["Sale", sale?money(sale):""],["Profit", sale?money(sale-total):""]].filter(x => x[1]);
-const stages = job.stages.map((s,i) => {
+const stages = (job.stages || []).map((s,i) => {
   const name = s.name || STAGES[i];
   const copy = STAGE_COPY[name] || {};
   const title = copy.title || name;
@@ -69,4 +73,5 @@ $("copyBrief").onclick = async () => {
   const text = ["Write a one-page service summary from this Calibre job. Only claim work that is marked done. No hype.", "", JSON.stringify(exportCard(job), null, 2)].join("\n");
   try { await navigator.clipboard.writeText(text); $("statusText").textContent = "Copied for ChatGPT."; } catch { $("statusText").textContent = "Copy failed. Export the card."; }
 };
+}
 </script></body></html>
