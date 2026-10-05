@@ -80,13 +80,23 @@ document.getElementById("start").addEventListener("click", async function(){
     stage.textContent = "Connected";
     hint.textContent = stream.getAudioTracks()[0].label || "Phone microphone open";
     window.calibreStream = stream;
-    (function tick(){
-      analyser.getByteTimeDomainData(data);
+    var lastBeat = 0;
+    var noise = 0.01;
+    var proc = ac.createScriptProcessor(2048, 1, 1);
+    proc.onaudioprocess = function(ev){
+      var ch = ev.inputBuffer.getChannelData(0);
       var peak = 0;
-      for (var i = 0; i < data.length; i++) { var v = Math.abs(data[i] - 128); if (v > peak) peak = v; }
-      if (level) level.style.width = Math.min(100, peak * 3) + "%";
-      requestAnimationFrame(tick);
-    })();
+      for (var i = 0; i < ch.length; i++) { var a = Math.abs(ch[i]); if (a > peak) peak = a; }
+      noise = noise * 0.98 + peak * 0.02;
+      if (level) level.style.width = Math.min(100, peak * 400) + "%";
+      if (peak > Math.max(0.03, noise * 2.2) && ac.currentTime - lastBeat > 0.09) {
+        lastBeat = ac.currentTime;
+        if (window.onCalibreBeat) window.onCalibreBeat(ac.currentTime);
+        hint.textContent = "Tick heard";
+      }
+    };
+    src.connect(proc);
+    proc.connect(silent);
   } catch (err) {
     status.textContent = "Blocked";
     stage.textContent = "No microphone";
@@ -136,6 +146,9 @@ async function listMics(){
   $("mic").innerHTML = "<option value=''>Phone default</option>" + mics.map(d => `<option value="${d.deviceId}">${d.label || "Microphone"}</option>`).join("");
 }
 function onBeat(t){ beats.push({ t }); if (beats.length > 80) beats.shift(); show(analyse(beats, locked)); if (!locked && last && last.bph) locked = last.bph; }
+window.onCalibreBeat = onBeat;
+$("start").onclick = async () => {
+  if (window.calibreStream) { $("status").textContent = "Listening"; $("hint").textContent = "Timing from the open microphone."; return; }
 async function openMic(){
   const id = $("mic").value;
   const audio = id ? { deviceId:{ exact:id } } : true;
