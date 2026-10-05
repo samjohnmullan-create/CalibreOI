@@ -16,6 +16,10 @@ export const STAGE_PATHS = {
   inspect: ["Intake","Inspection","Final QC"]
 };
 export const STAGES = STAGE_PATHS.manual;
+export function stagesFor(job){
+  const type = job && STAGE_PATHS[job.jobType] ? job.jobType : "manual";
+  return STAGE_PATHS[type];
+}
 export const FAULT_CHIPS = ["Crown/winder non-functional","Movement loose","Strap missing","Case scratched","Water resistance unverified"];
 export const SEVERITIES = ["Minor","Moderate","Critical","Parts required"];
 export const STATUSES = ["Purchased","Awaiting inspection","On bench","Awaiting parts","Ready for photos","Ready to list","Listed","Sold","Spares"];
