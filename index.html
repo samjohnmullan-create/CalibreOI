@@ -32,7 +32,7 @@
 </div>
 <script src="js/nav.js?v=10"></script>
 <script type="module">
-import { STAGES, loadState, saveState, blankJob, current, importCard, money, investment, escapeHtml } from "./js/store.js?v=5";
+import { STAGES, loadState, saveState, blankJob, current, importCard, money, investment, escapeHtml } from "./js/store.js?v=6";
 import { STAGE_COPY } from "./js/stages.js?v=8";
 import { fillResults } from "./js/search.js?v=7";
 const $ = id => document.getElementById(id);
@@ -64,6 +64,14 @@ function openJob(id, href){
 function paint(){
   const job = current(state);
   const jobs = state.jobs;
+  if (!job){
+    $("currentCard").innerHTML = `<div class="kicker">CURRENT WATCH</div><p class="muted">No job on this phone.</p><button id="newFromEmpty" class="btn" type="button">New job</button>`;
+    $("newFromEmpty").onclick = () => $("newJob").click();
+    $("dash").innerHTML = "";
+    $("jobList").innerHTML = "<p class='muted'>None in this group.</p>";
+    $("doneList").innerHTML = "<p class='muted'>Nothing completed yet.</p>";
+    return;
+  }
   const onBench = jobs.filter(bench);
   const waiting = jobs.filter(parts);
   const forSale = jobs.filter(ready);
@@ -99,9 +107,11 @@ function paint(){
         <option value="spares">Spares</option>
       </select></label>
       <a class="btn" href="workbench.html">Open on the bench</a>
+      <button id="deleteJob" class="btn secondary" type="button">Delete job</button>
     </div>`;
   $("watchStatus").value = ["waiting parts","complete","sold","spares"].includes(job.status) ? job.status : "on the bench";
   $("watchStatus").onchange = async () => { job.status = $("watchStatus").value; if (job.status === "complete" || job.status === "sold") job.completedAt = job.completedAt || new Date().toISOString(); await saveState(state); paint(); };
+  $("deleteJob").onclick = () => removeJob(job);
   const cards = [
     ["bench","On the bench", onBench.length],
     ["parts","Awaiting parts", waiting.length],
@@ -115,13 +125,23 @@ function paint(){
   const titles = { bench:"On the bench", parts:"Awaiting parts", ready:"Ready for sale", value:"Ready for sale", invested:"Money still in watches", profit:"With a target sale" };
   $("listTitle").textContent = titles[filter] || "Jobs";
   const listed = filter === "parts" ? waiting : filter === "ready" || filter === "value" ? forSale : filter === "profit" ? holding.filter(j => num(j.business.targetSale) || num(j.business.actualSale)) : filter === "invested" ? holding : onBench;
-  $("jobList").innerHTML = listed.map(j => `<a class="job-card" data-id="${j.id}" href="workbench.html"><div><strong>${escapeHtml(j.watchName)}</strong><div class="muted small">${escapeHtml(j.passport.maker || "")} ${escapeHtml(j.passport.calibre || "")} · ${escapeHtml(stageName(j))}</div></div><div><span class="badge">${money(investment(j.business))}</span></div></a>`).join("") || "<p class='muted'>None in this group.</p>";
-  $("jobList").querySelectorAll(".job-card").forEach(a => a.onclick = e => { e.preventDefault(); openJob(a.dataset.id, "workbench.html"); });
+  $("jobList").innerHTML = listed.map(j => `<a class="job-card" data-id="${j.id}" href="workbench.html"><div><strong>${escapeHtml(j.watchName)}</strong><div class="muted small">${escapeHtml(j.passport.maker || "")} ${escapeHtml(j.passport.calibre || "")} · ${escapeHtml(stageName(j))}</div></div><div><button class="btn secondary del" data-id="${j.id}" type="button">Delete</button></div></a>`).join("") || "<p class='muted'>None in this group.</p>";
+  $("jobList").querySelectorAll(".job-card").forEach(a => a.onclick = e => { if (e.target.closest(".del")) return; e.preventDefault(); openJob(a.dataset.id, "workbench.html"); });
+  $("jobList").querySelectorAll(".del").forEach(b => b.onclick = e => { e.preventDefault(); e.stopPropagation(); removeJob(jobs.find(j => j.id === b.dataset.id)); });
   const done = jobs.filter(j => j.status === "complete" || j.status === "sold").sort((a,b) => String(b.completedAt||b.updatedAt).localeCompare(String(a.completedAt||a.updatedAt))).slice(0, 5);
   $("doneList").innerHTML = done.map(j => `<a class="job-card" data-id="${j.id}" href="summary.html"><div><strong>${escapeHtml(j.watchName)}</strong><div class="muted small">${j.completedAt ? new Date(j.completedAt).toLocaleDateString() : "Completed"} · ${j.status === "sold" ? "Sold" : "Ready"}</div></div></a>`).join("") || "<p class='muted'>Nothing completed yet.</p>";
   $("doneList").querySelectorAll(".job-card").forEach(a => a.onclick = e => { e.preventDefault(); openJob(a.dataset.id, "summary.html"); });
 }
 function jStage(job){ return escapeHtml(String(job.stage + 1).padStart(2,"0") + " " + stageName(job)); }
+async function removeJob(job){
+  if (!job) return;
+  if (!confirm("Delete " + job.watchName + "? This stays deleted on this phone.")) return;
+  state.jobs = state.jobs.filter(j => j.id !== job.id);
+  if (state.currentId === job.id) state.currentId = state.jobs[0] ? state.jobs[0].id : null;
+  await saveState(state);
+  $("statusText").textContent = job.watchName + " deleted.";
+  paint();
+}
 paint();
 $("newJob").onclick = async () => { const n = blankJob({ watchName:"Untitled watch" }); state.jobs.unshift(n); state.currentId = n.id; await saveState(state); location.href = "workbench.html"; };
 $("jobFile").onchange = async (e) => {

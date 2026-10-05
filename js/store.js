@@ -85,12 +85,13 @@ function phenix(){
 }
 export async function loadState(){
   let state = await get("state");
-  if (!state || !Array.isArray(state.jobs) || !state.jobs.length){
+  if (!state || !Array.isArray(state.jobs)){
     state = { jobs:[phenix()], currentId:null };
     state.currentId = state.jobs[0].id;
     await put("state", state);
   }
   state.jobs = state.jobs.map(normalise);
+  if (!state.jobs.length){ state.currentId = null; return state; }
   if (!state.jobs.find(j => j.id === state.currentId)) state.currentId = state.jobs[0].id;
   return state;
 }
