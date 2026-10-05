@@ -20,7 +20,7 @@
 <div class="shell">
 <header class="brandbar"><a class="brand" href="index.html"><div class="brandmark">C&C</div><div><div class="kicker">CALIBRE & CO.</div><h1>Watchmaker's Workbench</h1></div></a></header>
 <nav class="mainnav"><a class="navbtn" href="index.html">Start</a><a class="navbtn active" href="workbench.html" aria-current="page">Bench</a><a class="navbtn" href="timegrapher.html">Time</a><a class="navbtn" href="passport.html">Identity</a><a class="navbtn" href="business.html">Cost</a><a class="navbtn" href="summary.html">Sheet</a><a class="navbtn" href="inventory.html">Stock</a><a class="navbtn" href="suppliers.html">Parts</a></nav>
-<div class="hero"><div><div class="kicker">ON THE BENCH</div><h2 id="watchTitle">Loading</h2><p id="stageAim" class="muted"></p></div><div class="hero-stats"><div><span>Up to</span><strong id="stageCounter">1/12</strong></div></div></div>
+<div class="hero"><div><div class="kicker">ON THE BENCH</div><h2 id="watchTitle">Reading jobs…</h2><p id="stageAim" class="muted"></p></div><div class="hero-stats"><div><span>Up to</span><strong id="stageCounter">1/12</strong></div></div></div>
 <div id="stageList" class="stage-list" style="display:flex;gap:8px;overflow:auto;margin-bottom:12px;min-height:96px">
 <button class="stage-btn active" type="button"><span class="stage-num">01</span><span class="stage-name">Intake</span></button>
 <button class="stage-btn" type="button"><span class="stage-num">02</span><span class="stage-name">Strip</span></button>
@@ -58,14 +58,49 @@
 </div>
 <p class="autosave" id="statusText">Loading…</p>
 </section></div>
+<script>
+(function(){
+  var paths = {
+    manual:["Intake","Demagnetising","Strip-down","Inspection","Cleaning","Barrel","Train","Escapement","Balance","Lubrication","Regulation","Final QC"],
+    automatic:["Intake","Demagnetising","Strip-down","Inspection","Cleaning","Barrel","Rotor","Train","Escapement","Balance","Lubrication","Regulation","Final QC"],
+    quartz:["Intake","Case and strap","Battery","Inspection","Movement secure","Hands","Regulation","Final QC"],
+    pocket:["Intake","Demagnetising","Bow and pendant","Strip-down","Inspection","Cleaning","Barrel","Train","Escapement","Balance","Lubrication","Regulation","Final QC"],
+    clock:["Intake","Case","Inspection","Cleaning","Train","Escapement","Pendulum","Strike","Regulation","Final QC"],
+    inspect:["Intake","Inspection","Final QC"]
+  };
+  var list = document.getElementById("stageList");
+  var note = document.getElementById("statusText");
+  function draw(type){
+    var names = paths[type] || paths.manual;
+    list.innerHTML = names.map(function(name, i){
+      return "<button class=\"stage-btn"+(i===0?" active":"")+"\" type=\"button\"><span class=\"stage-num\">"+String(i+1).padStart(2,"0")+"</span><span class=\"stage-name\">"+name+"</span></button>";
+    }).join("");
+    document.getElementById("stageCounter").textContent = "1/"+names.length;
+    if (note) note.textContent = "Path set. Saving when the job is ready.";
+  }
+  document.getElementById("jobTypes").onclick = function(e){
+    var b = e.target.closest(".type");
+    if (!b) return;
+    sessionStorage.setItem("calibre-type", b.dataset.type);
+    draw(b.dataset.type);
+  };
+  list.onclick = function(e){
+    var b = e.target.closest(".stage-btn");
+    if (!b) return;
+    list.querySelectorAll(".stage-btn").forEach(function(x){ x.classList.remove("active"); });
+    b.classList.add("active");
+    document.getElementById("stageTitle").textContent = b.querySelector(".stage-name").textContent;
+  };
+})();
+</script>
 <script src="js/nav.js?v=17"></script>
 <script type="module">
 import { loadState, saveState, current, markSpares, compressImage, stagesFor, JOB_TYPES, FAULT_CHIPS, SEVERITIES, normalise, blankPart, partsCost, money } from "./js/store.js?v=22";
 import { STAGE_COPY } from "./js/stages.js?v=9";
 const $ = id => document.getElementById(id);
 let state = { jobs:[], currentId:null };
-try { state = await loadState(); }
-catch (err) { $("stageList").innerHTML = "<p class='muted'>Bench could not read the jobs. " + (err.message || "") + "</p>"; }
+try { state = await Promise.race([loadState(), new Promise(function(_, rej){ setTimeout(function(){ rej(new Error("Jobs are slow to read.")); }, 4000); })]); }
+catch (err) { $("statusText").textContent = err.message || "Jobs are slow to read."; }
 let job = current(state);
 if (!job) { $("watchTitle").textContent = "No watch open"; $("statusText").textContent = "Pick a job on Jobs."; }
 else {
