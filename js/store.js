@@ -18,7 +18,14 @@ export const STAGE_PATHS = {
 export const STAGES = STAGE_PATHS.manual;
 export const FAULT_CHIPS = ["Crown/winder non-functional","Movement loose","Strap missing","Case scratched","Water resistance unverified"];
 export const SEVERITIES = ["Minor","Moderate","Critical","Parts required"];
-export function stagesFor(job){ return STAGE_PATHS[job && job.jobType] || STAGE_PATHS.manual; }
+export const STATUSES = ["Purchased","Awaiting inspection","On bench","Awaiting parts","Ready for photos","Ready to list","Listed","Sold","Spares"];
+export const CHANNELS = ["Not listed","eBay","Etsy","Instagram","Shop","Auction","Other"];
+const STATUS_MAP = { "on the bench":"On bench", "waiting parts":"Awaiting parts", "complete":"Ready to list", "sold":"Sold", "spares":"Spares" };
+export function stockAge(job){
+  const from = job.acquiredAt || job.createdAt;
+  if (!from) return 0;
+  return Math.floor((Date.now() - new Date(from).getTime()) / 86400000);
+}
 const DB = "calibre-co-v1";
 const STORE = "kv";
 let dbp;
@@ -127,7 +134,10 @@ export function normalise(job){
   job.diagnosis = job.diagnosis || "";
   job.repairPerformed = job.repairPerformed || "";
   job.stage = Math.max(0, Math.min(path.length - 1, job.stage || 0));
-  if (job.status === "spares") ensureSpares(job);
+  job.status = STATUS_MAP[job.status] || (STATUSES.includes(job.status) ? job.status : "On bench");
+  job.channel = job.channel || "Not listed";
+  job.offers = (Array.isArray(job.offers) ? job.offers : []).filter(o => o && o.amount);
+  if (job.status === "Spares") ensureSpares(job);
   else if (typeof job.fitsNote !== "string") job.fitsNote = "";
   return job;
 }

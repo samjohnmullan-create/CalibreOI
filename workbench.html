@@ -49,7 +49,7 @@
 </section></div>
 <script src="js/nav.js?v=10"></script>
 <script type="module">
-import { loadState, saveState, current, markSpares, compressImage, stagesFor, JOB_TYPES, FAULT_CHIPS, SEVERITIES, normalise, blankPart, partsCost, money } from "./js/store.js?v=13";
+import { loadState, saveState, current, markSpares, compressImage, stagesFor, JOB_TYPES, FAULT_CHIPS, SEVERITIES, normalise, blankPart, partsCost, money } from "./js/store.js?v=14";
 import { STAGE_COPY } from "./js/stages.js?v=9";
 const $ = id => document.getElementById(id);
 let state = await loadState();
@@ -173,7 +173,7 @@ $("timerBtn").onclick = async () => {
   } else { job.labour.running = true; job.labour.startedAt = new Date().toISOString(); }
   await saveState(state); paint();
 };
-$("awaitParts").onclick = async () => { job.status = job.status === "waiting parts" ? "on the bench" : "waiting parts"; await saveState(state); paint(); };
+$("awaitParts").onclick = async () => { job.status = job.status === "Awaiting parts" ? "On bench" : "Awaiting parts"; await saveState(state); paint(); };
 setInterval(() => { if (job && job.labour && job.labour.running) paintTimer(); }, 15000);
 $("jobType").onchange = async () => { capture(); job.jobType = $("jobType").value; normalise(job); job.stage = 0; await saveState(state); paint(); };
 $("takeStage").onclick = () => { $("stagePhoto").setAttribute("capture", "environment"); $("stagePhoto").click(); };

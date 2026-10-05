@@ -24,8 +24,11 @@
 <label>Labour rate / hour<input id="labourRate" type="number" step="0.01"></label>
 <label>Minimum sale<input id="minSale" type="number" step="0.01"></label>
 <label>Target sale<input id="targetSale" type="number" step="0.01"></label>
+<label>Sales channel<select id="channel"><option>Not listed</option><option>eBay</option><option>Etsy</option><option>Instagram</option><option>Shop</option><option>Auction</option><option>Other</option></select></label>
 <label>Actual sale<input id="actualSale" type="number" step="0.01"></label>
 </div>
+<h3>Offers</h3>
+<div id="offers"></div>
 <div class="business-metrics">
 <div><span>Cash out</span><strong id="investVal">$0.00</strong></div>
 <div><span>Cash profit</span><strong id="cashVal">$0.00</strong></div>
@@ -37,7 +40,7 @@
 </section></div>
 <script src="js/nav.js?v=10"></script>
 <script type="module">
-import { loadState, saveState, current, money, cashOut, cashProfit, profitAfterLabour, roi, salePrice } from "./js/store.js?v=13";
+import { loadState, saveState, current, money, cashOut, cashProfit, profitAfterLabour, roi, salePrice } from "./js/store.js?v=14";
 const $ = id => document.getElementById(id);
 const keys = ["purchasePrice","buyerPremium","postage","strapCost","batteryCost","partsCost","consumables","externalService","marketplaceFees","shippingToBuyer","otherCost","labourMinutes","labourRate","minSale","targetSale","actualSale"];
 let state = await loadState();
@@ -54,7 +57,14 @@ function figure(){
   const min = Number(b.minSale) || 0;
   $("warn").textContent = min && sale && sale < min ? "This price is under the minimum sale. It eats the margin." : "Cash profit ignores your time. After labour does not.";
 }
-function paint(){ job = current(state); $("watchTitle").textContent = job.watchName; keys.forEach(k => $(k).value = job.business[k] || ""); figure(); $("statusText").textContent = "Ready"; }
+function paintOffers(){
+  const rows = (job.offers || []).map((o, i) => `<div class="row"><strong>${money(o.amount)}</strong><span class="muted small">${o.note || ""}</span><button class="btn secondary ox" data-i="${i}" type="button">Remove</button></div>`).join("");
+  $("offers").innerHTML = rows + `<div class="row"><input id="offerAmt" inputmode="decimal" placeholder="Offer"><input id="offerNote" placeholder="Who"><button id="addOffer" class="btn secondary" type="button">Add offer</button></div>`;
+  $("offers").querySelectorAll(".ox").forEach(b => b.onclick = async () => { job.offers.splice(Number(b.dataset.i), 1); await saveState(state); paintOffers(); });
+  $("addOffer").onclick = async () => { const amount = $("offerAmt").value; if (!amount) return; job.offers.push({ amount, note:$("offerNote").value, at:new Date().toISOString() }); await saveState(state); paintOffers(); };
+}
+function paint(){ job = current(state); $("watchTitle").textContent = job.watchName; keys.forEach(k => $(k).value = job.business[k] || ""); $("channel").value = job.channel || "Not listed"; paintOffers(); figure(); $("statusText").textContent = "Ready"; }
+$("channel").onchange = async () => { job.channel = $("channel").value; await saveState(state); };
 keys.forEach(k => $(k).addEventListener("input", () => { figure(); clearTimeout(timer); timer = setTimeout(async () => { await saveState(state); $("statusText").textContent = "Saved"; }, 400); }));
 paint();
 </script></body></html>

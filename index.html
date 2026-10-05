@@ -32,17 +32,17 @@
 </div>
 <script src="js/nav.js?v=10"></script>
 <script type="module">
-import { STAGES, loadState, saveState, blankJob, current, importCard, money, investment, escapeHtml, coverPhoto } from "./js/store.js?v=13";
+import { STAGES, loadState, saveState, blankJob, current, importCard, money, investment, escapeHtml, coverPhoto } from "./js/store.js?v=14";
 import { STAGE_COPY } from "./js/stages.js?v=9";
 import { fillResults } from "./js/search.js?v=7";
 const $ = id => document.getElementById(id);
 let state = await loadState();
 let filter = "all";
 const num = v => Number(v) || 0;
-const held = j => j.status !== "sold" && j.status !== "spares";
-const bench = j => held(j) && j.status !== "complete" && j.status !== "waiting parts";
-const parts = j => j.status === "waiting parts";
-const ready = j => j.status === "complete";
+const held = j => j.status !== "Sold" && j.status !== "Spares";
+const bench = j => j.status === "On bench";
+const parts = j => j.status === "Awaiting parts";
+const ready = j => j.status === "Ready to list" || j.status === "Listed" || j.status === "Ready for photos";
 function photo(j){ return coverPhoto(j); }
 function stageName(j){
   const key = (j.stages[j.stage] && j.stages[j.stage].name) || STAGES[j.stage] || STAGES[0];
@@ -95,19 +95,13 @@ function paint(){
       </div>
     </div>
     <div class="row">
-      <label>Status<select id="watchStatus">
-        <option value="on the bench">On the bench</option>
-        <option value="waiting parts">Awaiting parts</option>
-        <option value="complete">Ready for sale</option>
-        <option value="sold">Sold</option>
-        <option value="spares">Spares</option>
-      </select></label>
+      <label>Status<select id="watchStatus">${["Purchased","Awaiting inspection","On bench","Awaiting parts","Ready for photos","Ready to list","Listed","Sold","Spares"].map(s => `<option>${s}</option>`).join("")}</select></label>
       <a class="btn" href="workbench.html">Open on the bench</a>
       <a class="btn secondary" href="passport.html">Photos</a>
       <button id="deleteJob" class="btn secondary" type="button">Delete job</button>
     </div>`;
-  $("watchStatus").value = ["waiting parts","complete","sold","spares"].includes(job.status) ? job.status : "on the bench";
-  $("watchStatus").onchange = async () => { job.status = $("watchStatus").value; if (job.status === "complete" || job.status === "sold") job.completedAt = job.completedAt || new Date().toISOString(); await saveState(state); paint(); };
+  $("watchStatus").value = job.status || "On bench";
+  $("watchStatus").onchange = async () => { job.status = $("watchStatus").value; if (job.status === "Sold" || job.status === "Ready to list") job.completedAt = job.completedAt || new Date().toISOString(); await saveState(state); paint(); };
   $("deleteJob").onclick = () => removeJob(job);
   const cards = [
     ["all","All jobs", jobs.length],
@@ -115,7 +109,7 @@ function paint(){
     ["parts","Awaiting parts", waiting.length],
     ["ready","Ready for sale", forSale.length],
     ["value","Stock value", money(value)],
-    ["invested","Money invested", money(invested)],
+    ["invested","Capital tied up", money(invested)],
     ["profit","Projected profit", money(projected)]
   ];
   $("dash").innerHTML = cards.map(([id, label, value]) => `<button class="stat${filter===id?" on":""}" data-f="${id}" type="button"><span>${label}</span><strong>${value}</strong></button>`).join("");
@@ -126,8 +120,8 @@ function paint(){
   $("jobList").innerHTML = listed.map(j => `<a class="job-card" data-id="${j.id}" href="workbench.html"><div><strong>${escapeHtml(j.watchName)}</strong><div class="muted small">${escapeHtml(j.jobId)} · ${escapeHtml(j.status || "on the bench")} · ${escapeHtml(stageName(j))}</div></div><div><button class="btn secondary del" data-id="${j.id}" type="button">Delete</button></div></a>`).join("") || "<p class='muted'>None in this group.</p>";
   $("jobList").querySelectorAll(".job-card").forEach(a => a.onclick = e => { if (e.target.closest(".del")) return; e.preventDefault(); openJob(a.dataset.id, "workbench.html"); });
   $("jobList").querySelectorAll(".del").forEach(b => b.onclick = e => { e.preventDefault(); e.stopPropagation(); removeJob(jobs.find(j => j.id === b.dataset.id)); });
-  const done = jobs.filter(j => j.status === "complete" || j.status === "sold").sort((a,b) => String(b.completedAt||b.updatedAt).localeCompare(String(a.completedAt||a.updatedAt))).slice(0, 5);
-  $("doneList").innerHTML = done.map(j => `<a class="job-card" data-id="${j.id}" href="summary.html"><div><strong>${escapeHtml(j.watchName)}</strong><div class="muted small">${j.completedAt ? new Date(j.completedAt).toLocaleDateString() : "Completed"} · ${j.status === "sold" ? "Sold" : "Ready"}</div></div></a>`).join("") || "<p class='muted'>Nothing completed yet.</p>";
+  const done = jobs.filter(j => j.status === "Sold" || j.status === "Ready to list" || j.status === "Listed").sort((a,b) => String(b.completedAt||b.updatedAt).localeCompare(String(a.completedAt||a.updatedAt))).slice(0, 5);
+  $("doneList").innerHTML = done.map(j => `<a class="job-card" data-id="${j.id}" href="summary.html"><div><strong>${escapeHtml(j.watchName)}</strong><div class="muted small">${j.status}</div></div></a>`).join("") || "<p class='muted'>Nothing completed yet.</p>";
   $("doneList").querySelectorAll(".job-card").forEach(a => a.onclick = e => { e.preventDefault(); openJob(a.dataset.id, "summary.html"); });
 }
 function jStage(job){ return escapeHtml(String(job.stage + 1).padStart(2,"0") + " " + stageName(job)); }
@@ -150,7 +144,7 @@ $("jobFile").onchange = async (e) => {
 function go(job){
   state.currentId = job.id;
   return saveState(state).then(() => {
-    location.href = job.status === "spares" ? "suppliers.html" : (job.status === "complete" || job.status === "sold") ? "summary.html" : "workbench.html";
+    location.href = job.status === "Spares" ? "suppliers.html" : (job.status === "Sold" || job.status === "Ready to list" || job.status === "Listed") ? "summary.html" : "workbench.html";
   });
 }
 $("q").addEventListener("input", () => fillResults($("found"), state.jobs, $("q").value, go));
