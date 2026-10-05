@@ -54,16 +54,16 @@ document.getElementById("start").addEventListener("click", async function(){
   var status = document.getElementById("status");
   var stage = document.getElementById("stage");
   var hint = document.getElementById("hint");
-  status.textContent = "Asking";
-  stage.textContent = "Opening the permission box";
+  status.textContent = "Opening";
+  stage.textContent = "Opening the phone microphone";
+  hint.textContent = "Using the allowed microphone.";
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
     status.textContent = "No mic";
     hint.textContent = "This browser cannot use a microphone. Open the page in Chrome.";
     return;
   }
-    var devices = await navigator.mediaDevices.enumerateDevices();
-    var phone = devices.filter(function(d){ return d.kind === "audioinput"; }).find(function(d){ return /built-in|phone|mic|microphone/i.test(d.label) && !/usb|holly|receiver/i.test(d.label); });
-    var stream = await navigator.mediaDevices.getUserMedia({ audio: phone ? { deviceId:{ exact:phone.deviceId } } : true });
+  try {
+    var stream = await navigator.mediaDevices.getUserMedia({ audio:true });
     var ac = new AudioContext();
     if (ac.state === "suspended") await ac.resume();
     var src = ac.createMediaStreamSource(stream);
@@ -78,9 +78,8 @@ document.getElementById("start").addEventListener("click", async function(){
     var level = document.getElementById("level");
     status.textContent = "Listening";
     stage.textContent = "Connected";
-    hint.textContent = stream.getAudioTracks()[0].label || "Microphone open";
+    hint.textContent = stream.getAudioTracks()[0].label || "Phone microphone open";
     window.calibreStream = stream;
-    window.calibreAudio = ac;
     (function tick(){
       analyser.getByteTimeDomainData(data);
       var peak = 0;
@@ -90,8 +89,8 @@ document.getElementById("start").addEventListener("click", async function(){
     })();
   } catch (err) {
     status.textContent = "Blocked";
-    stage.textContent = "No permission";
-    hint.textContent = (err.name || "Error") + ". Tap the lock in the address bar and set Microphone to Allow.";
+    stage.textContent = "No microphone";
+    hint.textContent = (err.name || "Error") + " — " + (err.message || "could not open");
   }
 });
 </script>
@@ -143,10 +142,7 @@ async function openMic(){
   return navigator.mediaDevices.getUserMedia({ audio });
 }
 $("start").onclick = async () => {
-  $("hint").textContent = "Asking for the microphone…";
-  $("stage").textContent = "Asking…";
-  $("status").textContent = "Asking";
-  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { $("hint").textContent = "This browser has no microphone. Use Chrome."; return; }
+  if (window.calibreStream) { $("status").textContent = "Listening"; $("hint").textContent = "Phone microphone already open."; return; }
   try {
     stream = window.calibreStream || await openMic();
     await listMics();
