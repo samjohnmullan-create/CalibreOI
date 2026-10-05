@@ -29,7 +29,8 @@ body.advanced .easy-only{display:none}
 <div class="hero"><div><div class="kicker">RATE</div><h2 id="watchTitle">Time</h2></div></div>
 <section class="card tg">
 <div class="tabs"><button id="easyTab" class="btn secondary on" type="button">Easy</button><button id="advTab" class="btn secondary" type="button">Advanced</button></div>
-<p id="stage" class="muted">Listening...</p>
+<label>Microphone<select id="mic"><option value="">Phone default</option></select></label>
+<div class="bar"><span id="level" style="width:0"></span></div>
 <p class="rate" id="rate">—</p>
 <span class="pill poor" id="status">Waiting</span>
 <div class="scale"><div class="band"></div><div class="centre"></div><div class="marker" id="marker" style="left:50%"></div></div>
@@ -84,22 +85,53 @@ function show(result){
 $("easyTab").onclick = () => { document.body.classList.remove("advanced"); $("easyTab").classList.add("on"); $("advTab").classList.remove("on"); };
 $("advTab").onclick = () => { document.body.classList.add("advanced"); $("advTab").classList.add("on"); $("easyTab").classList.remove("on"); };
 async function stop(){ running = false; if (stream) stream.getTracks().forEach(t => t.stop()); if (ac && ac.state !== "closed") { try { await ac.close(); } catch {} } $("start").disabled = false; $("stop").disabled = true; }
+async function listMics(){
+  const devices = await navigator.mediaDevices.enumerateDevices();
+  const mics = devices.filter(d => d.kind === "audioinput");
+  $("mic").innerHTML = "<option value=''>Phone default</option>" + mics.map(d => `<option value="${d.deviceId}">${d.label || "Microphone"}</option>`).join("");
+}
+function onBeat(t){ beats.push({ t }); if (beats.length > 80) beats.shift(); show(analyse(beats, locked)); if (!locked && last && last.bph) locked = last.bph; }
+async function openMic(){
+  const id = $("mic").value;
+  const audio = id ? { deviceId:{ exact:id } } : true;
+  return navigator.mediaDevices.getUserMedia({ audio });
+}
 $("start").onclick = async () => {
   $("hint").textContent = "Asking for the microphone…";
-  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { $("hint").textContent = "This page cannot use the microphone. Open it in Chrome."; return; }
+  $("stage").textContent = "Asking…";
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { $("hint").textContent = "This browser has no microphone. Use Chrome."; return; }
   try {
-    try { stream = await navigator.mediaDevices.getUserMedia({ audio:{ echoCancellation:false, noiseSuppression:false, autoGainControl:false } }); }
-    catch { stream = await navigator.mediaDevices.getUserMedia({ audio:true }); }
+    stream = await openMic();
+    await listMics();
     const track = stream.getAudioTracks()[0];
     ac = new AudioContext(); if (ac.state === "suspended") await ac.resume();
-    await ac.audioWorklet.addModule("js/tg-processor.js");
-    node = new AudioWorkletNode(ac, "calibre-tick");
-    ac.createMediaStreamSource(stream).connect(node);
+    const src = ac.createMediaStreamSource(stream);
     beats = []; trace = []; locked = Number($("bph").value) || 0;
-    node.port.onmessage = (e) => { if (running && e.data.kind === "beat") { beats.push(e.data); if (beats.length > 80) beats.shift(); show(analyse(beats, locked)); if (!locked && last && last.bph) locked = last.bph; } };
+    try {
+      await ac.audioWorklet.addModule("js/tg-processor.js");
+      node = new AudioWorkletNode(ac, "calibre-tick");
+      node.port.onmessage = (e) => {
+        if (!running) return;
+        if (e.data.kind === "level") $("level").style.width = Math.min(100, e.data.pk * 400) + "%";
+        if (e.data.kind === "beat") onBeat(e.data.t);
+      };
+      src.connect(node);
+    } catch {
+      const proc = ac.createScriptProcessor(2048, 1, 1);
+      proc.onaudioprocess = (ev) => {
+        const ch = ev.inputBuffer.getChannelData(0);
+        let pk = 0;
+        for (let i = 0; i < ch.length; i++) { const a = Math.abs(ch[i]); if (a > pk) pk = a; }
+        $("level").style.width = Math.min(100, pk * 400) + "%";
+        if (pk > 0.08 && running) onBeat(ac.currentTime);
+      };
+      src.connect(proc); proc.connect(ac.destination);
+    }
     running = true; $("start").disabled = true; $("stop").disabled = false;
-    $("hint").textContent = "Listening on " + (track.label || "the microphone") + ". Watch on the capsule.";
+    $("stage").textContent = "Listening...";
+    $("hint").textContent = "Connected: " + (track.label || "microphone") + ". The bar should move.";
   } catch (err) {
+    $("stage").textContent = "No microphone";
     $("hint").textContent = "Microphone failed: " + (err.name ? err.name + " — " : "") + (err.message || "permission blocked");
     if (stream) stream.getTracks().forEach(t => t.stop());
   }
