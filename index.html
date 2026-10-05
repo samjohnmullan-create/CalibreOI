@@ -32,11 +32,14 @@
 </div>
 <script src="js/nav.js?v=10"></script>
 <script type="module">
-import { STAGES, loadState, saveState, blankJob, current, importCard, money, investment, escapeHtml, coverPhoto } from "./js/store.js?v=15";
+import { STAGES, loadState, saveState, blankJob, current, importCard, money, investment, escapeHtml, coverPhoto } from "./js/store.js?v=17";
 import { STAGE_COPY } from "./js/stages.js?v=9";
 import { fillResults } from "./js/search.js?v=7";
 const $ = id => document.getElementById(id);
-let state = await loadState();
+let state = { jobs:[], currentId:null };
+try { state = await loadState(); }
+catch (err) { $("jobList").innerHTML = "<p class='muted'>Jobs could not load. " + escapeHtml(err && err.message || "") + "</p>"; }
+if (!state || !Array.isArray(state.jobs)) state = { jobs:[], currentId:null };
 let filter = "all";
 const num = v => Number(v) || 0;
 const held = j => j.status !== "Sold" && j.status !== "Spares";
