@@ -16,7 +16,7 @@ document.querySelectorAll("nav.mainnav").forEach(function(nav){
   var here = (location.pathname.split("/").pop() || "index.html").split("?")[0];
   if (!here || here.indexOf(".") === -1) here = "index.html";
   var items = [
-    ["index.html","Jobs","M4 7h16v12H4zM8 7V5h8v2"],
+    ["index.html","Home","M4 7h16v12H4zM8 7V5h8v2"],
     ["workbench.html?v=6","Bench","M4 18h16M6 18V8h4v10M14 18V5h4v13"],
     ["timegrapher.html?v=3","Rate","M12 7v6l4 2M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z"],
     ["passport.html","Watch","M8 4h8v3a4 4 0 0 1-8 0zM8 20h8v-3a4 4 0 0 1-8 0z"],
