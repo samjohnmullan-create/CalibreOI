@@ -24,7 +24,7 @@
 <div id="stageList" class="stage-list" style="display:flex;gap:8px;overflow:auto;margin-bottom:12px"></div>
 <section class="card">
 <div class="section-head"><div><div id="stageEyebrow" class="kicker">STAGE 01</div><h2 id="stageTitle">Initial check</h2></div><label class="checkline"><input id="stageComplete" type="checkbox"><span>Stage complete</span></label></div>
-<label id="decisionWrap">Job type<select id="jobType"></select></label>
+<div id="jobTypes" class="row"></div>
 <label id="decisionWrap2">Decision<select id="decision"><option value="">Not decided</option><option>Leave it</option><option>Regulate only</option><option>Case, hands or crystal</option><option>Partial</option><option>Full service</option></select></label>
 <p id="decisionNote" class="muted small"></p>
 <div id="steps"></div>
@@ -133,17 +133,15 @@ function paint(){
   $("stageCounter").textContent = upto < 0 ? names.length + "/" + names.length : (upto + 1) + "/" + names.length;
   $("stageEyebrow").textContent = "STAGE " + String(job.stage + 1).padStart(2, "0");
   $("stageTitle").textContent = copy.title; $("stageAim").textContent = copy.aim;
-  $("jobType").innerHTML = JOB_TYPES.map(([id, label]) => `<option value="${id}">${label}</option>`).join("");
-  $("jobType").value = job.jobType || "manual";
-  $("jobType").onchange = async () => {
+  $("jobTypes").innerHTML = JOB_TYPES.map(([id, label]) => `<button class="btn secondary type${job.jobType===id?" on":""}" data-type="${id}" type="button">${label}</button>`).join("");
+  $("jobTypes").querySelectorAll(".type").forEach(b => b.onclick = async () => {
     capture();
-    job.jobType = $("jobType").value;
+    job.jobType = b.dataset.type;
     normalise(job);
     job.stage = 0;
     await saveState(state);
     paint();
-    hint("Path set to " + stagesFor(job).length + " stages.");
-  };
+  });
   $("decision").value = job.decision || "";
   $("decisionNote").textContent = job.stage === 0 ? "A quartz watch does not take the barrel and balance path." : "";
   $("stageNotes").value = s.notes || ""; $("stageCondition").value = s.condition || ""; $("stageMeasure").value = s.measure || ""; $("stageComplete").checked = !!s.complete;
