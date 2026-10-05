@@ -112,11 +112,24 @@ function paintTimer(){
 function paint(){
   job = current(state);
   const names = path();
-  const name = names[job.stage];
+  const name = names[job.stage] || names[0];
   const copy = STAGE_COPY[name] || { title: name, aim: "", steps: [] };
-  const s = stage(); s.checks = s.checks || {};
-  $("watchTitle").textContent = job.watchName; $("watchName").value = job.watchName || "";
+  const s = stage() || job.stages[0];
+  s.checks = s.checks || {};
   const upto = job.stages.findIndex((st, i) => !stageDone(st, i));
+  const list = $("stageList");
+  list.innerHTML = "";
+  names.forEach((key,i) => {
+    const done = stageDone(job.stages[i], i);
+    const title = STAGE_COPY[key] ? STAGE_COPY[key].title : key;
+    const b = document.createElement("button"); b.type = "button";
+    b.className = "stage-btn" + (i === job.stage ? " active" : "") + (done ? " done" : "") + (i === upto ? " upto" : "");
+    b.innerHTML = `<span class="stage-check">${done ? "✓" : ""}</span><span class="stage-num">${String(i+1).padStart(2,"0")}</span><span class="stage-name">${title}${(job.stages[i].photos || []).length ? " · " + job.stages[i].photos.length : ""}</span>`;
+    b.onclick = async () => { capture(); job.stage = i; await saveState(state); paint(); };
+    list.appendChild(b);
+    if (i === job.stage) requestAnimationFrame(() => b.scrollIntoView({ inline: "center", block: "nearest" }));
+  });
+  $("watchTitle").textContent = job.watchName; $("watchName").value = job.watchName || "";
   $("stageCounter").textContent = upto < 0 ? names.length + "/" + names.length : (upto + 1) + "/" + names.length;
   $("stageEyebrow").textContent = "STAGE " + String(job.stage + 1).padStart(2, "0");
   $("stageTitle").textContent = copy.title; $("stageAim").textContent = copy.aim;
@@ -126,9 +139,7 @@ function paint(){
   $("decisionNote").textContent = job.stage === 0 ? "A quartz watch does not take the barrel and balance path." : "";
   $("stageNotes").value = s.notes || ""; $("stageCondition").value = s.condition || ""; $("stageMeasure").value = s.measure || ""; $("stageComplete").checked = !!s.complete;
   $("diagnosis").value = job.diagnosis || ""; $("repair").value = job.repairPerformed || "";
-  paintFaults();
-  paintParts();
-  paintTimer();
+  try { paintFaults(); paintParts(); paintTimer(); } catch (err) { hint(err.message); }
   s.photos = s.photos || [];
   $("stageShots").innerHTML = s.photos.map((src, i) => `<figure style="margin:0;position:relative"><img src="${src}" alt="" style="width:72px;height:72px;object-fit:cover;border-radius:8px"><button class="shot-x" data-i="${i}" type="button" aria-label="Remove photo" style="position:absolute;top:4px;right:4px;width:22px;height:22px;border:0;border-radius:50%;background:rgba(23,25,27,.72);color:#fff">×</button></figure>`).join("");
   $("stageShots").querySelectorAll(".shot-x").forEach(btn => btn.onclick = async () => { s.photos.splice(Number(btn.dataset.i), 1); await saveState(state); paint(); });
@@ -149,17 +160,6 @@ function paint(){
       btns.appendChild(b);
     });
     row.appendChild(p); row.appendChild(btns); box.appendChild(row);
-  });
-  const list = $("stageList"); list.innerHTML = "";
-  path().forEach((key,i) => {
-    const done = stageDone(job.stages[i], i);
-    const title = STAGE_COPY[key] ? STAGE_COPY[key].title : key;
-    const b = document.createElement("button"); b.type = "button";
-    b.className = "stage-btn" + (i === job.stage ? " active" : "") + (done ? " done" : "") + (i === upto ? " upto" : "");
-    b.innerHTML = `<span class="stage-check">${done ? "✓" : ""}</span><span class="stage-num">${String(i+1).padStart(2,"0")}</span><span class="stage-name">${title}${(job.stages[i].photos || []).length ? " · " + job.stages[i].photos.length : ""}</span>`;
-    b.onclick = async () => { capture(); job.stage = i; await saveState(state); paint(); };
-    list.appendChild(b);
-    if (i === job.stage) requestAnimationFrame(() => b.scrollIntoView({ inline: "center", block: "nearest" }));
   });
   hint("On " + copy.title);
 }
