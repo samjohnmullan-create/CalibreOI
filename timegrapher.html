@@ -20,7 +20,6 @@
 .trace{width:100%;height:120px;background:#111315;border-radius:12px}
 .adv{display:none}
 body.advanced .adv{display:block}
-body.advanced .easy-only{display:none}
 </style>
 </head><body>
 <div class="shell">
@@ -29,85 +28,28 @@ body.advanced .easy-only{display:none}
 <div class="hero"><div><div class="kicker">RATE</div><h2 id="watchTitle">Time</h2></div></div>
 <section class="card tg">
 <div class="tabs"><button id="easyTab" class="btn secondary on" type="button">Easy</button><button id="advTab" class="btn secondary" type="button">Advanced</button></div>
-<label>Microphone<select id="mic"><option value="">Phone microphone</option></select></label>
-<div class="bar"><span id="level" style="width:0"></span></div>
 <p class="rate" id="rate">—</p>
 <span class="pill poor" id="status">Tap Start</span>
 <div class="scale"><div class="band"></div><div class="centre"></div><div class="marker" id="marker" style="left:50%"></div></div>
 <div class="ticks"><span>Slow</span><span>Perfect</span><span>Fast</span></div>
-<p id="advice">Put the watch on the capsule, then start.</p>
-<div class="easy-only"><span class="muted small">Stability</span><div class="bar"><span id="stab" style="width:0"></span></div><p id="stabLabel" class="small">Not enough data</p></div>
+<p id="advice">Put the watch by the phone microphone, then start.</p>
+<div class="bar"><span id="level" style="width:0"></span></div>
+<p id="stabLabel" class="small">Not enough data</p>
 <canvas class="trace" id="trace" width="900" height="160"></canvas>
 <div class="adv">
-<div class="grid2">
-<label>BPH<select id="bph"><option value="0">Auto</option><option>14400</option><option>18000</option><option>19800</option><option>21600</option><option>25200</option><option>28800</option><option>36000</option></select></label>
 <label>Tag<select id="phase"><option>Before service</option><option>During service</option><option>After service</option><option>Regulation test</option><option>Final test</option></select></label>
+<p class="small" id="detail">Beat and confidence appear here.</p>
 </div>
-<p class="small" id="detail">Beat, confidence and sample count appear here.</p>
-</div>
-<div class="row"><button id="start" class="btn" type="button">Start</button><button id="stop" class="btn secondary" type="button" disabled>Stop</button><button id="save" class="btn secondary" type="button">Save run</button></div>
+<div class="row"><button id="start" class="btn" type="button">Start</button><button id="stop" class="btn secondary" type="button">Stop</button><button id="save" class="btn secondary" type="button">Save run</button></div>
 <p id="hint" class="muted small"></p>
 </section>
 </div>
-<script>
-document.getElementById("start").addEventListener("click", async function(){
-  var status = document.getElementById("status");
-  var stage = document.getElementById("stage");
-  var hint = document.getElementById("hint");
-  status.textContent = "Opening";
-  stage.textContent = "Opening the phone microphone";
-  hint.textContent = "Using the allowed microphone.";
-  try {
-    var stream = window.calibreStream;
-    if (!stream) {
-      var ask = navigator.mediaDevices.getUserMedia({ audio:true });
-      var timed = new Promise(function(_, rej){ setTimeout(function(){ rej(new Error("Microphone did not answer")); }, 5000); });
-      stream = await Promise.race([ask, timed]);
-      window.calibreStream = stream;
-    }
-    status.textContent = "Listening";
-    stage.textContent = "Microphone open";
-    hint.textContent = stream.getAudioTracks()[0].label || "Phone microphone open";
-    var ac = window.calibreAudio || new AudioContext();
-    window.calibreAudio = ac;
-    if (ac.state === "suspended") await ac.resume();
-    var src = ac.createMediaStreamSource(stream);
-    var silent = ac.createGain();
-    silent.gain.value = 0;
-    var level = document.getElementById("level");
-    var lastBeat = 0;
-    var noise = 0.01;
-    var proc = ac.createScriptProcessor(2048, 1, 1);
-    proc.onaudioprocess = function(ev){
-      var ch = ev.inputBuffer.getChannelData(0);
-      var peak = 0;
-      for (var i = 0; i < ch.length; i++) { var a = Math.abs(ch[i]); if (a > peak) peak = a; }
-      noise = noise * 0.98 + peak * 0.02;
-      if (level) level.style.width = Math.min(100, peak * 400) + "%";
-      if (peak > Math.max(0.03, noise * 2.2) && ac.currentTime - lastBeat > 0.09) {
-        lastBeat = ac.currentTime;
-        if (window.onCalibreBeat) window.onCalibreBeat(ac.currentTime);
-        hint.textContent = "Tick heard";
-      }
-    };
-    src.connect(proc);
-    proc.connect(silent);
-    silent.connect(ac.destination);
-    stage.textContent = "Timing";
-  } catch (err) {
-  } catch (err) {
-    status.textContent = "Blocked";
-    stage.textContent = "No microphone";
-    hint.textContent = (err.name || "Error") + " — " + (err.message || "could not open");
-  }
-});
-</script>
 <script src="js/nav.js?v=20"></script>
 <script type="module">
 import { loadState, saveState, current } from "./js/store.js?v=22";
 import { analyse, advice } from "./js/timing-engine.js?v=1";
 const $ = id => document.getElementById(id);
-let state, job, stream, ac, node, running = false, beats = [], trace = [], locked = 0, last = null;
+let state, job, stream, ac, proc, beats = [], trace = [], last = null, running = false;
 function drawTrace(){
   const c = $("trace"), g = c.getContext("2d"), w = c.width, h = c.height;
   g.fillStyle = "#111315"; g.fillRect(0,0,w,h);
@@ -121,87 +63,76 @@ function drawTrace(){
 }
 function show(result){
   last = result;
-  if (!result || !result.ready){ $("stage").textContent = result ? result.stage : "Listening..."; $("rate").textContent = "—"; return; }
+  if (!result || !result.ready){ $("advice").textContent = result ? result.stage : "Listening"; return; }
   const rate = result.rateSecondsPerDay;
-  $("stage").textContent = result.stage;
   $("rate").textContent = (rate >= 0 ? "+" : "") + rate.toFixed(0);
   $("status").textContent = result.status === "good" ? "Good" : result.status === "attention" ? "Needs attention" : result.status === "adjust" ? "Needs adjustment" : "Poor signal";
   $("status").className = "pill " + result.status;
   $("marker").style.left = Math.max(6, Math.min(94, 50 + rate / 60 * 50)) + "%";
   $("advice").textContent = advice(result);
-  $("stab").style.width = Math.round(result.confidence * 100) + "%";
   $("stabLabel").textContent = result.stabilityLabel;
-  $("detail").textContent = "BPH " + result.bph + " · beat " + (result.beatErrorMs == null ? "not enough data" : result.beatErrorMs.toFixed(1) + " ms") + " · confidence " + Math.round(result.confidence * 100) + "% · " + result.samples + " intervals · jitter " + result.jitterMs.toFixed(1) + " ms";
+  $("detail").textContent = "BPH " + result.bph + " · beat " + (result.beatErrorMs == null ? "not enough data" : result.beatErrorMs.toFixed(1) + " ms") + " · " + result.samples + " intervals";
   trace.push(rate); if (trace.length > 60) trace.shift();
   drawTrace();
 }
+function hear(t){
+  beats.push({ t });
+  if (beats.length > 80) beats.shift();
+  show(analyse(beats, 0));
+  $("hint").textContent = beats.length + " ticks";
+}
 $("easyTab").onclick = () => { document.body.classList.remove("advanced"); $("easyTab").classList.add("on"); $("advTab").classList.remove("on"); };
 $("advTab").onclick = () => { document.body.classList.add("advanced"); $("advTab").classList.add("on"); $("easyTab").classList.remove("on"); };
-async function stop(){ running = false; if (stream) stream.getTracks().forEach(t => t.stop()); if (ac && ac.state !== "closed") { try { await ac.close(); } catch {} } $("start").disabled = false; $("stop").disabled = true; }
-async function listMics(){
-  const devices = await navigator.mediaDevices.enumerateDevices();
-  const mics = devices.filter(d => d.kind === "audioinput");
-  $("mic").innerHTML = "<option value=''>Phone default</option>" + mics.map(d => `<option value="${d.deviceId}">${d.label || "Microphone"}</option>`).join("");
-}
-function onBeat(t){ beats.push({ t }); if (beats.length > 80) beats.shift(); show(analyse(beats, locked)); if (!locked && last && last.bph) locked = last.bph; }
-window.onCalibreBeat = onBeat;
 $("start").onclick = async () => {
-  if (window.calibreStream) { $("status").textContent = "Listening"; $("hint").textContent = "Timing from the open microphone."; return; }
-async function openMic(){
-  const id = $("mic").value;
-  const audio = id ? { deviceId:{ exact:id } } : true;
-  return navigator.mediaDevices.getUserMedia({ audio });
-}
-$("start").onclick = async () => {
-  if (window.calibreStream) { $("status").textContent = "Listening"; $("hint").textContent = "Phone microphone already open."; return; }
+  $("status").textContent = "Opening";
+  $("hint").textContent = "Opening the phone microphone.";
   try {
-    stream = window.calibreStream || await openMic();
-    await listMics();
-    const track = stream.getAudioTracks()[0];
-    ac = new AudioContext(); if (ac.state === "suspended") await ac.resume();
+    stream = await navigator.mediaDevices.getUserMedia({ audio:true });
+    ac = new AudioContext();
+    if (ac.state === "suspended") await ac.resume();
     const src = ac.createMediaStreamSource(stream);
-    beats = []; trace = []; locked = Number($("bph").value) || 0;
-    try {
-      await ac.audioWorklet.addModule("js/tg-processor.js");
-      node = new AudioWorkletNode(ac, "calibre-tick");
-      node.port.onmessage = (e) => {
-        if (!running) return;
-        if (e.data.kind === "level") $("level").style.width = Math.min(100, e.data.pk * 400) + "%";
-        if (e.data.kind === "beat") onBeat(e.data.t);
-      };
-      src.connect(node);
-      const silent = ac.createGain(); silent.gain.value = 0;
-      node.connect(silent); silent.connect(ac.destination);
-    } catch {
-      const proc = ac.createScriptProcessor(2048, 1, 1);
-      proc.onaudioprocess = (ev) => {
-        const ch = ev.inputBuffer.getChannelData(0);
-        let pk = 0;
-        for (let i = 0; i < ch.length; i++) { const a = Math.abs(ch[i]); if (a > pk) pk = a; }
-        $("level").style.width = Math.min(100, pk * 400) + "%";
-        if (pk > 0.08 && running) onBeat(ac.currentTime);
-      };
-      src.connect(proc); proc.connect(ac.destination);
-    }
-    running = true; $("start").disabled = true; $("stop").disabled = false;
-    $("stage").textContent = "Listening...";
+    const silent = ac.createGain();
+    silent.gain.value = 0;
+    proc = ac.createScriptProcessor(2048, 1, 1);
+    let lastBeat = 0, noise = 0.01;
+    proc.onaudioprocess = (ev) => {
+      const ch = ev.inputBuffer.getChannelData(0);
+      let peak = 0;
+      for (let i = 0; i < ch.length; i++) { const a = Math.abs(ch[i]); if (a > peak) peak = a; }
+      noise = noise * 0.98 + peak * 0.02;
+      $("level").style.width = Math.min(100, peak * 400) + "%";
+      if (running && peak > Math.max(0.03, noise * 2.2) && ac.currentTime - lastBeat > 0.09) {
+        lastBeat = ac.currentTime;
+        hear(ac.currentTime);
+      }
+    };
+    src.connect(proc);
+    proc.connect(silent);
+    silent.connect(ac.destination);
+    running = true;
+    beats = [];
     $("status").textContent = "Listening";
-    $("status").className = "pill attention";
-    $("hint").textContent = "Connected: " + (track.label || "microphone") + ". The bar should move.";
+    $("hint").textContent = stream.getAudioTracks()[0].label || "Phone microphone open";
   } catch (err) {
-    $("stage").textContent = "No microphone";
-    $("hint").textContent = "Microphone failed: " + (err.name ? err.name + " — " : "") + (err.message || "permission blocked");
-    if (stream) stream.getTracks().forEach(t => t.stop());
+    $("status").textContent = "Blocked";
+    $("hint").textContent = (err.name || "Error") + " — " + (err.message || "could not open");
   }
 };
-$("stop").onclick = () => stop();
+$("stop").onclick = () => {
+  running = false;
+  if (stream) stream.getTracks().forEach(t => t.stop());
+  if (ac) ac.close();
+  $("status").textContent = "Stopped";
+};
 $("save").onclick = async () => {
-  if (!last || !last.ready) { $("hint").textContent = "Not enough data to save."; return; }
+  if (!last || !last.ready || !job) { $("hint").textContent = "Not enough data to save."; return; }
   job.timingRuns = job.timingRuns || [];
   job.timingRuns.unshift({ ...last, phase:$("phase").value, position:"Dial up" });
   await saveState(state);
-  $("hint").textContent = "Saved on this job as " + $("phase").value + ".";
+  $("hint").textContent = "Saved as " + $("phase").value + ".";
 };
-state = await loadState(); job = current(state); $("watchTitle").textContent = job ? job.watchName : "Time";
+state = await loadState();
+job = current(state);
+$("watchTitle").textContent = job ? job.watchName : "Time";
 drawTrace();
 </script></body></html>
