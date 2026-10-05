@@ -49,6 +49,12 @@ body.advanced .easy-only{display:none}
 <p id="hint" class="muted small"></p>
 </section>
 </div>
+<script>
+document.getElementById("start").addEventListener("click", function(){
+  var stage = document.getElementById("stage");
+  if (stage && stage.textContent === "Listening...") stage.textContent = "Button pressed";
+});
+</script>
 <script src="js/nav.js?v=18"></script>
 <script type="module">
 import { loadState, saveState, current } from "./js/store.js?v=22";
@@ -116,6 +122,8 @@ $("start").onclick = async () => {
         if (e.data.kind === "beat") onBeat(e.data.t);
       };
       src.connect(node);
+      const silent = ac.createGain(); silent.gain.value = 0;
+      node.connect(silent); silent.connect(ac.destination);
     } catch {
       const proc = ac.createScriptProcessor(2048, 1, 1);
       proc.onaudioprocess = (ev) => {
