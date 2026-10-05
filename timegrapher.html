@@ -51,11 +51,13 @@ body.advanced .easy-only{display:none}
 </div>
 <script>
 document.getElementById("start").addEventListener("click", function(){
+  var status = document.getElementById("status");
   var stage = document.getElementById("stage");
-  if (stage && stage.textContent === "Listening...") stage.textContent = "Button pressed";
+  if (status) status.textContent = "Asking";
+  if (stage) stage.textContent = "Button pressed";
 });
 </script>
-<script src="js/nav.js?v=18"></script>
+<script src="js/nav.js?v=19"></script>
 <script type="module">
 import { loadState, saveState, current } from "./js/store.js?v=22";
 import { analyse, advice } from "./js/timing-engine.js?v=1";
