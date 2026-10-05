@@ -12,6 +12,7 @@
 <div class="grid2">
 <label>Movement<select id="kind"><option value="in">Money in</option><option value="out">Money spent</option><option value="taken">Funds taken</option></select></label>
 <label>On<select id="category"><option>Watches</option><option>Parts</option><option>Tools</option><option>Consumables</option></select></label>
+<label>How<select id="method"><option>EFT</option><option>Transfer</option><option>Cash</option></select></label>
 <label>Amount<input id="amount" inputmode="decimal" placeholder="0.00"></label>
 <label>Date<input id="when" type="date"></label>
 <label>Note<input id="note" placeholder="Sale, parts, drawings"></label>
@@ -49,12 +50,15 @@ function paint(){
   $("rows").querySelectorAll(".drop").forEach(b => b.onclick = async () => { state.ledger.splice(Number(b.dataset.i), 1); await saveState(state); paint(); });
 }
 $("add").onclick = async () => {
-  const amount = $("amount").value;
-  if (!amount) return;
-  state.ledger.unshift({ kind:$("kind").value, method:$("method").value, category:$("category").value, amount, when:$("when").value, note:$("note").value });
-  $("amount").value = ""; $("note").value = "";
-  await saveState(state); paint();
-  $("statusText").textContent = "Saved on this phone.";
+  try {
+    const amount = $("amount").value;
+    if (!amount) { $("statusText").textContent = "Enter an amount."; return; }
+    if (!Array.isArray(state.ledger)) state.ledger = [];
+    state.ledger.unshift({ kind:$("kind").value, method:$("method").value, category:$("category").value, amount, when:$("when").value, note:$("note").value });
+    $("amount").value = ""; $("note").value = "";
+    await saveState(state); paint();
+    $("statusText").textContent = "Saved on this phone.";
+  } catch (err) { $("statusText").textContent = err.message || "Could not add."; }
 };
 paint();
 </script></body></html>
