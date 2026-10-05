@@ -48,6 +48,7 @@ export const PHOTO_SLOTS = [
 export function blankPhotos(){
   return Object.fromEntries(PHOTO_SLOTS.map(([key]) => [key, []]));
 }
+export function blankStage(){ return { notes:"", condition:"", parts:"", measure:"", complete:false, photos:[], checks:{}, updatedAt:null }; }
 export function coverPhoto(job){
   const shots = job && job.photos || {};
   for (const key of ["hero", "finished", "dial", "intake", "caseback", "movement", "damage", "progress"]) {
