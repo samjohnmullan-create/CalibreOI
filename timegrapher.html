@@ -20,7 +20,7 @@
 <label>Microphone<select id="micSelect"><option value="">Default</option></select></label>
 <div class="grid4">
 <label>BPH<select id="targetBph"><option value="18000">18000</option><option value="14400">14400</option><option value="16200">16200</option><option value="19800">19800</option><option value="21600">21600</option><option value="28800">28800</option><option value="auto">Auto</option></select></label>
-<label>Position<select id="position"><option>Dial up</option><option>Dial down</option><option>Pendant up</option><option>Pendant down</option><option>Pendant left</option><option>Pendant right</option></select></label>
+<label>When<select id="phase"><option>Before</option><option>During</option><option>After</option><option>Final</option></select></label>
 <label>Session<select id="sessionSeconds"><option value="20" selected>20 sec</option><option value="30">30 sec</option><option value="60">60 sec</option></select></label>
 <label>Sensitivity<input id="sensitivity" type="range" min="1.4" max="4.5" step="0.1" value="2"></label>
 </div>
@@ -29,6 +29,9 @@
 <div class="graph-wrap"><div class="graph-head"><span>Trace · centre is on time</span><span id="sessionClock">Ready</span></div><canvas id="traceCanvas" width="900" height="160"></canvas></div>
 <div class="row"><button id="startTiming" class="btn" type="button">Start</button><button id="stopTiming" class="btn secondary" type="button" disabled>Stop</button></div>
 <p id="tgHint" class="muted small">Loading…</p>
+<h3>History</h3>
+<canvas id="history" width="900" height="220" style="width:100%;height:auto;background:#111315;border-radius:10px"></canvas>
+<p id="historyNote" class="muted small"></p>
 <div id="savedRuns"></div>
 </section></div>
 <script src="js/nav.js?v=10"></script>
@@ -53,7 +56,47 @@ function drawTrace(){
   g.fillStyle = "#e6c98a";
   pts.forEach((p,i) => { const px = pts.length===1?24:i/(pts.length-1)*(w-16)+8; const py = Math.max(10, Math.min(h-10, h/2-p*1.6)); g.beginPath(); g.arc(px, py, 4, 0, 6.3); g.fill(); });
 }
-function renderRuns(){ const runs = job && job.timingRuns || []; $("savedRuns").innerHTML = runs.length ? runs.slice(0,6).map(r => `<div class="saved-run"><strong>${r.rateWord||""} rate</strong> · ${r.position}<br>${r.rate>=0?"+":""}${r.rate.toFixed(0)} s/day · beat ${r.beatError==null?"n/a":r.beatError.toFixed(1)+" ms"}</div>`).join("") : ""; }
+function confidence(run){
+  const beats = run.beats || 0;
+  const secs = run.duration || 0;
+  const spread = run.spread == null ? 0 : run.spread;
+  if (secs < 30 || beats < 20 || spread > 40) return "Low confidence";
+  if (secs >= 60 && beats >= 40 && spread <= 20) return "High confidence";
+  return "Fair confidence";
+}
+function drawHistory(){
+  const c = $("history"), g = c.getContext("2d"), w = c.width, h = c.height;
+  const runs = [...(job && job.timingRuns || [])].reverse();
+  g.fillStyle = "#111315"; g.fillRect(0,0,w,h);
+  g.strokeStyle = "#2c343a"; g.beginPath(); g.moveTo(36, h/2); g.lineTo(w-12, h/2); g.stroke();
+  g.fillStyle = "#8b9196"; g.font = "14px sans-serif"; g.fillText("0", 8, h/2+4);
+  if (!runs.length){ $("historyNote").textContent = "No saved runs yet."; return; }
+  const rates = runs.map(r => Number(r.rate)||0);
+  const max = Math.max(40, ...rates.map(Math.abs));
+  g.strokeStyle = "#e6c98a"; g.beginPath();
+  runs.forEach((r,i) => {
+    const x = runs.length===1 ? w/2 : 48 + i/(runs.length-1)*(w-72);
+    const y = h/2 - (Number(r.rate)||0)/max*(h/2-28);
+    if (i===0) g.moveTo(x,y); else g.lineTo(x,y);
+  });
+  g.stroke();
+  runs.forEach((r,i) => {
+    const x = runs.length===1 ? w/2 : 48 + i/(runs.length-1)*(w-72);
+    const y = h/2 - (Number(r.rate)||0)/max*(h/2-28);
+    g.fillStyle = confidence(r)==="Low confidence" ? "#b9a07a" : "#e6c98a";
+    g.beginPath(); g.arc(x,y,5,0,6.3); g.fill();
+    g.fillStyle = "#d7d2c8"; g.font = "13px sans-serif";
+    g.fillText((r.phase||"Run")+" "+((Number(r.rate)||0)>=0?"+":"")+Math.round(r.rate), x-28, h-12);
+  });
+  const phases = ["Before","During","After","Final"];
+  const bits = phases.map(p => { const hit = (job.timingRuns||[]).find(r => r.phase===p); return hit ? p+": "+(hit.rate>=0?"+":"")+Math.round(hit.rate)+" s/day" : ""; }).filter(Boolean);
+  $("historyNote").textContent = bits.join(" · ") || "Label a run Before, During, After, or Final.";
+}
+function renderRuns(){
+  const runs = job && job.timingRuns || [];
+  drawHistory();
+  $("savedRuns").innerHTML = runs.length ? runs.slice(0,8).map(r => `<div class="saved-run"><strong>${r.phase||"Unlabelled"}</strong> · ${r.position}<br>${r.rate>=0?"+":""}${Number(r.rate).toFixed(0)} s/day · ${confidence(r)}</div>`).join("") : "";
+}
 function analyse(){
   if (beats.length < 3) return;
   const ints = [];
@@ -99,7 +142,8 @@ async function openMic(){
 async function stopAudio(){ running=false; if (stream) stream.getTracks().forEach(t=>t.stop()); stream=null; if (ac && ac.state!=="closed"){ try { await ac.close(); } catch {} } ac=null; node=null; $("startTiming").disabled=false; $("stopTiming").disabled=true; }
 async function finish(){
   if (!running) return;
-  const run = metrics.bph && beats.length>=12 ? { ...metrics, at:new Date().toISOString(), duration:Number($("sessionSeconds").value) } : null;
+  const spread = trace.length ? Math.max(...trace)-Math.min(...trace) : 0;
+  const run = metrics.bph && beats.length>=12 ? { ...metrics, at:new Date().toISOString(), duration:Number($("sessionSeconds").value), phase:$("phase").value, spread } : null;
   await stopAudio(); $("sessionClock").textContent = "Complete";
   if (!run){ hint("Not enough steady beats to save."); return; }
   job.timingRuns = job.timingRuns || []; job.timingRuns.unshift(run); await saveState(state); renderRuns(); hint("Saved on this job.");
