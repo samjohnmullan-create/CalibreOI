@@ -18,16 +18,20 @@
 .bar{height:8px;border-radius:99px;background:var(--surface-2);overflow:hidden}
 .bar span{display:block;height:100%;background:var(--brass)}
 .trace{width:100%;height:120px;background:#111315;border-radius:12px}
-.adv{display:none}
-body.advanced .adv{display:block}
+.dash{display:grid;gap:12px}
+.board{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.cell{background:var(--surface-2);border-radius:12px;padding:10px}
+.cell span{display:block;color:var(--muted);font-size:.68rem;letter-spacing:.04em}
+.cell strong{display:block;margin-top:4px;font-size:1.15rem}
+@media(max-width:640px){.board{grid-template-columns:1fr 1fr}}
 </style>
 </head><body>
 <div class="shell">
 <header class="brandbar"><a class="brand" href="index.html"><div class="brandmark">C&C</div><div><div class="kicker">CALIBRE & CO.</div><h1>Watchmaker's Workbench</h1></div></a></header>
 <nav class="mainnav"></nav>
 <div class="hero"><div><div class="kicker">RATE</div><h2 id="watchTitle">Time</h2></div></div>
-<section class="card tg">
-<div class="tabs"><button id="easyTab" class="btn secondary on" type="button">Easy</button><button id="advTab" class="btn secondary" type="button">Advanced</button></div>
+<section class="card tg dash">
+<p class="kicker">EASY</p>
 <p class="rate" id="rate">—</p>
 <span class="pill poor" id="status">Tap Start</span>
 <div class="scale"><div class="band"></div><div class="centre"></div><div class="marker" id="marker" style="left:50%"></div></div>
@@ -36,10 +40,16 @@ body.advanced .adv{display:block}
 <div class="bar"><span id="level" style="width:0"></span></div>
 <p id="stabLabel" class="small">Not enough data</p>
 <canvas class="trace" id="trace" width="900" height="160"></canvas>
-<div class="adv">
-<label>Tag<select id="phase"><option>Before service</option><option>During service</option><option>After service</option><option>Regulation test</option><option>Final test</option></select></label>
-<p class="small" id="detail">Beat and confidence appear here.</p>
+<p class="kicker">ADVANCED</p>
+<div class="board">
+<div class="cell"><span>Rate</span><strong id="advRate">—</strong></div>
+<div class="cell"><span>BPH</span><strong id="advBph">—</strong></div>
+<div class="cell"><span>Beat error</span><strong id="advBeat">—</strong></div>
+<div class="cell"><span>Confidence</span><strong id="advConf">—</strong></div>
+<div class="cell"><span>Samples</span><strong id="advSamples">—</strong></div>
+<div class="cell"><span>Jitter</span><strong id="advJitter">—</strong></div>
 </div>
+<label>Tag<select id="phase"><option>Before service</option><option>During service</option><option>After service</option><option>Regulation test</option><option>Final test</option></select></label>
 <div class="row"><button id="start" class="btn" type="button">Start</button><button id="stop" class="btn secondary" type="button">Stop</button><button id="save" class="btn secondary" type="button">Save run</button></div>
 <p id="hint" class="muted small"></p>
 </section>
@@ -71,7 +81,12 @@ function show(result){
   $("marker").style.left = Math.max(6, Math.min(94, 50 + rate / 60 * 50)) + "%";
   $("advice").textContent = advice(result);
   $("stabLabel").textContent = result.stabilityLabel;
-  $("detail").textContent = "BPH " + result.bph + " · beat " + (result.beatErrorMs == null ? "not enough data" : result.beatErrorMs.toFixed(1) + " ms") + " · " + result.samples + " intervals";
+  $("advRate").textContent = (rate >= 0 ? "+" : "") + rate.toFixed(1) + " s/day";
+  $("advBph").textContent = result.bph || "—";
+  $("advBeat").textContent = result.beatErrorMs == null ? "Not enough data" : result.beatErrorMs.toFixed(1) + " ms";
+  $("advConf").textContent = Math.round(result.confidence * 100) + "%";
+  $("advSamples").textContent = result.samples;
+  $("advJitter").textContent = result.jitterMs.toFixed(1) + " ms";
   trace.push(rate); if (trace.length > 60) trace.shift();
   drawTrace();
 }
@@ -81,8 +96,6 @@ function hear(t){
   show(analyse(beats, 0));
   $("hint").textContent = beats.length + " ticks";
 }
-$("easyTab").onclick = () => { document.body.classList.remove("advanced"); $("easyTab").classList.add("on"); $("advTab").classList.remove("on"); };
-$("advTab").onclick = () => { document.body.classList.add("advanced"); $("advTab").classList.add("on"); $("easyTab").classList.remove("on"); };
 $("start").onclick = async () => {
   $("status").textContent = "Opening";
   $("hint").textContent = "Opening the phone microphone.";
