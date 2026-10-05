@@ -3,15 +3,10 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Identity · Calibre & Co.</title><link rel="stylesheet" href="css/app.css?v=4">
 <style>
-.frames{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
-.frame{position:relative;aspect-ratio:1;border:1px solid var(--line);border-radius:10px;background:#f7f5f0;overflow:hidden}
-.frame img{width:100%;height:100%;object-fit:cover;display:block}
-.frame span{position:absolute;left:0;right:0;bottom:0;padding:4px 6px;background:rgba(23,25,27,.72);color:#fff;font-size:.62rem;letter-spacing:.03em}
-.frame .add{position:absolute;inset:auto 8px 28px 8px;opacity:1;height:32px}
-.frame.empty .add{inset:28px 8px}
-.frame.empty{display:grid;place-items:end stretch}
-.frame .x{position:absolute;top:4px;right:4px;width:22px;height:22px;border:0;border-radius:50%;background:rgba(23,25,27,.72);color:#fff;padding:0}
-@media(max-width:640px){.frames{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.shotrow{display:grid;grid-template-columns:72px minmax(0,1fr);gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.shotrow img,.shotrow .ph{width:72px;height:72px;object-fit:cover;border-radius:8px;background:#f7f5f0}
+.shotrow .ph{display:grid;place-items:center;color:var(--muted);font-size:.7rem}
+.shotrow .row{margin-top:6px}
 </style>
 </head><body>
 <div class="shell">
@@ -20,7 +15,7 @@
 <div class="hero"><div><div class="kicker">THIS WATCH</div><h2 id="watchTitle">Identity</h2></div></div>
 <section class="card">
 <h3>Photographs</h3>
-<p class="muted small">Tap a frame to add. Tap the cross to remove. Sales hero is the cover on Start.</p>
+<p class="muted small">Take photo opens the camera. Upload opens the gallery.</p>
 <div class="frames" id="slots"></div>
 </section>
 <section class="card">
@@ -60,9 +55,10 @@ function paintSlots(){
   $("slots").innerHTML = PHOTO_SLOTS.map(([key, label]) => {
     const src = (job.photos[key] || [])[0] || "";
     const extra = (job.photos[key] || []).length;
-    return `<div class="frame${src?"":" empty"}">${src?`<img src="${src}" alt="">`:""}<span>${escapeHtml(label)}${extra>1?" · "+extra:""}</span>${src?`<button class="x" data-slot="${key}" type="button" aria-label="Remove">×</button>`:""}<button class="btn add" data-slot="${key}" type="button">${src?"Add another":"Take or upload"}</button><input id="file-${key}" type="file" accept="image/*" hidden></div>`;
+    return `<div class="shotrow">${src?`<img src="${src}" alt="">`:`<div class="ph">None</div>`}<div><strong>${escapeHtml(label)}</strong>${extra>1?`<div class="muted small">${extra} photos</div>`:""}<div class="row"><button class="btn secondary take" data-slot="${key}" type="button">Take photo</button><button class="btn secondary up" data-slot="${key}" type="button">Upload</button>${src?`<button class="btn secondary x" data-slot="${key}" type="button">Remove</button>`:""}</div></div><input id="file-${key}" type="file" accept="image/*" hidden></div>`;
   }).join("");
-  $("slots").querySelectorAll("button.add").forEach(btn => btn.onclick = () => $("file-"+btn.dataset.slot).click());
+  $("slots").querySelectorAll("button.take").forEach(btn => btn.onclick = () => { const input = $("file-"+btn.dataset.slot); input.setAttribute("capture","environment"); input.click(); });
+  $("slots").querySelectorAll("button.up").forEach(btn => btn.onclick = () => { const input = $("file-"+btn.dataset.slot); input.removeAttribute("capture"); input.click(); });
   $("slots").querySelectorAll("input[type=file]").forEach(input => input.onchange = async () => {
     const file = input.files && input.files[0];
     if (!file) return;

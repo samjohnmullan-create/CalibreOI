@@ -24,19 +24,15 @@
 <div id="stageList" class="stage-list" style="display:flex;gap:8px;overflow:auto;margin-bottom:12px"></div>
 <section class="card">
 <div class="section-head"><div><div id="stageEyebrow" class="kicker">STAGE 01</div><h2 id="stageTitle">Initial check</h2></div><label class="checkline"><input id="stageComplete" type="checkbox"><span>Stage complete</span></label></div>
-<div class="row">
-<button id="takeStage" class="btn" type="button">Take photo</button>
-<button id="uploadStage" class="btn secondary" type="button">Upload</button>
-<input id="stagePhoto" type="file" accept="image/*" hidden>
-</div>
-<div id="stageShots" style="display:flex;gap:8px;overflow:auto;margin:10px 0"></div>
 <label id="decisionWrap">Decision<select id="decision"><option value="">Not decided</option><option>Leave it</option><option>Regulate only</option><option>Case, hands or crystal</option><option>Partial</option><option>Full service</option></select></label>
 <p id="decisionNote" class="muted small"></p>
 <div id="steps"></div>
 <div class="grid2"><label>Watch name<input id="watchName"></label><label>Condition<select id="stageCondition"><option value="">Not set</option><option>Running</option><option>Running, needs a look</option><option>Stopped</option><option>Slipping wind</option><option>Damaged</option></select></label></div>
 <label>Notes<textarea id="stageNotes" rows="4"></textarea></label>
 <div class="grid2"><label>Parts used<input id="stageParts"></label><label>Measurement<input id="stageMeasure"></label></div>
-<div class="row"><a class="btn secondary" href="passport.html">Identity</a><a class="btn secondary" href="business.html">Cost</a></div>
+<div class="row"><a class="btn secondary" href="passport.html">Identity</a><a class="btn secondary" href="business.html">Cost</a><button id="takeStage" class="btn secondary" type="button">Take photo</button><button id="uploadStage" class="btn secondary" type="button">Upload</button></div>
+<input id="stagePhoto" type="file" accept="image/*" hidden>
+<div id="stageShots" style="display:flex;gap:8px;overflow:auto;margin-top:10px"></div>
 <div class="footer-actions">
 <button id="prevStage" class="btn secondary" type="button">Previous</button>
 <button id="completeJob" class="btn" type="button">Complete job</button>
