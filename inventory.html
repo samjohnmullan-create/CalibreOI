@@ -32,8 +32,10 @@ try {
     const src = coverPhoto(j);
     return `<a class="job-card" data-id="${j.id}" href="summary.html">${src ? `<img class="thumb" src="${src}" alt="">` : `<span class="thumb"></span>`}<div><strong>${name}</strong><div class="muted small">${j.jobId || ""} · ${j.channel || "Not listed"}${ageNote(j)}</div></div><div><span class="badge">${j.status || "On bench"}</span></div></a>`;
   }
-  groups.innerHTML = STATUSES.map(status => {
-    const list = state.jobs.filter(j => j.status === status);
+  const known = new Set(STATUSES);
+  const extra = [...new Set(state.jobs.map(j => j.status || "On bench").filter(s => !known.has(s)))];
+  groups.innerHTML = STATUSES.concat(extra).map(status => {
+    const list = state.jobs.filter(j => (j.status || "On bench") === status);
     if (!list.length) return "";
     return `<section class="card"><h3>${status} <span class="muted">${list.length}</span></h3><div class="jobs">${list.map(row).join("")}</div></section>`;
   }).join("") || "<p class='muted'>No watches on this phone.</p>";
