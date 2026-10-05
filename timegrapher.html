@@ -105,6 +105,7 @@ async function openMic(){
 $("start").onclick = async () => {
   $("hint").textContent = "Asking for the microphone…";
   $("stage").textContent = "Asking…";
+  $("status").textContent = "Asking";
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { $("hint").textContent = "This browser has no microphone. Use Chrome."; return; }
   try {
     stream = await openMic();
@@ -137,6 +138,8 @@ $("start").onclick = async () => {
     }
     running = true; $("start").disabled = true; $("stop").disabled = false;
     $("stage").textContent = "Listening...";
+    $("status").textContent = "Listening";
+    $("status").className = "pill attention";
     $("hint").textContent = "Connected: " + (track.label || "microphone") + ". The bar should move.";
   } catch (err) {
     $("stage").textContent = "No microphone";
