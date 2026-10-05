@@ -64,10 +64,30 @@ document.getElementById("start").addEventListener("click", async function(){
   var ask = navigator.mediaDevices.getUserMedia({ audio:true });
   try {
     var stream = await ask;
+    var ac = new AudioContext();
+    if (ac.state === "suspended") await ac.resume();
+    var src = ac.createMediaStreamSource(stream);
+    var analyser = ac.createAnalyser();
+    analyser.fftSize = 1024;
+    src.connect(analyser);
+    var silent = ac.createGain();
+    silent.gain.value = 0;
+    analyser.connect(silent);
+    silent.connect(ac.destination);
+    var data = new Uint8Array(analyser.fftSize);
+    var level = document.getElementById("level");
     status.textContent = "Listening";
     stage.textContent = "Connected";
     hint.textContent = stream.getAudioTracks()[0].label || "Microphone open";
     window.calibreStream = stream;
+    window.calibreAudio = ac;
+    (function tick(){
+      analyser.getByteTimeDomainData(data);
+      var peak = 0;
+      for (var i = 0; i < data.length; i++) { var v = Math.abs(data[i] - 128); if (v > peak) peak = v; }
+      if (level) level.style.width = Math.min(100, peak * 3) + "%";
+      requestAnimationFrame(tick);
+    })();
   } catch (err) {
     status.textContent = "Blocked";
     stage.textContent = "No permission";
