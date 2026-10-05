@@ -63,7 +63,10 @@ export const PHOTO_SLOTS = [
 export function blankPhotos(){
   return Object.fromEntries(PHOTO_SLOTS.map(([key]) => [key, []]));
 }
-export function blankStage(){ return { notes:"", condition:"", parts:"", measure:"", complete:false, photos:[], checks:{}, updatedAt:null }; }
+export function blankPart(){ return { part:"", supplier:"", partNumber:"", quantity:"1", cost:"", ordered:"", received:false, fitted:false }; }
+export function partsCost(job){
+  return (job.parts || []).reduce((n, p) => n + (Number(p.cost) || 0) * (Number(p.quantity) || 1), 0);
+}
 export function coverPhoto(job){
   const shots = job && job.photos || {};
   for (const key of ["hero", "finished", "dial", "intake", "caseback", "movement", "damage", "progress"]) {
@@ -117,6 +120,9 @@ export function normalise(job){
   job.timingRuns = job.timingRuns || [];
   job.chat = job.chat || [];
   job.faults = (Array.isArray(job.faults) ? job.faults : []).filter(f => f && f.text).map(f => ({ text: f.text, severity: SEVERITIES.includes(f.severity) ? f.severity : "Moderate" }));
+  job.parts = (Array.isArray(job.parts) ? job.parts : []).map(p => Object.assign(blankPart(), p, { received: !!p.received, fitted: !!p.fitted }));
+  if (job.parts.length) job.business.partsCost = String(partsCost(job));
+  job.labour = Object.assign({ running:false, startedAt:null }, job.labour || {});
   job.diagnosis = job.diagnosis || "";
   job.repairPerformed = job.repairPerformed || "";
   job.stage = Math.max(0, Math.min(path.length - 1, job.stage || 0));

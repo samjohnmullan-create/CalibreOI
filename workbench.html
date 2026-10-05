@@ -33,7 +33,9 @@
 <label>Repair performed<textarea id="repair" rows="3" placeholder="What you actually fixed."></textarea></label>
 <div class="grid2"><label>Watch name<input id="watchName"></label><label>Condition<select id="stageCondition"><option value="">Not set</option><option>Running</option><option>Running, needs a look</option><option>Stopped</option><option>Slipping wind</option><option>Damaged</option></select></label></div>
 <label>Notes<textarea id="stageNotes" rows="4"></textarea></label>
-<div class="grid2"><label>Parts used<input id="stageParts"></label><label>Measurement<input id="stageMeasure"></label></div>
+<div id="parts"></div>
+<div class="row" id="timerRow"><button id="timerBtn" class="btn" type="button">Start timer</button><span id="timerRead" class="muted small"></span><button id="awaitParts" class="btn secondary" type="button">Awaiting parts</button></div>
+<label>Measurement<input id="stageMeasure"></label>
 <div class="row"><a class="btn secondary" href="passport.html">Identity</a><a class="btn secondary" href="business.html">Cost</a><button id="takeStage" class="btn secondary" type="button">Take photo</button><button id="uploadStage" class="btn secondary" type="button">Upload</button></div>
 <input id="stagePhoto" type="file" accept="image/*" hidden>
 <div id="stageShots" style="display:flex;gap:8px;overflow:auto;margin-top:10px"></div>
@@ -47,7 +49,7 @@
 </section></div>
 <script src="js/nav.js?v=10"></script>
 <script type="module">
-import { loadState, saveState, current, markSpares, compressImage, stagesFor, JOB_TYPES, FAULT_CHIPS, SEVERITIES, normalise } from "./js/store.js?v=9";
+import { loadState, saveState, current, markSpares, compressImage, stagesFor, JOB_TYPES, FAULT_CHIPS, SEVERITIES, normalise, blankPart, partsCost, money } from "./js/store.js?v=10";
 import { STAGE_COPY } from "./js/stages.js?v=9";
 const $ = id => document.getElementById(id);
 let state = await loadState();
@@ -60,8 +62,13 @@ function capture(){
   job.watchName = $("watchName").value; job.decision = $("decision").value;
   job.diagnosis = $("diagnosis").value; job.repairPerformed = $("repair").value;
   const s = stage(); if (!s) return;
-  s.notes = $("stageNotes").value; s.condition = $("stageCondition").value; s.parts = $("stageParts").value; s.measure = $("stageMeasure").value; s.complete = $("stageComplete").checked; s.updatedAt = new Date().toISOString();
+  s.notes = $("stageNotes").value; s.condition = $("stageCondition").value; s.measure = $("stageMeasure").value; s.complete = $("stageComplete").checked; s.updatedAt = new Date().toISOString();
 }
+function elapsedMinutes(){
+  if (!job.labour || !job.labour.running || !job.labour.startedAt) return 0;
+  return Math.max(0, (Date.now() - new Date(job.labour.startedAt).getTime()) / 60000);
+}
+function syncParts(){ if (job.parts.length) job.business.partsCost = String(Math.round(partsCost(job) * 100) / 100); }
 function schedule(){ clearTimeout(timer); hint("Saving…"); timer = setTimeout(async () => { capture(); await saveState(state); hint("Saved"); }, 400); }
 function stageDone(s, i){
   if (!s || s.complete) return !s ? false : true;
@@ -79,7 +86,29 @@ function paintFaults(){
   $("faults").querySelectorAll(".drop").forEach(b => b.onclick = async () => { job.faults.splice(Number(b.dataset.i), 1); await saveState(state); paint(); });
   $("addFault").onclick = async () => { const text = $("faultText").value.trim(); if (!text) return; job.faults.push({ text, severity: "Moderate" }); await saveState(state); paint(); };
 }
-function paint(){
+function paintParts(){
+  const rows = (job.parts || []).map((p, i) => `<div class="card" style="padding:10px;margin-top:8px">
+    <div class="grid2"><label>Part<input class="pf" data-i="${i}" data-k="part" value="${p.part || ""}"></label><label>Supplier<input class="pf" data-i="${i}" data-k="supplier" value="${p.supplier || ""}"></label>
+    <label>Part number<input class="pf" data-i="${i}" data-k="partNumber" value="${p.partNumber || ""}"></label><label>Quantity<input class="pf" data-i="${i}" data-k="quantity" inputmode="decimal" value="${p.quantity || ""}"></label>
+    <label>Cost<input class="pf" data-i="${i}" data-k="cost" inputmode="decimal" value="${p.cost || ""}"></label><label>Date ordered<input class="pf" data-i="${i}" data-k="ordered" type="date" value="${p.ordered || ""}"></label></div>
+    <div class="row"><label class="checkline"><input class="pf" data-i="${i}" data-k="received" type="checkbox"${p.received?" checked":""}>Received</label><label class="checkline"><input class="pf" data-i="${i}" data-k="fitted" type="checkbox"${p.fitted?" checked":""}>Fitted</label><button class="btn secondary drop-part" data-i="${i}" type="button">Remove</button></div>
+  </div>`).join("");
+  $("parts").innerHTML = `<h3>Parts ${job.parts.length ? "· " + money(partsCost(job)) : ""}</h3>${rows}<button id="addPart" class="btn secondary" type="button">Add part</button>`;
+  $("parts").querySelectorAll(".pf").forEach(el => el.oninput = el.onchange = () => {
+    const p = job.parts[el.dataset.i];
+    p[el.dataset.k] = el.type === "checkbox" ? el.checked : el.value;
+    syncParts();
+    schedule();
+  });
+  $("parts").querySelectorAll(".drop-part").forEach(b => b.onclick = async () => { job.parts.splice(Number(b.dataset.i), 1); syncParts(); await saveState(state); paint(); });
+  $("addPart").onclick = async () => { job.parts.push(blankPart()); await saveState(state); paint(); };
+}
+function paintTimer(){
+  const booked = Number(job.business.labourMinutes) || 0;
+  const live = elapsedMinutes();
+  $("timerBtn").textContent = job.labour.running ? "Pause timer" : "Start timer";
+  $("timerRead").textContent = Math.round(booked + live) + " min on cost" + (job.status === "waiting parts" ? " · awaiting parts" : "");
+}
   job = current(state);
   const names = path();
   const name = names[job.stage];
@@ -94,9 +123,11 @@ function paint(){
   $("jobType").value = job.jobType || "manual";
   $("decision").value = job.decision || "";
   $("decisionNote").textContent = job.stage === 0 ? "A quartz watch does not take the barrel and balance path." : "";
-  $("stageNotes").value = s.notes || ""; $("stageCondition").value = s.condition || ""; $("stageParts").value = s.parts || ""; $("stageMeasure").value = s.measure || ""; $("stageComplete").checked = !!s.complete;
+  $("stageNotes").value = s.notes || ""; $("stageCondition").value = s.condition || ""; $("stageMeasure").value = s.measure || ""; $("stageComplete").checked = !!s.complete;
   $("diagnosis").value = job.diagnosis || ""; $("repair").value = job.repairPerformed || "";
   paintFaults();
+  paintParts();
+  paintTimer();
   s.photos = s.photos || [];
   $("stageShots").innerHTML = s.photos.map((src, i) => `<figure style="margin:0;position:relative"><img src="${src}" alt="" style="width:72px;height:72px;object-fit:cover;border-radius:8px"><button class="shot-x" data-i="${i}" type="button" aria-label="Remove photo" style="position:absolute;top:4px;right:4px;width:22px;height:22px;border:0;border-radius:50%;background:rgba(23,25,27,.72);color:#fff">×</button></figure>`).join("");
   $("stageShots").querySelectorAll(".shot-x").forEach(btn => btn.onclick = async () => { s.photos.splice(Number(btn.dataset.i), 1); await saveState(state); paint(); });
@@ -131,8 +162,18 @@ function paint(){
   });
   hint("On " + copy.title);
 }
-["watchName","stageNotes","stageParts","stageMeasure","diagnosis","repair"].forEach(id => $(id).addEventListener("input", schedule));
+["watchName","stageNotes","stageMeasure","diagnosis","repair"].forEach(id => $(id).addEventListener("input", schedule));
 ["stageCondition","stageComplete","decision"].forEach(id => $(id).addEventListener("change", schedule));
+$("timerBtn").onclick = async () => {
+  job.labour = job.labour || { running:false, startedAt:null };
+  if (job.labour.running) {
+    job.business.labourMinutes = String(Math.round((Number(job.business.labourMinutes) || 0) + elapsedMinutes()));
+    job.labour.running = false; job.labour.startedAt = null;
+  } else { job.labour.running = true; job.labour.startedAt = new Date().toISOString(); }
+  await saveState(state); paint();
+};
+$("awaitParts").onclick = async () => { job.status = job.status === "waiting parts" ? "on the bench" : "waiting parts"; await saveState(state); paint(); };
+setInterval(() => { if (job && job.labour && job.labour.running) paintTimer(); }, 15000);
 $("jobType").onchange = async () => { capture(); job.jobType = $("jobType").value; normalise(job); job.stage = 0; await saveState(state); paint(); };
 $("takeStage").onclick = () => { $("stagePhoto").setAttribute("capture", "environment"); $("stagePhoto").click(); };
 $("uploadStage").onclick = () => { $("stagePhoto").removeAttribute("capture"); $("stagePhoto").click(); };
