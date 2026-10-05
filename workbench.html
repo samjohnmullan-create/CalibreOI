@@ -30,7 +30,8 @@
 <div class="grid2"><label>Watch name<input id="watchName"></label><label>Condition<select id="stageCondition"><option value="">Not set</option><option>Running</option><option>Running, needs a look</option><option>Stopped</option><option>Slipping wind</option><option>Damaged</option></select></label></div>
 <label>Notes<textarea id="stageNotes" rows="4"></textarea></label>
 <div class="grid2"><label>Parts used<input id="stageParts"></label><label>Measurement<input id="stageMeasure"></label></div>
-<div class="row"><a class="btn secondary" href="passport.html">Identity</a><a class="btn secondary" href="business.html">Cost</a></div>
+<div class="row"><a class="btn secondary" href="passport.html">Identity</a><a class="btn secondary" href="business.html">Cost</a><label class="btn secondary">Progress photo<input id="progressPhoto" type="file" accept="image/*" capture="environment" hidden></label></div>
+<div id="progressStrip" class="thumbs"></div>
 <div class="footer-actions">
 <button id="prevStage" class="btn secondary" type="button">Previous</button>
 <button id="completeJob" class="btn" type="button">Complete job</button>
@@ -41,7 +42,7 @@
 </section></div>
 <script src="js/nav.js?v=10"></script>
 <script type="module">
-import { STAGES, loadState, saveState, current, markSpares } from "./js/store.js?v=6";
+import { STAGES, loadState, saveState, current, markSpares, compressImage } from "./js/store.js?v=7";
 import { STAGE_COPY } from "./js/stages.js?v=8";
 const $ = id => document.getElementById(id);
 let state = await loadState();
@@ -74,6 +75,8 @@ function paint(){
   $("decision").value = job.decision || ""; $("decisionWrap").style.display = job.stage === 0 ? "" : "none";
   $("decisionNote").textContent = job.stage === 0 ? "A running watch with no fault does not get a full service." : "";
   $("stageNotes").value = s.notes || ""; $("stageCondition").value = s.condition || ""; $("stageParts").value = s.parts || ""; $("stageMeasure").value = s.measure || ""; $("stageComplete").checked = !!s.complete;
+  const shots = (job.photos && job.photos.progress) || [];
+  $("progressStrip").innerHTML = shots.slice(-4).map(src => `<img src="${src}" alt="" style="width:64px;height:64px;object-fit:cover;border-radius:8px;margin:8px 6px 0 0">`).join("");
   const box = $("steps"); box.innerHTML = "";
   copy.steps.forEach((text,i) => {
     const row = document.createElement("div"); row.className = "yn";
@@ -107,6 +110,16 @@ function paint(){
 }
 ["watchName","stageNotes","stageParts","stageMeasure"].forEach(id => $(id).addEventListener("input", schedule));
 ["stageCondition","stageComplete","decision"].forEach(id => $(id).addEventListener("change", schedule));
+$("progressPhoto").onchange = async () => {
+  const file = $("progressPhoto").files && $("progressPhoto").files[0];
+  if (!file) return;
+  hint("Saving photo…");
+  job.photos.progress.push(await compressImage(file));
+  await saveState(state);
+  $("progressPhoto").value = "";
+  paint();
+  hint("Saved");
+};
 $("stageComplete").addEventListener("change", async () => { capture(); await saveState(state); paint(); });
 $("prevStage").onclick = async () => { capture(); job.stage = Math.max(0, job.stage-1); await saveState(state); paint(); };
 $("nextStage").onclick = async () => { capture(); job.stage = Math.min(11, job.stage+1); await saveState(state); paint(); };

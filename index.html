@@ -32,7 +32,7 @@
 </div>
 <script src="js/nav.js?v=10"></script>
 <script type="module">
-import { STAGES, loadState, saveState, blankJob, current, importCard, money, investment, escapeHtml } from "./js/store.js?v=6";
+import { STAGES, loadState, saveState, blankJob, current, importCard, money, investment, escapeHtml, coverPhoto } from "./js/store.js?v=7";
 import { STAGE_COPY } from "./js/stages.js?v=8";
 import { fillResults } from "./js/search.js?v=7";
 const $ = id => document.getElementById(id);
@@ -43,11 +43,7 @@ const held = j => j.status !== "sold" && j.status !== "spares";
 const bench = j => held(j) && j.status !== "complete" && j.status !== "waiting parts";
 const parts = j => j.status === "waiting parts";
 const ready = j => j.status === "complete";
-function photo(j){
-  if (j.passport.photos && j.passport.photos[0]) return j.passport.photos[0];
-  for (const s of j.stages) if (s.photos && s.photos[0]) return s.photos[0];
-  return "";
-}
+function photo(j){ return coverPhoto(j); }
 function stageName(j){
   const key = STAGES[j.stage] || STAGES[0];
   return (STAGE_COPY[key] && STAGE_COPY[key].title) || key;
@@ -107,6 +103,7 @@ function paint(){
         <option value="spares">Spares</option>
       </select></label>
       <a class="btn" href="workbench.html">Open on the bench</a>
+      <a class="btn secondary" href="passport.html">Photos</a>
       <button id="deleteJob" class="btn secondary" type="button">Delete job</button>
     </div>`;
   $("watchStatus").value = ["waiting parts","complete","sold","spares"].includes(job.status) ? job.status : "on the bench";

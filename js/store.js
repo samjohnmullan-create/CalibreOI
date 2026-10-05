@@ -35,7 +35,28 @@ function put(k, v){
 }
 export function uid(){ return "job-" + Math.random().toString(36).slice(2, 8) + Date.now().toString(36).slice(-4); }
 export function slugify(s){ return String(s || "watch").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "watch"; }
-export function blankStage(){ return { notes:"", condition:"", parts:"", measure:"", complete:false, photos:[], checks:{}, updatedAt:null }; }
+export const PHOTO_SLOTS = [
+  ["intake", "Intake"],
+  ["caseback", "Caseback"],
+  ["movement", "Movement"],
+  ["dial", "Dial"],
+  ["damage", "Damage"],
+  ["progress", "Repair progress"],
+  ["finished", "Finished watch"],
+  ["hero", "Sales hero"]
+];
+export function blankPhotos(){
+  return Object.fromEntries(PHOTO_SLOTS.map(([key]) => [key, []]));
+}
+export function coverPhoto(job){
+  const shots = job && job.photos || {};
+  for (const key of ["hero", "finished", "dial", "intake", "caseback", "movement", "damage", "progress"]) {
+    if (shots[key] && shots[key][0]) return shots[key][0];
+  }
+  if (job && job.passport && job.passport.photos && job.passport.photos[0]) return job.passport.photos[0];
+  for (const s of (job && job.stages) || []) if (s.photos && s.photos[0]) return s.photos[0];
+  return "";
+}
 export function blankPassport(){
   return { maker:"", model:"", calibre:"", jewels:"", movementType:"", movementMm:"", year:"", serial:"", caseNumber:"", reference:"", caseMaterial:"", width:"", height:"", thickness:"", escapement:"", notes:"", history:"", photos:[] };
 }
@@ -66,6 +87,8 @@ export function normalise(job){
   while (job.stages.length < STAGES.length) job.stages.push(blankStage());
   job.stages = job.stages.slice(0, STAGES.length).map(s => Object.assign(blankStage(), s, { photos: s.photos || [], checks: s.checks || {} }));
   job.passport = Object.assign(blankPassport(), job.passport, { photos: (job.passport && job.passport.photos) || [] });
+  job.photos = Object.assign(blankPhotos(), job.photos || {});
+  PHOTO_SLOTS.forEach(([key]) => { job.photos[key] = Array.isArray(job.photos[key]) ? job.photos[key] : []; });
   job.business = Object.assign(blankBusiness(), job.business);
   if (!job.business.partsCost && job.business.repairCost) job.business.partsCost = job.business.repairCost;
   job.timingRuns = job.timingRuns || [];
@@ -145,6 +168,7 @@ export function importCard(raw){
     passport: raw.passport || {},
     business: raw.business || {},
     timingRuns: raw.timingRuns || [],
+    photos: raw.photos || {},
     stages
   });
 }
@@ -163,6 +187,7 @@ export function exportCard(job){
     passport: job.passport,
     business: job.business,
     timingRuns: job.timingRuns || [],
+    photos: job.photos || blankPhotos(),
     stages: job.stages.map((s, i) => ({ name: STAGES[i], notes: s.notes, condition: s.condition, parts: s.parts, measure: s.measure, complete: s.complete, checks: s.checks || {} }))
   };
 }
