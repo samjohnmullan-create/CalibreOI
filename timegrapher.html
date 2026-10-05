@@ -17,7 +17,19 @@
 .good{background:#e5f0e8;color:#245c38}.attention{background:#f6ecd4;color:#8a5a12}.adjust{background:#f6e4e2;color:#8d342e}.poor{background:var(--surface-2);color:var(--muted)}
 .bar{height:8px;border-radius:99px;background:var(--surface-2);overflow:hidden}
 .bar span{display:block;height:100%;background:var(--brass)}
-.trace{width:100%;height:120px;background:#111315;border-radius:12px}
+body{background:#070707;color:#f4f4f4}
+.shell{background:#070707}
+.card{background:#0c0c0c;border-color:#2a1212;box-shadow:0 0 24px rgba(220,40,40,.18)}
+.rate{color:#fff;text-shadow:0 0 18px rgba(255,40,40,.85)}
+.scale{background:#100808;box-shadow:inset 0 0 18px rgba(255,30,30,.25)}
+.band{background:rgba(180,20,20,.28)}
+.centre{background:#ff2a2a;box-shadow:0 0 10px #ff2a2a}
+.marker{background:#ff1e1e;border-color:#fff;box-shadow:0 0 14px #ff2020}
+.bar{background:#1a0c0c}
+.bar span{background:#ff2a2a;box-shadow:0 0 10px #ff2020}
+.trace{width:100%;height:120px;background:#050505;border-radius:12px}
+.cell{background:#120808;box-shadow:inset 0 0 12px rgba(255,30,30,.12)}
+.kicker{color:#ff4a4a;text-shadow:0 0 8px rgba(255,40,40,.7)}
 .dash{display:grid;gap:12px}
 .board{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .cell{background:var(--surface-2);border-radius:12px;padding:10px}
@@ -71,9 +83,9 @@ const $ = id => document.getElementById(id);
 let state, job, stream, ac, proc, beats = [], trace = [], last = null, running = false;
 function drawTrace(){
   const c = $("trace"), g = c.getContext("2d"), w = c.width, h = c.height;
-  g.fillStyle = "#111315"; g.fillRect(0,0,w,h);
-  g.strokeStyle = "#a87a2b"; g.beginPath(); g.moveTo(0,h/2); g.lineTo(w,h/2); g.stroke();
-  g.fillStyle = "#f3efe6";
+  g.fillStyle = "#050505"; g.fillRect(0,0,w,h);
+  g.strokeStyle = "#ff2a2a"; g.shadowColor = "#ff2020"; g.shadowBlur = 8; g.beginPath(); g.moveTo(0,h/2); g.lineTo(w,h/2); g.stroke();
+  g.fillStyle = "#ff3b3b";
   trace.slice(-50).forEach((rate, i, arr) => {
     const x = arr.length < 2 ? w/2 : i / (arr.length - 1) * (w - 16) + 8;
     const y = h/2 - Math.max(-70, Math.min(70, rate)) * 0.7;
@@ -103,12 +115,12 @@ function show(result){
 function drawPaper(){
   const c = $("paper"); if (!c) return;
   const g = c.getContext("2d"), w = c.width, h = c.height;
-  g.fillStyle = "#111315"; g.fillRect(0,0,w,h);
-  g.strokeStyle = "#3a362e";
+  g.fillStyle = "#050505"; g.fillRect(0,0,w,h);
+  g.strokeStyle = "#3a1010";
   for (let y = 20; y < h; y += 20) { g.beginPath(); g.moveTo(0,y); g.lineTo(w,y); g.stroke(); }
   const bph = Number($("bph").value) || (last && last.bph) || 18000;
   const nominal = 3600 / bph;
-  g.fillStyle = "#d4b36a";
+  g.fillStyle = "#ff2a2a"; g.shadowColor = "#ff2020"; g.shadowBlur = 8;
   beats.slice(-80).forEach((beat, i, arr) => {
     if (!i) return;
     const gap = beat.t - arr[i-1].t;
