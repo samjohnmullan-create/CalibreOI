@@ -48,7 +48,7 @@ const parts = j => j.status === "Awaiting parts";
 const ready = j => j.status === "Ready to list" || j.status === "Listed" || j.status === "Ready for photos";
 function card(j){
   const src = coverPhoto(j);
-  return `<a class="job-card" data-id="${j.id}" href="workbench.html">${src ? `<img class="thumb" src="${src}" alt="">` : `<span class="thumb"></span>`}<div><strong>${escapeHtml(j.watchName || "Untitled")}</strong><div class="muted small">${escapeHtml(j.jobId || "")} · ${escapeHtml(j.status || "On bench")}</div></div><button class="star" data-id="${j.id}" type="button" aria-label="Priority">${j.priority ? "★" : "☆"}</button></a>`;
+  return `<a class="job-card" data-id="${j.id}" href="workbench.html">${src ? `<img class="thumb" src="${src}" alt="">` : `<span class="thumb"></span>`}<div><strong>${escapeHtml(j.watchName || "Untitled")}</strong><div class="muted small">${escapeHtml(j.jobId || "")} · ${escapeHtml(j.status || "On bench")}</div></div><div><button class="star" data-id="${j.id}" type="button" aria-label="Priority">${j.priority ? "★" : "☆"}</button><button class="btn secondary del" data-id="${j.id}" type="button">Delete</button></div></a>`;
 }
 function stageName(j){
   const stages = j.stages || [];
@@ -131,6 +131,7 @@ function paint(){
   $("jobList").innerHTML = listed.map(card).join("") || "<p class='muted'>None in this group.</p>";
   $("jobList").querySelectorAll(".job-card").forEach(a => a.onclick = e => { if (e.target.closest(".star") || e.target.closest(".del")) return; e.preventDefault(); openJob(a.dataset.id, "workbench.html"); });
   $("jobList").querySelectorAll(".star").forEach(b => b.onclick = async e => { e.preventDefault(); e.stopPropagation(); const hit = state.jobs.find(j => j.id === b.dataset.id); if (!hit) return; hit.priority = !hit.priority; await saveState(state); paint(); });
+  $("jobList").querySelectorAll(".del").forEach(b => b.onclick = e => { e.preventDefault(); e.stopPropagation(); removeJob(state.jobs.find(j => j.id === b.dataset.id)); });
   const done = jobs.filter(j => j.status === "Sold" || j.status === "Ready to list" || j.status === "Listed").sort((a,b) => String(b.completedAt||b.updatedAt).localeCompare(String(a.completedAt||a.updatedAt))).slice(0, 5);
   $("doneList").innerHTML = done.map(j => `<a class="job-card" data-id="${j.id}" href="summary.html"><div><strong>${escapeHtml(j.watchName)}</strong><div class="muted small">${j.status}</div></div></a>`).join("") || "<p class='muted'>Nothing completed yet.</p>";
   $("doneList").querySelectorAll(".job-card").forEach(a => a.onclick = e => { e.preventDefault(); openJob(a.dataset.id, "summary.html"); });
