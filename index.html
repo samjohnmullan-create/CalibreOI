@@ -25,7 +25,7 @@
 <label>Search<input id="q" autocomplete="off" enterkeyhint="search" placeholder="Serial, brand, part, calibre"></label>
 <div id="found" class="jobs"></div>
 </section>
-<section class="card"><h3 id="listTitle">On the bench</h3><div id="jobList" class="jobs"></div>
+<section class="card"><h3 id="listTitle">All jobs</h3><div id="jobList" class="jobs"></div>
 <div class="row"><button id="newJob" class="btn secondary" type="button">New job</button><label class="btn secondary">Import<input id="jobFile" type="file" accept=".calibrejob,application/json" hidden></label></div>
 <p id="statusText" class="muted small"></p></section>
 <section class="card"><h3>Recently completed</h3><div id="doneList" class="jobs"></div></section>
@@ -37,7 +37,7 @@ import { STAGE_COPY } from "./js/stages.js?v=8";
 import { fillResults } from "./js/search.js?v=7";
 const $ = id => document.getElementById(id);
 let state = await loadState();
-let filter = "bench";
+let filter = "all";
 const num = v => Number(v) || 0;
 const held = j => j.status !== "sold" && j.status !== "spares";
 const bench = j => held(j) && j.status !== "complete" && j.status !== "waiting parts";
@@ -110,6 +110,7 @@ function paint(){
   $("watchStatus").onchange = async () => { job.status = $("watchStatus").value; if (job.status === "complete" || job.status === "sold") job.completedAt = job.completedAt || new Date().toISOString(); await saveState(state); paint(); };
   $("deleteJob").onclick = () => removeJob(job);
   const cards = [
+    ["all","All jobs", jobs.length],
     ["bench","On the bench", onBench.length],
     ["parts","Awaiting parts", waiting.length],
     ["ready","Ready for sale", forSale.length],
@@ -119,10 +120,10 @@ function paint(){
   ];
   $("dash").innerHTML = cards.map(([id, label, value]) => `<button class="stat${filter===id?" on":""}" data-f="${id}" type="button"><span>${label}</span><strong>${value}</strong></button>`).join("");
   $("dash").querySelectorAll(".stat").forEach(b => b.onclick = () => { filter = b.dataset.f; paint(); $("jobList").scrollIntoView({block:"nearest"}); });
-  const titles = { bench:"On the bench", parts:"Awaiting parts", ready:"Ready for sale", value:"Ready for sale", invested:"Money still in watches", profit:"With a target sale" };
+  const titles = { all:"All jobs", bench:"On the bench", parts:"Awaiting parts", ready:"Ready for sale", value:"Ready for sale", invested:"Money still in watches", profit:"With a target sale" };
   $("listTitle").textContent = titles[filter] || "Jobs";
-  const listed = filter === "parts" ? waiting : filter === "ready" || filter === "value" ? forSale : filter === "profit" ? holding.filter(j => num(j.business.targetSale) || num(j.business.actualSale)) : filter === "invested" ? holding : onBench;
-  $("jobList").innerHTML = listed.map(j => `<a class="job-card" data-id="${j.id}" href="workbench.html"><div><strong>${escapeHtml(j.watchName)}</strong><div class="muted small">${escapeHtml(j.passport.maker || "")} ${escapeHtml(j.passport.calibre || "")} · ${escapeHtml(stageName(j))}</div></div><div><button class="btn secondary del" data-id="${j.id}" type="button">Delete</button></div></a>`).join("") || "<p class='muted'>None in this group.</p>";
+  const listed = filter === "all" ? jobs : filter === "parts" ? waiting : filter === "ready" || filter === "value" ? forSale : filter === "profit" ? holding.filter(j => num(j.business.targetSale) || num(j.business.actualSale)) : filter === "invested" ? holding : onBench;
+  $("jobList").innerHTML = listed.map(j => `<a class="job-card" data-id="${j.id}" href="workbench.html"><div><strong>${escapeHtml(j.watchName)}</strong><div class="muted small">${escapeHtml(j.jobId)} · ${escapeHtml(j.status || "on the bench")} · ${escapeHtml(stageName(j))}</div></div><div><button class="btn secondary del" data-id="${j.id}" type="button">Delete</button></div></a>`).join("") || "<p class='muted'>None in this group.</p>";
   $("jobList").querySelectorAll(".job-card").forEach(a => a.onclick = e => { if (e.target.closest(".del")) return; e.preventDefault(); openJob(a.dataset.id, "workbench.html"); });
   $("jobList").querySelectorAll(".del").forEach(b => b.onclick = e => { e.preventDefault(); e.stopPropagation(); removeJob(jobs.find(j => j.id === b.dataset.id)); });
   const done = jobs.filter(j => j.status === "complete" || j.status === "sold").sort((a,b) => String(b.completedAt||b.updatedAt).localeCompare(String(a.completedAt||a.updatedAt))).slice(0, 5);
