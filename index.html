@@ -47,7 +47,7 @@ const bench = j => j.status === "On bench";
 const parts = j => j.status === "Awaiting parts";
 const ready = j => j.status === "Ready to list" || j.status === "Listed" || j.status === "Ready for photos";
 function card(j){
-  const src = photo(j);
+  const src = coverPhoto(j);
   return `<a class="job-card" data-id="${j.id}" href="workbench.html">${src ? `<img class="thumb" src="${src}" alt="">` : `<span class="thumb"></span>`}<div><strong>${escapeHtml(j.watchName || "Untitled")}</strong><div class="muted small">${escapeHtml(j.jobId || "")} · ${escapeHtml(j.status || "On bench")}</div></div><button class="star" data-id="${j.id}" type="button" aria-label="Priority">${j.priority ? "★" : "☆"}</button></a>`;
 }
 function stageName(j){
