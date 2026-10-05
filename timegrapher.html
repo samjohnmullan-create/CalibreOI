@@ -50,9 +50,37 @@ body.advanced .easy-only{display:none}
 </section>
 </div>
 <script>
-document.getElementById("start").addEventListener("click", function(){
-  document.getElementById("status").textContent = "Asking";
-  document.getElementById("stage").textContent = "Asking for the microphone";
+document.getElementById("start").addEventListener("click", async function(){
+  var status = document.getElementById("status");
+  var stage = document.getElementById("stage");
+  var hint = document.getElementById("hint");
+  status.textContent = "Asking";
+  stage.textContent = "Opening the permission box";
+  hint.textContent = "The phone should ask now.";
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    status.textContent = "No mic";
+    hint.textContent = "This browser cannot use a microphone. Open the page in Chrome.";
+    return;
+  }
+  try {
+    var perm = navigator.permissions && await navigator.permissions.query({ name:"microphone" });
+    if (perm && perm.state === "denied") {
+      status.textContent = "Blocked";
+      hint.textContent = "Microphone is blocked. Tap the lock in the address bar, set Microphone to Allow, then Start again.";
+      return;
+    }
+  } catch (e) {}
+  try {
+    var stream = await navigator.mediaDevices.getUserMedia({ audio:true });
+    status.textContent = "Listening";
+    stage.textContent = "Connected";
+    hint.textContent = stream.getAudioTracks()[0].label || "Microphone open";
+    window.calibreStream = stream;
+  } catch (err) {
+    status.textContent = "Blocked";
+    stage.textContent = "No permission";
+    hint.textContent = (err.name || "Error") + ". Tap the lock in the address bar and set Microphone to Allow.";
+  }
 });
 </script>
 <script src="js/nav.js?v=20"></script>
