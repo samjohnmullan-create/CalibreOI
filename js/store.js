@@ -202,7 +202,7 @@ export function importCard(raw){
       parts: src.parts || "",
       measure: src.measure || "",
       complete: !!src.complete,
-      checks: src.checks || {},
+      photos: src.photos || [],
       updatedAt: src.notes ? new Date().toISOString() : null
     });
   });
@@ -219,6 +219,16 @@ export function importCard(raw){
     business: raw.business || {},
     timingRuns: raw.timingRuns || [],
     photos: raw.photos || {},
+    jobType: raw.jobType || "manual",
+    decision: raw.decision || "",
+    diagnosis: raw.diagnosis || "",
+    repairPerformed: raw.repairPerformed || "",
+    faults: raw.faults || [],
+    parts: raw.parts || [],
+    priority: !!raw.priority,
+    channel: raw.channel || "Not listed",
+    offers: raw.offers || [],
+    stage: raw.stage || 0,
     stages
   });
 }
@@ -226,19 +236,30 @@ export function exportCard(job){
   const pushId = job.pushId || slugify(job.watchName);
   return {
     type: "calibrejob",
+    version: 2,
     pushId,
     jobId: job.jobId,
     watchName: job.watchName,
     status: job.status,
+    jobType: job.jobType || "manual",
+    decision: job.decision || "",
+    diagnosis: job.diagnosis || "",
+    repairPerformed: job.repairPerformed || "",
     writeOff: job.writeOff || "",
     fitsNote: job.fitsNote || "",
+    priority: !!job.priority,
+    channel: job.channel || "Not listed",
+    offers: job.offers || [],
+    faults: job.faults || [],
+    parts: job.parts || [],
+    stage: job.stage || 0,
     sparesParts: job.sparesParts || [],
     importUrl: "https://samjohnmullan-create.github.io/CalibreOI/?card=" + encodeURIComponent(pushId),
     passport: job.passport,
     business: job.business,
     timingRuns: job.timingRuns || [],
     photos: job.photos || blankPhotos(),
-    stages: job.stages.map((s, i) => ({ name: STAGES[i], notes: s.notes, condition: s.condition, parts: s.parts, measure: s.measure, complete: s.complete, checks: s.checks || {} }))
+    stages: (job.stages || []).map((s, i) => ({ name: s.name || STAGES[i], notes: s.notes, condition: s.condition, parts: s.parts, measure: s.measure, complete: s.complete, checks: s.checks || {}, photos: s.photos || [] }))
   };
 }
 export async function compressImage(file){

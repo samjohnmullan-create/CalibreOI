@@ -25,7 +25,7 @@ window.addEventListener("error", function (e) {
 });
 </script>
 <script type="module">
-import { STAGES, loadState, saveState, current, exportCard, money, labourCost, investment, markSpares, PHOTO_SLOTS } from "./js/store.js?v=22";
+import { STAGES, loadState, saveState, current, exportCard, money, labourCost, investment, markSpares, PHOTO_SLOTS } from "./js/store.js?v=23";
 import { STAGE_COPY } from "./js/stages.js?v=9";
 const $ = id => document.getElementById(id);
 const slow = setTimeout(() => { if (/Loading/.test($("sheet").textContent)) $("sheet").innerHTML = "<p class='muted'>Still reading the jobs on this phone.</p>"; }, 6000);
