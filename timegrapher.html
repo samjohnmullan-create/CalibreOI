@@ -49,6 +49,15 @@
 <div class="cell"><span>Samples</span><strong id="advSamples">—</strong></div>
 <div class="cell"><span>Jitter</span><strong id="advJitter">—</strong></div>
 </div>
+<p class="kicker">TIMEGRAPHER</p>
+<div class="grid2">
+<label>Beat rate<select id="bph"><option value="0">Auto</option><option>14400</option><option>18000</option><option>19800</option><option>21600</option><option>25200</option><option>28800</option><option>36000</option></select></label>
+<label>Lift angle<select id="lift"><option>44</option><option>49</option><option selected>52</option><option>58</option><option>62</option></select></label>
+<label>Position<select id="position"><option>Dial up</option><option>Dial down</option><option>Crown left</option><option>Crown right</option><option>Crown up</option><option>Crown down</option></select></label>
+<label>Measure<select id="window"><option value="10">10 s</option><option value="20" selected>20 s</option><option value="30">30 s</option><option value="60">60 s</option></select></label>
+<label>Gain<select id="gain"><option value="1.6">Low</option><option value="2.2" selected>Normal</option><option value="3">High</option></select></label>
+</div>
+<canvas class="trace" id="paper" width="900" height="220"></canvas>
 <label>Tag<select id="phase"><option>Before service</option><option>During service</option><option>After service</option><option>Regulation test</option><option>Final test</option></select></label>
 <div class="row"><button id="start" class="btn" type="button">Start</button><button id="stop" class="btn secondary" type="button">Stop</button><button id="save" class="btn secondary" type="button">Save run</button></div>
 <p id="hint" class="muted small"></p>
@@ -89,12 +98,32 @@ function show(result){
   $("advJitter").textContent = result.jitterMs.toFixed(1) + " ms";
   trace.push(rate); if (trace.length > 60) trace.shift();
   drawTrace();
+  drawPaper();
+}
+function drawPaper(){
+  const c = $("paper"); if (!c) return;
+  const g = c.getContext("2d"), w = c.width, h = c.height;
+  g.fillStyle = "#111315"; g.fillRect(0,0,w,h);
+  g.strokeStyle = "#3a362e";
+  for (let y = 20; y < h; y += 20) { g.beginPath(); g.moveTo(0,y); g.lineTo(w,y); g.stroke(); }
+  const bph = Number($("bph").value) || (last && last.bph) || 18000;
+  const nominal = 3600 / bph;
+  g.fillStyle = "#d4b36a";
+  beats.slice(-80).forEach((beat, i, arr) => {
+    if (!i) return;
+    const gap = beat.t - arr[i-1].t;
+    const slip = ((gap - nominal) / nominal) * h * 4;
+    const x = i / arr.length * w;
+    const y = (h / 2 + slip) % h;
+    g.fillRect(x, y < 0 ? y + h : y, 3, 8);
+  });
 }
 function hear(t){
+  const seconds = Number($("window").value) || 20;
   beats.push({ t });
-  if (beats.length > 80) beats.shift();
-  show(analyse(beats, 0));
-  $("hint").textContent = beats.length + " ticks";
+  beats = beats.filter(b => t - b.t < seconds);
+  show(analyse(beats, Number($("bph").value) || 0));
+  $("hint").textContent = beats.length + " ticks · " + $("position").value;
 }
 $("start").onclick = async () => {
   $("status").textContent = "Opening";
@@ -114,7 +143,7 @@ $("start").onclick = async () => {
       for (let i = 0; i < ch.length; i++) { const a = Math.abs(ch[i]); if (a > peak) peak = a; }
       noise = noise * 0.98 + peak * 0.02;
       $("level").style.width = Math.min(100, peak * 400) + "%";
-      if (running && peak > Math.max(0.03, noise * 2.2) && ac.currentTime - lastBeat > 0.09) {
+      if (running && peak > Math.max(0.02, noise * Number($("gain").value)) && ac.currentTime - lastBeat > 0.09) {
         lastBeat = ac.currentTime;
         hear(ac.currentTime);
       }
