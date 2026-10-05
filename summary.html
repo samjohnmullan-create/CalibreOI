@@ -18,11 +18,20 @@
 <p id="statusText" class="muted small no-print"></p>
 </div>
 <script src="js/nav.js?v=10"></script>
+<script>
+window.addEventListener("error", function (e) {
+  var sheet = document.getElementById("sheet");
+  if (sheet && /Loading/.test(sheet.textContent)) sheet.innerHTML = "<p class='muted'>Sheet failed. " + (e.message || "Script error") + "</p>";
+});
+</script>
 <script type="module">
-import { STAGES, loadState, saveState, current, exportCard, money, labourCost, investment, markSpares, PHOTO_SLOTS } from "./js/store.js?v=17";
+import { STAGES, loadState, saveState, current, exportCard, money, labourCost, investment, markSpares, PHOTO_SLOTS } from "./js/store.js?v=18";
 import { STAGE_COPY } from "./js/stages.js?v=9";
 const $ = id => document.getElementById(id);
+const slow = setTimeout(() => { if (/Loading/.test($("sheet").textContent)) $("sheet").innerHTML = "<p class='muted'>Still reading the jobs on this phone.</p>"; }, 6000);
+try {
 const state = await loadState();
+clearTimeout(slow);
 const job = current(state);
 if (!job) {
   $("sheet").innerHTML = "<p class='muted'>No watch is open. Pick one on Start.</p>";
@@ -32,8 +41,6 @@ const p = job.passport || {}, b = job.business || {};
 const sale = Number(b.actualSale) || Number(b.targetSale) || 0;
 const total = investment(b);
 $("watchTitle").textContent = job.watchName;
-if (job.status === "complete" || job.status === "sold") $("completeJob").textContent = "Completed";
-if (job.status === "spares") $("writeOff").textContent = "Written off";
 const lines = [["Decision", job.decision],["Status", job.status],["Write-off", job.writeOff],["Maker", p.maker],["Model", p.model],["Calibre", p.calibre],["Jewels", p.jewels],["Serial", p.serial],["Case", [p.caseMaterial, p.caseNumber].filter(Boolean).join(" ")],["Purchase", b.purchasePrice?money(b.purchasePrice):""],["Parts", b.partsCost?money(b.partsCost):""],["Labour", labourCost(b)?money(labourCost(b)):""],["Investment", money(total)],["Sale", sale?money(sale):""],["Profit", sale?money(sale-total):""]].filter(x => x[1]);
 const stages = (job.stages || []).map((s,i) => {
   const name = s.name || STAGES[i];
@@ -58,7 +65,7 @@ $("buyerSheet").onclick = () => { mode = mode === "buyer" ? "internal" : "buyer"
 function download(name, data){ const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:"application/json"})); a.download = name; a.click(); }
 $("completeJob").onclick = async () => {
   if (!confirm("Mark "+job.watchName+" complete?")) return;
-  job.status = "complete"; job.completedAt = new Date().toISOString();
+  job.status = "Ready to list"; job.completedAt = new Date().toISOString();
   await saveState(state); location.href = "inventory.html";
 };
 $("writeOff").onclick = async () => {
@@ -67,11 +74,14 @@ $("writeOff").onclick = async () => {
   job.writeOff = reason; markSpares(job); job.completedAt = new Date().toISOString();
   await saveState(state); location.href = "suppliers.html";
 };
-$("printSheet").onclick = () => window.print();
 $("exportCard").onclick = () => { const card = exportCard(job); download((card.pushId||"job")+".calibrejob", card); $("statusText").textContent = "Job card saved."; };
 $("copyBrief").onclick = async () => {
   const text = ["Write a one-page service summary from this Calibre job. Only claim work that is marked done. No hype.", "", JSON.stringify(exportCard(job), null, 2)].join("\n");
   try { await navigator.clipboard.writeText(text); $("statusText").textContent = "Copied for ChatGPT."; } catch { $("statusText").textContent = "Copy failed. Export the card."; }
 };
+}
+} catch (err) {
+  clearTimeout(slow);
+  $("sheet").innerHTML = "<p class='muted'>Sheet could not load. " + (err && err.message ? err.message : "Unknown error") + "</p>";
 }
 </script></body></html>
