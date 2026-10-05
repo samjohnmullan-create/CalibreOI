@@ -8,10 +8,10 @@ document.querySelectorAll("nav.mainnav").forEach(function(nav){
   }).join("");
 });
 var markStyle = document.createElement("style");
-markStyle.textContent = ".brandmark{padding:0;overflow:hidden;background:transparent}.brandmark img{width:42px;height:42px;object-fit:cover;display:block}.seal{display:block;width:min(168px,42vw);height:auto;margin:4px auto 12px}.seal.dark{border-radius:50%}.wordmark{display:block;width:min(440px,100%);height:auto;margin:0 auto 14px}";
+markStyle.textContent = ".header-logo{display:block;height:48px;width:auto;max-width:min(280px,72vw)}.brandbar{min-height:60px}";
 document.head.appendChild(markStyle);
-document.querySelectorAll(".brandmark").forEach(function(el){
-  el.innerHTML = "<img src=\"assets/mark.png?v=4\" alt=\"\" style=\"width:42px;height:42px;object-fit:cover;display:block\">";
+document.querySelectorAll("a.brand").forEach(function(el){
+  el.innerHTML = "<img class=\"header-logo\" src=\"assets/header.png?v=5\" alt=\"Calibre\">";
 });
 if (!document.querySelector("link[rel=icon]")){
   var icon = document.createElement("link");
