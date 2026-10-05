@@ -1,9 +1,24 @@
 import { ensureSpares } from "./match.js";
-export const STAGES = [
-  "Intake","Demagnetising","Strip-down","Inspection","Cleaning",
-  "Barrel & Mainspring","Train Test","Escapement","Balance",
-  "Lubrication","Regulation","Final QC"
+export const JOB_TYPES = [
+  ["manual", "Mechanical manual"],
+  ["automatic", "Automatic"],
+  ["quartz", "Quartz"],
+  ["pocket", "Pocket watch"],
+  ["clock", "Clock"],
+  ["inspect", "Inspection only"]
 ];
+export const STAGE_PATHS = {
+  manual: ["Intake","Demagnetising","Strip-down","Inspection","Cleaning","Barrel & Mainspring","Train Test","Escapement","Balance","Lubrication","Regulation","Final QC"],
+  automatic: ["Intake","Demagnetising","Strip-down","Inspection","Cleaning","Barrel & Mainspring","Rotor","Train Test","Escapement","Balance","Lubrication","Regulation","Final QC"],
+  quartz: ["Intake","Case and strap","Battery","Inspection","Movement secure","Hands and calendar","Regulation","Final QC"],
+  pocket: ["Intake","Demagnetising","Bow and pendant","Strip-down","Inspection","Cleaning","Barrel & Mainspring","Train Test","Escapement","Balance","Lubrication","Regulation","Final QC"],
+  clock: ["Intake","Case","Inspection","Cleaning","Train Test","Escapement","Pendulum","Strike","Regulation","Final QC"],
+  inspect: ["Intake","Inspection","Final QC"]
+};
+export const STAGES = STAGE_PATHS.manual;
+export const FAULT_CHIPS = ["Crown/winder non-functional","Movement loose","Strap missing","Case scratched","Water resistance unverified"];
+export const SEVERITIES = ["Minor","Moderate","Critical","Parts required"];
+export function stagesFor(job){ return STAGE_PATHS[job && job.jobType] || STAGE_PATHS.manual; }
 const DB = "calibre-co-v1";
 const STORE = "kv";
 let dbp;
@@ -84,9 +99,16 @@ export function blankJob(partial = {}){
   return normalise(Object.assign(job, partial, { stages: partial.stages || stages, passport: Object.assign(blankPassport(), partial.passport), business: Object.assign(blankBusiness(), partial.business) }));
 }
 export function normalise(job){
-  job.stages = Array.isArray(job.stages) ? job.stages : [];
-  while (job.stages.length < STAGES.length) job.stages.push(blankStage());
-  job.stages = job.stages.slice(0, STAGES.length).map(s => Object.assign(blankStage(), s, { photos: s.photos || [], checks: s.checks || {} }));
+  job.jobType = STAGE_PATHS[job.jobType] ? job.jobType : "manual";
+  const path = stagesFor(job);
+  const existing = Array.isArray(job.stages) ? job.stages : [];
+  const byName = {};
+  existing.forEach((s, i) => {
+    const name = (s && s.name) || STAGES[i];
+    if (!name) return;
+    byName[name] = Object.assign(blankStage(), s, { name, photos: (s && s.photos) || [], checks: (s && s.checks) || {} });
+  });
+  job.stages = path.map(name => byName[name] || Object.assign(blankStage(), { name }));
   job.passport = Object.assign(blankPassport(), job.passport, { photos: (job.passport && job.passport.photos) || [] });
   job.photos = Object.assign(blankPhotos(), job.photos || {});
   PHOTO_SLOTS.forEach(([key]) => { job.photos[key] = Array.isArray(job.photos[key]) ? job.photos[key] : []; });
@@ -94,7 +116,10 @@ export function normalise(job){
   if (!job.business.partsCost && job.business.repairCost) job.business.partsCost = job.business.repairCost;
   job.timingRuns = job.timingRuns || [];
   job.chat = job.chat || [];
-  job.stage = Math.max(0, Math.min(11, job.stage || 0));
+  job.faults = (Array.isArray(job.faults) ? job.faults : []).filter(f => f && f.text).map(f => ({ text: f.text, severity: SEVERITIES.includes(f.severity) ? f.severity : "Moderate" }));
+  job.diagnosis = job.diagnosis || "";
+  job.repairPerformed = job.repairPerformed || "";
+  job.stage = Math.max(0, Math.min(path.length - 1, job.stage || 0));
   if (job.status === "spares") ensureSpares(job);
   else if (typeof job.fitsNote !== "string") job.fitsNote = "";
   return job;

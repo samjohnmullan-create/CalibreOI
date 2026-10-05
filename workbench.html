@@ -24,9 +24,13 @@
 <div id="stageList" class="stage-list" style="display:flex;gap:8px;overflow:auto;margin-bottom:12px"></div>
 <section class="card">
 <div class="section-head"><div><div id="stageEyebrow" class="kicker">STAGE 01</div><h2 id="stageTitle">Initial check</h2></div><label class="checkline"><input id="stageComplete" type="checkbox"><span>Stage complete</span></label></div>
-<label id="decisionWrap">Decision<select id="decision"><option value="">Not decided</option><option>Leave it</option><option>Regulate only</option><option>Case, hands or crystal</option><option>Partial</option><option>Full service</option></select></label>
+<label id="decisionWrap">Job type<select id="jobType"></select></label>
+<label id="decisionWrap2">Decision<select id="decision"><option value="">Not decided</option><option>Leave it</option><option>Regulate only</option><option>Case, hands or crystal</option><option>Partial</option><option>Full service</option></select></label>
 <p id="decisionNote" class="muted small"></p>
 <div id="steps"></div>
+<div id="faults"></div>
+<label>Diagnosis<textarea id="diagnosis" rows="3" placeholder="What you found. Not what you did."></textarea></label>
+<label>Repair performed<textarea id="repair" rows="3" placeholder="What you actually fixed."></textarea></label>
 <div class="grid2"><label>Watch name<input id="watchName"></label><label>Condition<select id="stageCondition"><option value="">Not set</option><option>Running</option><option>Running, needs a look</option><option>Stopped</option><option>Slipping wind</option><option>Damaged</option></select></label></div>
 <label>Notes<textarea id="stageNotes" rows="4"></textarea></label>
 <div class="grid2"><label>Parts used<input id="stageParts"></label><label>Measurement<input id="stageMeasure"></label></div>
@@ -43,39 +47,56 @@
 </section></div>
 <script src="js/nav.js?v=10"></script>
 <script type="module">
-import { STAGES, loadState, saveState, current, markSpares, compressImage } from "./js/store.js?v=8";
-import { STAGE_COPY } from "./js/stages.js?v=8";
+import { loadState, saveState, current, markSpares, compressImage, stagesFor, JOB_TYPES, FAULT_CHIPS, SEVERITIES, normalise } from "./js/store.js?v=9";
+import { STAGE_COPY } from "./js/stages.js?v=9";
 const $ = id => document.getElementById(id);
 let state = await loadState();
 let job = current(state);
 let timer;
+const path = () => stagesFor(job);
 const stage = () => job.stages[job.stage];
 function hint(t){ $("statusText").textContent = t; }
 function capture(){
   job.watchName = $("watchName").value; job.decision = $("decision").value;
-  const s = stage(); s.notes = $("stageNotes").value; s.condition = $("stageCondition").value; s.parts = $("stageParts").value; s.measure = $("stageMeasure").value; s.complete = $("stageComplete").checked; s.updatedAt = new Date().toISOString();
+  job.diagnosis = $("diagnosis").value; job.repairPerformed = $("repair").value;
+  const s = stage(); if (!s) return;
+  s.notes = $("stageNotes").value; s.condition = $("stageCondition").value; s.parts = $("stageParts").value; s.measure = $("stageMeasure").value; s.complete = $("stageComplete").checked; s.updatedAt = new Date().toISOString();
 }
 function schedule(){ clearTimeout(timer); hint("Saving…"); timer = setTimeout(async () => { capture(); await saveState(state); hint("Saved"); }, 400); }
 function stageDone(s, i){
-  if (s.complete) return true;
-  const steps = (STAGE_COPY[STAGES[i]] || {}).steps || [];
+  if (!s || s.complete) return !s ? false : true;
+  const steps = (STAGE_COPY[path()[i]] || {}).steps || [];
   if (!steps.length) return false;
   const checks = s.checks || {};
   return steps.every((_, n) => checks[n] === "yes" || checks[n] === "na" || checks[n] === true);
 }
+function paintFaults(){
+  const chips = FAULT_CHIPS.map(text => `<button class="btn secondary chip" data-fault="${text}" type="button">${text}</button>`).join("");
+  const rows = (job.faults || []).map((f, i) => `<div class="row"><strong>${f.text}</strong><select class="sev" data-i="${i}">${SEVERITIES.map(v => `<option${v===f.severity?" selected":""}>${v}</option>`).join("")}</select><button class="btn secondary drop" data-i="${i}" type="button">Remove</button></div>`).join("");
+  $("faults").innerHTML = `<h3>Faults found</h3><div class="row">${chips}</div>${rows}<div class="row"><input id="faultText" placeholder="Add a fault"><button id="addFault" class="btn secondary" type="button">Add</button></div>`;
+  $("faults").querySelectorAll(".chip").forEach(b => b.onclick = async () => { if (!job.faults.some(f => f.text === b.dataset.fault)) job.faults.push({ text: b.dataset.fault, severity: "Moderate" }); await saveState(state); paint(); });
+  $("faults").querySelectorAll(".sev").forEach(sel => sel.onchange = async () => { job.faults[sel.dataset.i].severity = sel.value; await saveState(state); });
+  $("faults").querySelectorAll(".drop").forEach(b => b.onclick = async () => { job.faults.splice(Number(b.dataset.i), 1); await saveState(state); paint(); });
+  $("addFault").onclick = async () => { const text = $("faultText").value.trim(); if (!text) return; job.faults.push({ text, severity: "Moderate" }); await saveState(state); paint(); };
+}
 function paint(){
   job = current(state);
-  const name = STAGES[job.stage];
+  const names = path();
+  const name = names[job.stage];
   const copy = STAGE_COPY[name] || { title: name, aim: "", steps: [] };
   const s = stage(); s.checks = s.checks || {};
   $("watchTitle").textContent = job.watchName; $("watchName").value = job.watchName || "";
   const upto = job.stages.findIndex((st, i) => !stageDone(st, i));
-  $("stageCounter").textContent = upto < 0 ? "12/12" : (upto + 1) + "/12";
+  $("stageCounter").textContent = upto < 0 ? names.length + "/" + names.length : (upto + 1) + "/" + names.length;
   $("stageEyebrow").textContent = "STAGE " + String(job.stage + 1).padStart(2, "0");
   $("stageTitle").textContent = copy.title; $("stageAim").textContent = copy.aim;
-  $("decision").value = job.decision || ""; $("decisionWrap").style.display = job.stage === 0 ? "" : "none";
-  $("decisionNote").textContent = job.stage === 0 ? "A running watch with no fault does not get a full service." : "";
+  $("jobType").innerHTML = JOB_TYPES.map(([id, label]) => `<option value="${id}">${label}</option>`).join("");
+  $("jobType").value = job.jobType || "manual";
+  $("decision").value = job.decision || "";
+  $("decisionNote").textContent = job.stage === 0 ? "A quartz watch does not take the barrel and balance path." : "";
   $("stageNotes").value = s.notes || ""; $("stageCondition").value = s.condition || ""; $("stageParts").value = s.parts || ""; $("stageMeasure").value = s.measure || ""; $("stageComplete").checked = !!s.complete;
+  $("diagnosis").value = job.diagnosis || ""; $("repair").value = job.repairPerformed || "";
+  paintFaults();
   s.photos = s.photos || [];
   $("stageShots").innerHTML = s.photos.map((src, i) => `<figure style="margin:0;position:relative"><img src="${src}" alt="" style="width:72px;height:72px;object-fit:cover;border-radius:8px"><button class="shot-x" data-i="${i}" type="button" aria-label="Remove photo" style="position:absolute;top:4px;right:4px;width:22px;height:22px;border:0;border-radius:50%;background:rgba(23,25,27,.72);color:#fff">×</button></figure>`).join("");
   $("stageShots").querySelectorAll(".shot-x").forEach(btn => btn.onclick = async () => { s.photos.splice(Number(btn.dataset.i), 1); await saveState(state); paint(); });
@@ -98,7 +119,7 @@ function paint(){
     row.appendChild(p); row.appendChild(btns); box.appendChild(row);
   });
   const list = $("stageList"); list.innerHTML = "";
-  STAGES.forEach((key,i) => {
+  path().forEach((key,i) => {
     const done = stageDone(job.stages[i], i);
     const title = STAGE_COPY[key] ? STAGE_COPY[key].title : key;
     const b = document.createElement("button"); b.type = "button";
@@ -110,8 +131,9 @@ function paint(){
   });
   hint("On " + copy.title);
 }
-["watchName","stageNotes","stageParts","stageMeasure"].forEach(id => $(id).addEventListener("input", schedule));
+["watchName","stageNotes","stageParts","stageMeasure","diagnosis","repair"].forEach(id => $(id).addEventListener("input", schedule));
 ["stageCondition","stageComplete","decision"].forEach(id => $(id).addEventListener("change", schedule));
+$("jobType").onchange = async () => { capture(); job.jobType = $("jobType").value; normalise(job); job.stage = 0; await saveState(state); paint(); };
 $("takeStage").onclick = () => { $("stagePhoto").setAttribute("capture", "environment"); $("stagePhoto").click(); };
 $("uploadStage").onclick = () => { $("stagePhoto").removeAttribute("capture"); $("stagePhoto").click(); };
 $("stagePhoto").onchange = async () => {
@@ -128,7 +150,7 @@ $("stagePhoto").onchange = async () => {
 };
 $("stageComplete").addEventListener("change", async () => { capture(); await saveState(state); paint(); });
 $("prevStage").onclick = async () => { capture(); job.stage = Math.max(0, job.stage-1); await saveState(state); paint(); };
-$("nextStage").onclick = async () => { capture(); job.stage = Math.min(11, job.stage+1); await saveState(state); paint(); };
+$("nextStage").onclick = async () => { capture(); job.stage = Math.min(path().length - 1, job.stage+1); await saveState(state); paint(); };
 $("completeJob").onclick = async () => {
   capture();
   if (!confirm("Mark "+job.watchName+" complete?")) return;

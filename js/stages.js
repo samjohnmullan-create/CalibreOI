@@ -128,5 +128,14 @@ export const STAGE_COPY = {
       "If it was apart, has it been demagnetised?",
       "If it was opened, has it been left running a day?"
     ]
-  }
+  },
+  "Rotor": { title: "Rotor", aim: "The automatic works, not the going train.", steps: ["Does the rotor swing free?", "Does winding from the rotor take up the spring?", "Is the reversing wheel sound?"] },
+  "Case and strap": { title: "Case and strap", aim: "What is missing or damaged before the movement is blamed.", steps: ["Is the strap present and sound?", "Is the crown attached and able to pull?", "Is the case back secure?"] },
+  "Battery": { title: "Battery", aim: "A quartz watch starts here, not at the barrel.", steps: ["Is the cell the right size and in date?", "Are the contacts clean and making?", "Does it run on a known cell?"] },
+  "Movement secure": { title: "Movement secure", aim: "A loose movement is a case fault.", steps: ["Are the case clamps or screws holding the movement?", "Does the stem stay in place?"] },
+  "Hands and calendar": { title: "Hands and calendar", aim: "Setting and the date, if it has one.", steps: ["Do the hands pass without a catch?", "Does the calendar change, if fitted?"] },
+  "Bow and pendant": { title: "Bow and pendant", aim: "Pocket-watch parts a wristwatch does not have.", steps: ["Is the bow sound?", "Does the pendant wind and set?", "Is the sleeve free?"] },
+  "Case": { title: "Case", aim: "The clock case and the seat of the movement.", steps: ["Is the movement seated?", "Are the dial feet and the bezel sound?"] },
+  "Pendulum": { title: "Pendulum", aim: "Length, beat, and a free swing.", steps: ["Is the suspension spring sound?", "Is it in beat?", "Does it swing free of the case?"] },
+  "Strike": { title: "Strike", aim: "Only if this clock strikes or chimes.", steps: ["Does it warn?", "Does it strike the right count?", "Is the rack or countwheel free?"] }
 };

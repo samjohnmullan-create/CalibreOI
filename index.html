@@ -32,8 +32,8 @@
 </div>
 <script src="js/nav.js?v=10"></script>
 <script type="module">
-import { STAGES, loadState, saveState, blankJob, current, importCard, money, investment, escapeHtml, coverPhoto } from "./js/store.js?v=8";
-import { STAGE_COPY } from "./js/stages.js?v=8";
+import { STAGES, loadState, saveState, blankJob, current, importCard, money, investment, escapeHtml, coverPhoto } from "./js/store.js?v=9";
+import { STAGE_COPY } from "./js/stages.js?v=9";
 import { fillResults } from "./js/search.js?v=7";
 const $ = id => document.getElementById(id);
 let state = await loadState();
@@ -45,7 +45,7 @@ const parts = j => j.status === "waiting parts";
 const ready = j => j.status === "complete";
 function photo(j){ return coverPhoto(j); }
 function stageName(j){
-  const key = STAGES[j.stage] || STAGES[0];
+  const key = (j.stages[j.stage] && j.stages[j.stage].name) || STAGES[j.stage] || STAGES[0];
   return (STAGE_COPY[key] && STAGE_COPY[key].title) || key;
 }
 function stockValue(j){ return num(j.business.actualSale) || num(j.business.targetSale) || investment(j.business); }
