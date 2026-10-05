@@ -45,8 +45,9 @@ const parts = j => j.status === "Awaiting parts";
 const ready = j => j.status === "Ready to list" || j.status === "Listed" || j.status === "Ready for photos";
 function photo(j){ return coverPhoto(j); }
 function stageName(j){
-  const key = (j.stages[j.stage] && j.stages[j.stage].name) || STAGES[j.stage] || STAGES[0];
-  return (STAGE_COPY[key] && STAGE_COPY[key].title) || key;
+  const stages = j.stages || [];
+  const key = (stages[j.stage] && stages[j.stage].name) || STAGES[j.stage] || STAGES[0];
+  return (STAGE_COPY[key] && STAGE_COPY[key].title) || key || "Stage";
 }
 function stockValue(j){ return num(j.business.actualSale) || num(j.business.targetSale) || investment(j.business); }
 function profit(j){
@@ -58,13 +59,17 @@ function openJob(id, href){
   return saveState(state).then(() => { location.href = href; });
 }
 function paint(){
+  const jobs = state.jobs || [];
   const job = current(state);
-  const jobs = state.jobs;
+  const listedSafe = jobs.map(j => `<a class="job-card" data-id="${j.id}" href="workbench.html"><div><strong>${escapeHtml(j.watchName || "Untitled")}</strong><div class="muted small">${escapeHtml(j.jobId || "")} · ${escapeHtml(j.status || "On bench")}</div></div><div><button class="btn secondary del" data-id="${j.id}" type="button">Delete</button></div></a>`).join("") || "<p class='muted'>No jobs on this phone.</p>";
+  $("jobList").innerHTML = listedSafe;
+  $("listTitle").textContent = "All jobs · " + jobs.length;
+  $("jobList").querySelectorAll(".job-card").forEach(a => a.onclick = e => { if (e.target.closest(".del")) return; e.preventDefault(); openJob(a.dataset.id, "workbench.html"); });
+  $("jobList").querySelectorAll(".del").forEach(b => b.onclick = e => { e.preventDefault(); e.stopPropagation(); removeJob(jobs.find(j => j.id === b.dataset.id)); });
   if (!job){
     $("currentCard").innerHTML = `<div class="kicker">CURRENT WATCH</div><p class="muted">No job on this phone.</p><button id="newFromEmpty" class="btn" type="button">New job</button>`;
     $("newFromEmpty").onclick = () => $("newJob").click();
     $("dash").innerHTML = "";
-    $("jobList").innerHTML = "<p class='muted'>None in this group.</p>";
     $("doneList").innerHTML = "<p class='muted'>Nothing completed yet.</p>";
     return;
   }
