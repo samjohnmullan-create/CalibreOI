@@ -26,13 +26,16 @@
 <div id="found" class="jobs"></div>
 </section>
 <section class="card"><h3 id="listTitle">All jobs</h3><div id="jobList" class="jobs"></div>
-<div class="row"><button id="newJob" class="btn secondary" type="button">New job</button><button id="saveDrive" class="btn secondary" type="button">Save to Drive</button><label class="btn secondary">Load from Drive<input id="jobFile" type="file" accept=".calibrejob,.calibrejobs,application/json" hidden></label></div>
+<div class="row"><button id="newJob" class="btn secondary" type="button">New job</button><button id="saveDrive" class="btn secondary" type="button">Save to Drive</button><button id="loadCard" class="btn secondary" type="button">Load job card</button></div>
+<input id="jobFile" type="file" accept="application/json,text/plain,.json,.txt,.calibrejob,.calibrejobs,*/*" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
+<label>Or paste the card<textarea id="pasteCard" rows="4" placeholder="Paste the job card JSON here if the phone will not open the file"></textarea></label>
+<button id="pasteCardBtn" class="btn secondary" type="button">Add pasted card</button>
 <p id="statusText" class="muted small"></p></section>
 <section class="card"><h3>Recently completed</h3><div id="doneList" class="jobs"></div></section>
 </div>
 <script src="js/nav.js?v=20"></script>
 <script type="module">
-import { STAGES, loadState, saveState, blankJob, current, importCard, money, investment, escapeHtml, coverPhoto, normalise } from "./js/store.js?v=23";
+import { STAGES, loadState, saveState, blankJob, current, importCard, money, investment, escapeHtml, coverPhoto, normalise } from "./js/store.js?v=24";
 import { STAGE_COPY } from "./js/stages.js?v=9";
 import { fillResults } from "./js/search.js?v=7";
 const $ = id => document.getElementById(id);
@@ -86,7 +89,7 @@ function paint(){
   const invested = holding.reduce((n, j) => n + investment(j.business), 0);
   const value = forSale.reduce((n, j) => n + stockValue(j), 0);
   const projected = holding.reduce((n, j) => n + profit(j), 0);
-  const src = photo(job);
+  const src = coverPhoto(job);
   const p = job.passport, b = job.business;
   $("currentCard").innerHTML = `
     <div class="kicker">CURRENT WATCH</div>
@@ -153,23 +156,51 @@ $("saveDrive").onclick = () => {
   const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "calibre-jobs.calibrejobs"; a.click();
   $("statusText").textContent = "File saved. Put calibre-jobs.calibrejobs in the Drive folder Calibre jobs.";
 };
+function readCardText(text){
+  const clean = String(text || "").replace(/^\uFEFF/, "").trim();
+  const start = clean.indexOf("{");
+  const end = clean.lastIndexOf("}");
+  if (start < 0 || end < start) throw new Error("No JSON in that card");
+  return JSON.parse(clean.slice(start, end + 1));
+}
+async function takeCard(data, label){
+  if (data && data.type === "calibrejobs" && Array.isArray(data.jobs)) {
+    const byId = new Map(state.jobs.map(j => [j.id, j]));
+    data.jobs.forEach(j => byId.set(j.id, normalise(j)));
+    state.jobs = [...byId.values()];
+    if (data.currentId) state.currentId = data.currentId;
+    await saveState(state); paint();
+    $("statusText").textContent = state.jobs.length + " jobs loaded.";
+    return;
+  }
+  const n = importCard(data);
+  const existing = state.jobs.find(j => n.pushId && j.pushId === n.pushId);
+  if (existing) state.currentId = existing.id;
+  else { state.jobs.unshift(n); state.currentId = n.id; }
+  await saveState(state);
+  location.href = "workbench.html";
+}
+$("loadCard").onclick = () => $("jobFile").click();
 $("jobFile").onchange = async (e) => {
   const file = e.target.files[0]; if (!file) return;
-  try {
-    const data = JSON.parse(await file.text());
-    if (data && data.type === "calibrejobs" && Array.isArray(data.jobs)) {
-      const byId = new Map(state.jobs.map(j => [j.id, j]));
-      data.jobs.forEach(j => byId.set(j.id, normalise(j)));
-      state.jobs = [...byId.values()];
-      if (data.currentId) state.currentId = data.currentId;
-      await saveState(state); paint();
-      $("statusText").textContent = state.jobs.length + " jobs loaded from Drive.";
-    } else {
-      const n = importCard(data); state.jobs.unshift(n); state.currentId = n.id; await saveState(state); location.href = "workbench.html";
-    }
-  }
-  catch { $("statusText").textContent = "That card could not be read."; }
+  try { await takeCard(readCardText(await file.text()), file.name); }
+  catch (err) { $("statusText").textContent = "That card could not be read. " + (err && err.message || "Save it as .json, or paste it below."); }
+  e.target.value = "";
 };
+$("pasteCardBtn").onclick = async () => {
+  try { await takeCard(readCardText($("pasteCard").value), "paste"); }
+  catch (err) { $("statusText").textContent = "That paste could not be read. " + (err && err.message || ""); }
+};
+const cardSlug = new URLSearchParams(location.search).get("card");
+if (cardSlug) {
+  try {
+    const res = await fetch("cards/" + encodeURIComponent(cardSlug) + ".calibrejob", { cache: "no-store" });
+    if (!res.ok) throw new Error("That card is not in the repo yet");
+    await takeCard(readCardText(await res.text()), cardSlug);
+  } catch (err) {
+    $("statusText").textContent = "Link did not load the card. " + (err && err.message || "") + " Use Load job card, or paste the JSON.";
+  }
+}
 function go(job){
   state.currentId = job.id;
   return saveState(state).then(() => {
