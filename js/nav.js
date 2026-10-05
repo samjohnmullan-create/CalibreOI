@@ -20,6 +20,7 @@ document.querySelectorAll("nav.mainnav").forEach(function(nav){
     ["timegrapher.html","Rate","M12 7v6l4 2M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z"],
     ["passport.html","Watch","M8 4h8v3a4 4 0 0 1-8 0zM8 20h8v-3a4 4 0 0 1-8 0z"],
     ["business.html","Cost","M6 6h12v12H6zM9 10h6M9 14h4"],
+    ["finance.html","Funds","M5 7h14v11H5zM5 11h14M8 15h3"],
     ["summary.html","Sheet","M7 4h8l4 4v12H7zM15 4v4h4"],
     ["inventory.html","Stock","M5 8h14v11H5zM5 8l2-3h10l2 3"],
     ["suppliers.html","Parts","M12 4l2 4 4 .5-3 3 .8 4.5L12 14l-3.8 2 0.8-4.5-3-3L10 8z"]
