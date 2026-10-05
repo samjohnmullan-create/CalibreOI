@@ -29,7 +29,7 @@ body.advanced .easy-only{display:none}
 <div class="hero"><div><div class="kicker">RATE</div><h2 id="watchTitle">Time</h2></div></div>
 <section class="card tg">
 <div class="tabs"><button id="easyTab" class="btn secondary on" type="button">Easy</button><button id="advTab" class="btn secondary" type="button">Advanced</button></div>
-<label>Microphone<select id="mic"><option value="">Phone default</option></select></label>
+<label>Microphone<select id="mic"><option value="">Phone microphone</option></select></label>
 <div class="bar"><span id="level" style="width:0"></span></div>
 <p class="rate" id="rate">—</p>
 <span class="pill poor" id="status">Tap Start</span>
@@ -61,9 +61,9 @@ document.getElementById("start").addEventListener("click", async function(){
     hint.textContent = "This browser cannot use a microphone. Open the page in Chrome.";
     return;
   }
-  var ask = navigator.mediaDevices.getUserMedia({ audio:true });
-  try {
-    var stream = await ask;
+    var devices = await navigator.mediaDevices.enumerateDevices();
+    var phone = devices.filter(function(d){ return d.kind === "audioinput"; }).find(function(d){ return /built-in|phone|mic|microphone/i.test(d.label) && !/usb|holly|receiver/i.test(d.label); });
+    var stream = await navigator.mediaDevices.getUserMedia({ audio: phone ? { deviceId:{ exact:phone.deviceId } } : true });
     var ac = new AudioContext();
     if (ac.state === "suspended") await ac.resume();
     var src = ac.createMediaStreamSource(stream);
