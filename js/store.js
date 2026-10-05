@@ -142,7 +142,7 @@ export function normalise(job){
   return job;
 }
 export function markSpares(job){
-  job.status = "spares";
+  job.status = "Spares";
   ensureSpares(job);
   return job;
 }

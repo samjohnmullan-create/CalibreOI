@@ -11,26 +11,34 @@
 </div>
 <script src="js/nav.js?v=10"></script>
 <script type="module">
-import { loadState, saveState, money, cashOut, stockAge, STATUSES } from "./js/store.js?v=14";
-const state = await loadState();
-const unsold = state.jobs.filter(j => j.status !== "Sold" && j.status !== "Spares");
-const tied = unsold.reduce((n, j) => n + cashOut(j.business || {}), 0);
-document.getElementById("capital").textContent = "You currently have " + money(tied) + " tied up in unsold watches.";
-function ageNote(j){
-  if (j.status === "Sold") return "";
-  const d = stockAge(j);
-  if (d >= 90) return " · 90+ days";
-  if (d >= 60) return " · 60+ days";
-  if (d >= 30) return " · 30+ days";
-  return d ? " · " + d + " days" : "";
+import { loadState, saveState, money, cashOut, stockAge, STATUSES } from "./js/store.js?v=15";
+const capital = document.getElementById("capital");
+const groups = document.getElementById("groups");
+try {
+  const state = await loadState();
+  const unsold = (state.jobs || []).filter(j => j.status !== "Sold" && j.status !== "Spares");
+  const tied = unsold.reduce((n, j) => n + cashOut(j.business || {}), 0);
+  capital.textContent = "You currently have " + money(tied) + " tied up in unsold watches.";
+  function ageNote(j){
+    if (j.status === "Sold") return "";
+    const d = stockAge(j);
+    if (d >= 90) return " · 90+ days";
+    if (d >= 60) return " · 60+ days";
+    if (d >= 30) return " · 30+ days";
+    return d ? " · " + d + " days" : "";
+  }
+  function row(j){
+    const name = String(j.watchName || "Untitled").replace(/[&<>]/g, c => ({"&":"&","<":"<",">":">"}[c]));
+    return `<a class="job-card" data-id="${j.id}" href="summary.html"><div><strong>${name}</strong><div class="muted small">${j.jobId || ""} · ${j.channel || "Not listed"}${ageNote(j)}</div></div><div><span class="badge">${j.status || "On bench"}</span></div></a>`;
+  }
+  groups.innerHTML = STATUSES.map(status => {
+    const list = state.jobs.filter(j => j.status === status);
+    if (!list.length) return "";
+    return `<section class="card"><h3>${status} <span class="muted">${list.length}</span></h3><div class="jobs">${list.map(row).join("")}</div></section>`;
+  }).join("") || "<p class='muted'>No watches on this phone.</p>";
+  document.querySelectorAll(".job-card").forEach(a => a.onclick = async () => { state.currentId = a.dataset.id; await saveState(state); });
+} catch (err) {
+  capital.textContent = "Stock could not load.";
+  groups.innerHTML = "<p class='muted'>" + (err && err.message ? err.message : "Unknown error") + "</p>";
 }
-function row(j){
-  return `<a class="job-card" data-id="${j.id}" href="summary.html"><div><strong>${j.watchName}</strong><div class="muted small">${j.jobId} · ${j.channel || "Not listed"}${ageNote(j)}</div></div><div><span class="badge">${j.status}</span></div></a>`;
-}
-document.getElementById("groups").innerHTML = STATUSES.map(status => {
-  const list = state.jobs.filter(j => j.status === status);
-  if (!list.length) return "";
-  return `<section class="card"><h3>${status} <span class="muted">${list.length}</span></h3><div class="jobs">${list.map(row).join("")}</div></section>`;
-}).join("") || "<p class='muted'>No watches on this phone.</p>";
-document.querySelectorAll(".job-card").forEach(a => a.onclick = async () => { state.currentId = a.dataset.id; await saveState(state); });
 </script></body></html>
