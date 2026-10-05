@@ -135,6 +135,15 @@ function paint(){
   $("stageTitle").textContent = copy.title; $("stageAim").textContent = copy.aim;
   $("jobType").innerHTML = JOB_TYPES.map(([id, label]) => `<option value="${id}">${label}</option>`).join("");
   $("jobType").value = job.jobType || "manual";
+  $("jobType").onchange = async () => {
+    capture();
+    job.jobType = $("jobType").value;
+    normalise(job);
+    job.stage = 0;
+    await saveState(state);
+    paint();
+    hint("Path set to " + stagesFor(job).length + " stages.");
+  };
   $("decision").value = job.decision || "";
   $("decisionNote").textContent = job.stage === 0 ? "A quartz watch does not take the barrel and balance path." : "";
   $("stageNotes").value = s.notes || ""; $("stageCondition").value = s.condition || ""; $("stageMeasure").value = s.measure || ""; $("stageComplete").checked = !!s.complete;
@@ -174,8 +183,6 @@ $("timerBtn").onclick = async () => {
   await saveState(state); paint();
 };
 $("awaitParts").onclick = async () => { job.status = job.status === "Awaiting parts" ? "On bench" : "Awaiting parts"; await saveState(state); paint(); };
-setInterval(() => { if (job && job.labour && job.labour.running) paintTimer(); }, 15000);
-$("jobType").onchange = async () => { capture(); job.jobType = $("jobType").value; normalise(job); job.stage = 0; await saveState(state); paint(); };
 $("takeStage").onclick = () => { $("stagePhoto").setAttribute("capture", "environment"); $("stagePhoto").click(); };
 $("uploadStage").onclick = () => { $("stagePhoto").removeAttribute("capture"); $("stagePhoto").click(); };
 $("stagePhoto").onchange = async () => {
