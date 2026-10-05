@@ -259,6 +259,8 @@ export function exportCard(job){
     business: job.business,
     timingRuns: job.timingRuns || [],
     photos: job.photos || blankPhotos(),
+    invoicePhoto: (job.passport && job.passport.invoicePhoto) || "",
+    photoCount: PHOTO_SLOTS.reduce((n, [key]) => n + ((job.photos && job.photos[key] && job.photos[key].length) || 0), 0) + (job.stages || []).reduce((n, s) => n + ((s.photos && s.photos.length) || 0), 0),
     stages: (job.stages || []).map((s, i) => ({ name: s.name || STAGES[i], notes: s.notes, condition: s.condition, parts: s.parts, measure: s.measure, complete: s.complete, checks: s.checks || {}, photos: s.photos || [] }))
   };
 }

@@ -74,7 +74,7 @@ $("writeOff").onclick = async () => {
   job.writeOff = reason; markSpares(job); job.completedAt = new Date().toISOString();
   await saveState(state); location.href = "suppliers.html";
 };
-$("exportCard").onclick = () => { const card = exportCard(job); download((card.pushId||"job")+".calibrejob", card); $("statusText").textContent = "Job card saved."; };
+$("exportCard").onclick = () => { const card = exportCard(job); download((card.pushId||"job")+".calibrejob", card); $("statusText").textContent = "Job card saved with " + card.photoCount + " photos."; };
 $("copyBrief").onclick = async () => {
   const text = ["Write a one-page service summary from this Calibre job. Only claim work that is marked done. No hype.", "", JSON.stringify(exportCard(job), null, 2)].join("\n");
   try { await navigator.clipboard.writeText(text); $("statusText").textContent = "Copied for ChatGPT."; } catch { $("statusText").textContent = "Copy failed. Export the card."; }
