@@ -64,6 +64,7 @@ export function blankPhotos(){
   return Object.fromEntries(PHOTO_SLOTS.map(([key]) => [key, []]));
 }
 export function blankPart(){ return { part:"", supplier:"", partNumber:"", quantity:"1", cost:"", ordered:"", received:false, fitted:false }; }
+export function blankStage(){ return { notes:"", condition:"", parts:"", measure:"", complete:false, photos:[], checks:{}, updatedAt:null }; }
 export function partsCost(job){
   return (job.parts || []).reduce((n, p) => n + (Number(p.cost) || 0) * (Number(p.quantity) || 1), 0);
 }
