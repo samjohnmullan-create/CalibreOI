@@ -128,9 +128,9 @@ function paint(){
   const titles = { all:"All jobs", bench:"On the bench", parts:"Awaiting parts", ready:"Ready for sale", value:"Ready for sale", invested:"Money still in watches", profit:"With a target sale" };
   $("listTitle").textContent = titles[filter] || "Jobs";
   const listed = filter === "all" ? jobs : filter === "parts" ? waiting : filter === "ready" || filter === "value" ? forSale : filter === "profit" ? holding.filter(j => num(j.business.targetSale) || num(j.business.actualSale)) : filter === "invested" ? holding : onBench;
-  $("jobList").innerHTML = listed.map(j => `<a class="job-card" data-id="${j.id}" href="workbench.html"><div><strong>${escapeHtml(j.watchName)}</strong><div class="muted small">${escapeHtml(j.jobId)} · ${escapeHtml(j.status || "on the bench")} · ${escapeHtml(stageName(j))}</div></div><div><button class="btn secondary del" data-id="${j.id}" type="button">Delete</button></div></a>`).join("") || "<p class='muted'>None in this group.</p>";
-  $("jobList").querySelectorAll(".job-card").forEach(a => a.onclick = e => { if (e.target.closest(".del")) return; e.preventDefault(); openJob(a.dataset.id, "workbench.html"); });
-  $("jobList").querySelectorAll(".del").forEach(b => b.onclick = e => { e.preventDefault(); e.stopPropagation(); removeJob(jobs.find(j => j.id === b.dataset.id)); });
+  $("jobList").innerHTML = listed.map(card).join("") || "<p class='muted'>None in this group.</p>";
+  $("jobList").querySelectorAll(".job-card").forEach(a => a.onclick = e => { if (e.target.closest(".star") || e.target.closest(".del")) return; e.preventDefault(); openJob(a.dataset.id, "workbench.html"); });
+  $("jobList").querySelectorAll(".star").forEach(b => b.onclick = async e => { e.preventDefault(); e.stopPropagation(); const hit = state.jobs.find(j => j.id === b.dataset.id); if (!hit) return; hit.priority = !hit.priority; await saveState(state); paint(); });
   const done = jobs.filter(j => j.status === "Sold" || j.status === "Ready to list" || j.status === "Listed").sort((a,b) => String(b.completedAt||b.updatedAt).localeCompare(String(a.completedAt||a.updatedAt))).slice(0, 5);
   $("doneList").innerHTML = done.map(j => `<a class="job-card" data-id="${j.id}" href="summary.html"><div><strong>${escapeHtml(j.watchName)}</strong><div class="muted small">${j.status}</div></div></a>`).join("") || "<p class='muted'>Nothing completed yet.</p>";
   $("doneList").querySelectorAll(".job-card").forEach(a => a.onclick = e => { e.preventDefault(); openJob(a.dataset.id, "summary.html"); });
