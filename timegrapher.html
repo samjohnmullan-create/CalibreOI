@@ -86,15 +86,23 @@ $("advTab").onclick = () => { document.body.classList.add("advanced"); $("advTab
 async function stop(){ running = false; if (stream) stream.getTracks().forEach(t => t.stop()); if (ac && ac.state !== "closed") { try { await ac.close(); } catch {} } $("start").disabled = false; $("stop").disabled = true; }
 $("start").onclick = async () => {
   $("hint").textContent = "Asking for the microphone…";
-  stream = await navigator.mediaDevices.getUserMedia({ audio:{ echoCancellation:false, noiseSuppression:false, autoGainControl:false } });
-  ac = new AudioContext(); if (ac.state === "suspended") await ac.resume();
-  await ac.audioWorklet.addModule("js/tg-processor.js");
-  node = new AudioWorkletNode(ac, "calibre-tick");
-  ac.createMediaStreamSource(stream).connect(node);
-  beats = []; trace = []; locked = Number($("bph").value) || 0;
-  node.port.onmessage = (e) => { if (running && e.data.kind === "beat") { beats.push(e.data); if (beats.length > 80) beats.shift(); show(analyse(beats, locked)); if (!locked && last && last.bph) locked = last.bph; } };
-  running = true; $("start").disabled = true; $("stop").disabled = false;
-  $("hint").textContent = "Watch on the capsule, not the phone.";
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { $("hint").textContent = "This page cannot use the microphone. Open it in Chrome."; return; }
+  try {
+    try { stream = await navigator.mediaDevices.getUserMedia({ audio:{ echoCancellation:false, noiseSuppression:false, autoGainControl:false } }); }
+    catch { stream = await navigator.mediaDevices.getUserMedia({ audio:true }); }
+    const track = stream.getAudioTracks()[0];
+    ac = new AudioContext(); if (ac.state === "suspended") await ac.resume();
+    await ac.audioWorklet.addModule("js/tg-processor.js");
+    node = new AudioWorkletNode(ac, "calibre-tick");
+    ac.createMediaStreamSource(stream).connect(node);
+    beats = []; trace = []; locked = Number($("bph").value) || 0;
+    node.port.onmessage = (e) => { if (running && e.data.kind === "beat") { beats.push(e.data); if (beats.length > 80) beats.shift(); show(analyse(beats, locked)); if (!locked && last && last.bph) locked = last.bph; } };
+    running = true; $("start").disabled = true; $("stop").disabled = false;
+    $("hint").textContent = "Listening on " + (track.label || "the microphone") + ". Watch on the capsule.";
+  } catch (err) {
+    $("hint").textContent = "Microphone failed: " + (err.name ? err.name + " — " : "") + (err.message || "permission blocked");
+    if (stream) stream.getTracks().forEach(t => t.stop());
+  }
 };
 $("stop").onclick = () => stop();
 $("save").onclick = async () => {
