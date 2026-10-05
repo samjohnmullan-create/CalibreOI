@@ -6,7 +6,7 @@
   "background_color": "#f3f1eb",
   "theme_color": "#17191b",
   "icons": [
-    { "src": "assets/mark.png?v=2", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "assets/seal-black.png?v=2", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+    { "src": "assets/mark.png?v=3", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "assets/seal-black.png?v=3", "sizes": "512x512", "type": "image/png", "purpose": "any" }
   ]
 }
