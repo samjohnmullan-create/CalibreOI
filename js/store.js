@@ -78,7 +78,7 @@ export function coverPhoto(job){
   return "";
 }
 export function blankPassport(){
-  return { maker:"", model:"", calibre:"", jewels:"", movementType:"", movementMm:"", year:"", serial:"", caseNumber:"", reference:"", caseMaterial:"", width:"", height:"", thickness:"", escapement:"", notes:"", history:"", photos:[] };
+  return { maker:"", model:"", country:"", year:"", confidence:"Unknown", dialMarkings:"", movementMaker:"", calibre:"", calibreFamily:"", beatRate:"", powerReserve:"", settingType:"", jewels:"", movementType:"", movementMm:"", escapement:"", serial:"", caseNumber:"", reference:"", caseMaterial:"", caseStyle:"", casebackType:"", crystalType:"", crownType:"", lugWidth:"", width:"", height:"", thickness:"", complications:"", waterMark:"", strap:"", hallmarks:"", engravings:"", notes:"", history:"", photos:[] };
 }
 export function blankBusiness(){
   return { purchasePrice:"", partsCost:"", labourMinutes:"", labourRate:"", otherCost:"", targetSale:"", actualSale:"", title:"", text:"" };
