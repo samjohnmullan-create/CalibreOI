@@ -32,7 +32,7 @@ body.advanced .easy-only{display:none}
 <label>Microphone<select id="mic"><option value="">Phone default</option></select></label>
 <div class="bar"><span id="level" style="width:0"></span></div>
 <p class="rate" id="rate">—</p>
-<span class="pill poor" id="status">Waiting</span>
+<span class="pill poor" id="status">Tap Start</span>
 <div class="scale"><div class="band"></div><div class="centre"></div><div class="marker" id="marker" style="left:50%"></div></div>
 <div class="ticks"><span>Slow</span><span>Perfect</span><span>Fast</span></div>
 <p id="advice">Put the watch on the capsule, then start.</p>
@@ -50,14 +50,42 @@ body.advanced .easy-only{display:none}
 </section>
 </div>
 <script>
-document.getElementById("start").addEventListener("click", function(){
+document.getElementById("start").addEventListener("click", async function(){
   var status = document.getElementById("status");
   var stage = document.getElementById("stage");
-  if (status) status.textContent = "Asking";
-  if (stage) stage.textContent = "Button pressed";
+  var hint = document.getElementById("hint");
+  var level = document.getElementById("level");
+  status.textContent = "Asking";
+  stage.textContent = "Asking for the microphone";
+  hint.textContent = "Allow the microphone if the phone asks.";
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { status.textContent = "No mic"; hint.textContent = "Use Chrome."; return; }
+  try {
+    var stream = await navigator.mediaDevices.getUserMedia({ audio:true });
+    var ac = new AudioContext();
+    if (ac.state === "suspended") await ac.resume();
+    var src = ac.createMediaStreamSource(stream);
+    var analyser = ac.createAnalyser();
+    analyser.fftSize = 256;
+    src.connect(analyser);
+    var data = new Uint8Array(analyser.fftSize);
+    status.textContent = "Listening";
+    stage.textContent = "Connected";
+    hint.textContent = stream.getAudioTracks()[0].label || "Microphone open";
+    (function tick(){
+      analyser.getByteTimeDomainData(data);
+      var peak = 0;
+      for (var i = 0; i < data.length; i++) { var v = Math.abs(data[i] - 128); if (v > peak) peak = v; }
+      level.style.width = Math.min(100, peak * 2) + "%";
+      requestAnimationFrame(tick);
+    })();
+  } catch (err) {
+    status.textContent = "Blocked";
+    stage.textContent = "No microphone";
+    hint.textContent = (err.name || "Error") + " — " + (err.message || "permission blocked");
+  }
 });
 </script>
-<script src="js/nav.js?v=19"></script>
+<script src="js/nav.js?v=20"></script>
 <script type="module">
 import { loadState, saveState, current } from "./js/store.js?v=22";
 import { analyse, advice } from "./js/timing-engine.js?v=1";
