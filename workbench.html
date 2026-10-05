@@ -58,7 +58,7 @@
 </div>
 <p class="autosave" id="statusText">Loading…</p>
 </section></div>
-<script src="js/nav.js?v=16"></script>
+<script src="js/nav.js?v=17"></script>
 <script type="module">
 import { loadState, saveState, current, markSpares, compressImage, stagesFor, JOB_TYPES, FAULT_CHIPS, SEVERITIES, normalise, blankPart, partsCost, money } from "./js/store.js?v=22";
 import { STAGE_COPY } from "./js/stages.js?v=9";
@@ -135,26 +135,29 @@ function paintTimer(){
   $("timerRead").textContent = Math.round(booked + live) + " min on cost" + (job.status === "waiting parts" ? " · awaiting parts" : "");
 }
 function paint(){
-  job = current(state);
+  job = current(state) || job;
+  if (!job) return;
   const names = path();
+  $("watchTitle").textContent = job.watchName || "Untitled watch";
+  if ($("watchName")) $("watchName").value = job.watchName || "";
   const name = names[job.stage] || names[0];
   const copy = STAGE_COPY[name] || { title: name, aim: "", steps: [] };
-  const s = stage() || job.stages[0];
+  job.stages = job.stages || [];
+  const s = job.stages[job.stage] || job.stages[0] || { checks:{}, photos:[], notes:"", condition:"", measure:"", complete:false };
   s.checks = s.checks || {};
   const upto = job.stages.findIndex((st, i) => !stageDone(st, i));
   const list = $("stageList");
   list.innerHTML = "";
   names.forEach((key,i) => {
-    const done = stageDone(job.stages[i], i);
+    const st = job.stages[i] || {};
+    const done = stageDone(st, i);
     const title = STAGE_COPY[key] ? STAGE_COPY[key].title : key;
     const b = document.createElement("button"); b.type = "button";
     b.className = "stage-btn" + (i === job.stage ? " active" : "") + (done ? " done" : "") + (i === upto ? " upto" : "");
-    b.innerHTML = `<span class="stage-check">${done ? "✓" : ""}</span><span class="stage-num">${String(i+1).padStart(2,"0")}</span><span class="stage-name">${title}${(job.stages[i].photos || []).length ? " · " + job.stages[i].photos.length : ""}</span>`;
-    b.onclick = async () => { capture(); job.stage = i; await saveState(state); paint(); };
+    b.innerHTML = `<span class="stage-check">${done ? "✓" : ""}</span><span class="stage-num">${String(i+1).padStart(2,"0")}</span><span class="stage-name">${title}</span>`;
+    b.onclick = async () => { job.stage = i; await saveState(state); paint(); };
     list.appendChild(b);
-    if (i === job.stage) requestAnimationFrame(() => b.scrollIntoView({ inline: "center", block: "nearest" }));
   });
-  $("watchTitle").textContent = job.watchName; $("watchName").value = job.watchName || "";
   $("stageCounter").textContent = upto < 0 ? names.length + "/" + names.length : (upto + 1) + "/" + names.length;
   $("stageEyebrow").textContent = "STAGE " + String(job.stage + 1).padStart(2, "0");
   $("stageTitle").textContent = copy.title; $("stageAim").textContent = copy.aim;
