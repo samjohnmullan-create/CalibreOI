@@ -1,4 +1,5 @@
-if (localStorage.getItem("calibre-theme") === "dark") document.documentElement.dataset.theme = "dark";
+var savedTheme = localStorage.getItem("calibre-theme");
+if (savedTheme !== "light") document.documentElement.dataset.theme = "dark";
 document.querySelectorAll(".brandbar").forEach(function(bar){
   if (bar.querySelector(".themebtn")) return;
   var b = document.createElement("button");
