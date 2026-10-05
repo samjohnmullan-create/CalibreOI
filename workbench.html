@@ -75,8 +75,9 @@ function paint(){
   $("decision").value = job.decision || ""; $("decisionWrap").style.display = job.stage === 0 ? "" : "none";
   $("decisionNote").textContent = job.stage === 0 ? "A running watch with no fault does not get a full service." : "";
   $("stageNotes").value = s.notes || ""; $("stageCondition").value = s.condition || ""; $("stageParts").value = s.parts || ""; $("stageMeasure").value = s.measure || ""; $("stageComplete").checked = !!s.complete;
-  const shots = (job.photos && job.photos.progress) || [];
-  $("progressStrip").innerHTML = shots.slice(-4).map(src => `<img src="${src}" alt="" style="width:64px;height:64px;object-fit:cover;border-radius:8px;margin:8px 6px 0 0">`).join("");
+  s.photos = s.photos || [];
+  $("stageShots").innerHTML = s.photos.map((src, i) => `<figure style="margin:0;position:relative"><img src="${src}" alt="" style="width:72px;height:72px;object-fit:cover;border-radius:8px"><button class="shot-x" data-i="${i}" type="button" aria-label="Remove photo" style="position:absolute;top:4px;right:4px;width:22px;height:22px;border:0;border-radius:50%;background:rgba(23,25,27,.72);color:#fff">×</button></figure>`).join("");
+  $("stageShots").querySelectorAll(".shot-x").forEach(btn => btn.onclick = async () => { s.photos.splice(Number(btn.dataset.i), 1); await saveState(state); paint(); });
   const box = $("steps"); box.innerHTML = "";
   copy.steps.forEach((text,i) => {
     const row = document.createElement("div"); row.className = "yn";
