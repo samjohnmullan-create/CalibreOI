@@ -21,7 +21,11 @@
 <header class="brandbar"><a class="brand" href="index.html"><div class="brandmark">C&C</div><div><div class="kicker">CALIBRE & CO.</div><h1>Watchmaker's Workbench</h1></div></a></header>
 <nav class="mainnav"><a class="navbtn" href="index.html">Start</a><a class="navbtn active" href="workbench.html" aria-current="page">Bench</a><a class="navbtn" href="timegrapher.html">Time</a><a class="navbtn" href="passport.html">Identity</a><a class="navbtn" href="business.html">Cost</a><a class="navbtn" href="summary.html">Sheet</a><a class="navbtn" href="inventory.html">Stock</a><a class="navbtn" href="suppliers.html">Parts</a></nav>
 <div class="hero"><div><div class="kicker">ON THE BENCH</div><h2 id="watchTitle">Loading</h2><p id="stageAim" class="muted"></p></div><div class="hero-stats"><div><span>Up to</span><strong id="stageCounter">1/12</strong></div></div></div>
-<div id="stageList" class="stage-list" style="display:flex;gap:8px;overflow:auto;margin-bottom:12px"></div>
+<div id="stageList" class="stage-list" style="display:flex;gap:8px;overflow:auto;margin-bottom:12px;min-height:96px">
+<button class="stage-btn active" type="button"><span class="stage-num">01</span><span class="stage-name">Intake</span></button>
+<button class="stage-btn" type="button"><span class="stage-num">02</span><span class="stage-name">Strip</span></button>
+<button class="stage-btn" type="button"><span class="stage-num">03</span><span class="stage-name">Inspection</span></button>
+</div>
 <section class="card">
 <div class="section-head"><div><div id="stageEyebrow" class="kicker">STAGE 01</div><h2 id="stageTitle">Initial check</h2></div><label class="checkline"><input id="stageComplete" type="checkbox"><span>Stage complete</span></label></div>
 <div id="jobTypes" class="row">
@@ -54,13 +58,17 @@
 </div>
 <p class="autosave" id="statusText">Loading…</p>
 </section></div>
-<script src="js/nav.js?v=14"></script>
+<script src="js/nav.js?v=15"></script>
 <script type="module">
 import { loadState, saveState, current, markSpares, compressImage, stagesFor, JOB_TYPES, FAULT_CHIPS, SEVERITIES, normalise, blankPart, partsCost, money } from "./js/store.js?v=22";
 import { STAGE_COPY } from "./js/stages.js?v=9";
 const $ = id => document.getElementById(id);
-let state = await loadState();
+let state = { jobs:[], currentId:null };
+try { state = await loadState(); }
+catch (err) { $("stageList").innerHTML = "<p class='muted'>Bench could not read the jobs. " + (err.message || "") + "</p>"; }
 let job = current(state);
+if (!job) { $("watchTitle").textContent = "No watch open"; $("statusText").textContent = "Pick a job on Jobs."; }
+else {
 let timer;
 const path = () => stagesFor(job);
 const stage = () => job.stages[job.stage];
@@ -219,4 +227,5 @@ $("writeOff").onclick = async () => {
   await saveState(state); location.href = "suppliers.html";
 };
 paint();
+}
 </script></body></html>
