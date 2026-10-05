@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Calibre & Co.</title><link rel="manifest" href="manifest.json"><link rel="stylesheet" href="css/app.css?v=4">
+<title>Calibre & Co.</title><link rel="manifest" href="manifest.json"><link rel="stylesheet" href="css/app.css?v=9">
 <style>
 .dash{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:14px}
 .stat{border:1px solid var(--line);background:#fff;border-radius:12px;padding:12px;text-align:left}
@@ -30,7 +30,7 @@
 <p id="statusText" class="muted small"></p></section>
 <section class="card"><h3>Recently completed</h3><div id="doneList" class="jobs"></div></section>
 </div>
-<script src="js/nav.js?v=10"></script>
+<script src="js/nav.js?v=12"></script>
 <script type="module">
 import { STAGES, loadState, saveState, blankJob, current, importCard, money, investment, escapeHtml, coverPhoto, normalise } from "./js/store.js?v=18";
 import { STAGE_COPY } from "./js/stages.js?v=9";
@@ -46,7 +46,10 @@ const held = j => j.status !== "Sold" && j.status !== "Spares";
 const bench = j => j.status === "On bench";
 const parts = j => j.status === "Awaiting parts";
 const ready = j => j.status === "Ready to list" || j.status === "Listed" || j.status === "Ready for photos";
-function photo(j){ return coverPhoto(j); }
+function card(j){
+  const src = photo(j);
+  return `<a class="job-card" data-id="${j.id}" href="workbench.html">${src ? `<img class="thumb" src="${src}" alt="">` : `<span class="thumb"></span>`}<div><strong>${escapeHtml(j.watchName || "Untitled")}</strong><div class="muted small">${escapeHtml(j.jobId || "")} · ${escapeHtml(j.status || "On bench")}</div></div><button class="star" data-id="${j.id}" type="button" aria-label="Priority">${j.priority ? "★" : "☆"}</button></a>`;
+}
 function stageName(j){
   const stages = j.stages || [];
   const key = (stages[j.stage] && stages[j.stage].name) || STAGES[j.stage] || STAGES[0];
@@ -64,8 +67,8 @@ function openJob(id, href){
 function paint(){
   const jobs = state.jobs || [];
   const job = current(state);
-  const listedSafe = jobs.map(j => `<a class="job-card" data-id="${j.id}" href="workbench.html"><div><strong>${escapeHtml(j.watchName || "Untitled")}</strong><div class="muted small">${escapeHtml(j.jobId || "")} · ${escapeHtml(j.status || "On bench")}</div></div><div><button class="btn secondary del" data-id="${j.id}" type="button">Delete</button></div></a>`).join("") || "<p class='muted'>No jobs on this phone.</p>";
-  $("jobList").innerHTML = listedSafe;
+  const ordered = jobs.slice().sort((a,b) => (b.priority===true) - (a.priority===true));
+  $("jobList").innerHTML = ordered.map(card).join("") || "<p class='muted'>No jobs on this phone.</p>";
   $("listTitle").textContent = "All jobs · " + jobs.length;
   $("jobList").querySelectorAll(".job-card").forEach(a => a.onclick = e => { if (e.target.closest(".del")) return; e.preventDefault(); openJob(a.dataset.id, "workbench.html"); });
   $("jobList").querySelectorAll(".del").forEach(b => b.onclick = e => { e.preventDefault(); e.stopPropagation(); removeJob(jobs.find(j => j.id === b.dataset.id)); });

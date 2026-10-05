@@ -137,6 +137,7 @@ export function normalise(job){
   job.status = STATUS_MAP[job.status] || (STATUSES.includes(job.status) ? job.status : "On bench");
   job.channel = job.channel || "Not listed";
   job.offers = (Array.isArray(job.offers) ? job.offers : []).filter(o => o && o.amount);
+  job.priority = !!job.priority;
   if (job.status === "Spares") ensureSpares(job);
   else if (typeof job.fitsNote !== "string") job.fitsNote = "";
   return job;
