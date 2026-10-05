@@ -24,7 +24,14 @@
 <div id="stageList" class="stage-list" style="display:flex;gap:8px;overflow:auto;margin-bottom:12px"></div>
 <section class="card">
 <div class="section-head"><div><div id="stageEyebrow" class="kicker">STAGE 01</div><h2 id="stageTitle">Initial check</h2></div><label class="checkline"><input id="stageComplete" type="checkbox"><span>Stage complete</span></label></div>
-<div id="jobTypes" class="row"></div>
+<div id="jobTypes" class="row">
+<button class="btn secondary type" data-type="manual" type="button">Mechanical manual</button>
+<button class="btn secondary type" data-type="automatic" type="button">Automatic</button>
+<button class="btn secondary type" data-type="quartz" type="button">Quartz</button>
+<button class="btn secondary type" data-type="pocket" type="button">Pocket watch</button>
+<button class="btn secondary type" data-type="clock" type="button">Clock</button>
+<button class="btn secondary type" data-type="inspect" type="button">Inspection only</button>
+</div>
 <label id="decisionWrap2">Decision<select id="decision"><option value="">Not decided</option><option>Leave it</option><option>Regulate only</option><option>Case, hands or crystal</option><option>Partial</option><option>Full service</option></select></label>
 <p id="decisionNote" class="muted small"></p>
 <div id="steps"></div>
@@ -47,7 +54,7 @@
 </div>
 <p class="autosave" id="statusText">Loading…</p>
 </section></div>
-<script src="js/nav.js?v=13"></script>
+<script src="js/nav.js?v=14"></script>
 <script type="module">
 import { loadState, saveState, current, markSpares, compressImage, stagesFor, JOB_TYPES, FAULT_CHIPS, SEVERITIES, normalise, blankPart, partsCost, money } from "./js/store.js?v=22";
 import { STAGE_COPY } from "./js/stages.js?v=9";
