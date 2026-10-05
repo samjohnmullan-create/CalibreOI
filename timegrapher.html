@@ -57,29 +57,24 @@ document.getElementById("start").addEventListener("click", async function(){
   status.textContent = "Opening";
   stage.textContent = "Opening the phone microphone";
   hint.textContent = "Using the allowed microphone.";
-  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-    status.textContent = "No mic";
-    hint.textContent = "This browser cannot use a microphone. Open the page in Chrome.";
-    return;
-  }
   try {
-    var stream = await navigator.mediaDevices.getUserMedia({ audio:true });
-    var ac = new AudioContext();
+    var stream = window.calibreStream;
+    if (!stream) {
+      var ask = navigator.mediaDevices.getUserMedia({ audio:true });
+      var timed = new Promise(function(_, rej){ setTimeout(function(){ rej(new Error("Microphone did not answer")); }, 5000); });
+      stream = await Promise.race([ask, timed]);
+      window.calibreStream = stream;
+    }
+    status.textContent = "Listening";
+    stage.textContent = "Microphone open";
+    hint.textContent = stream.getAudioTracks()[0].label || "Phone microphone open";
+    var ac = window.calibreAudio || new AudioContext();
+    window.calibreAudio = ac;
     if (ac.state === "suspended") await ac.resume();
     var src = ac.createMediaStreamSource(stream);
-    var analyser = ac.createAnalyser();
-    analyser.fftSize = 1024;
-    src.connect(analyser);
     var silent = ac.createGain();
     silent.gain.value = 0;
-    analyser.connect(silent);
-    silent.connect(ac.destination);
-    var data = new Uint8Array(analyser.fftSize);
     var level = document.getElementById("level");
-    status.textContent = "Listening";
-    stage.textContent = "Connected";
-    hint.textContent = stream.getAudioTracks()[0].label || "Phone microphone open";
-    window.calibreStream = stream;
     var lastBeat = 0;
     var noise = 0.01;
     var proc = ac.createScriptProcessor(2048, 1, 1);
@@ -97,6 +92,9 @@ document.getElementById("start").addEventListener("click", async function(){
     };
     src.connect(proc);
     proc.connect(silent);
+    silent.connect(ac.destination);
+    stage.textContent = "Timing";
+  } catch (err) {
   } catch (err) {
     status.textContent = "Blocked";
     stage.textContent = "No microphone";
