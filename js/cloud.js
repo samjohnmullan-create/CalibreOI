@@ -61,6 +61,29 @@ export async function writeCloudState(state){
   return {signedIn:true,user:s.user,updatedAt};
 }
 
+export async function readInbox(){
+  const s=await session();
+  if(!s?.user)return {signedIn:false,items:[]};
+  const {data,error}=await supabaseClient()
+    .from("calibre_inbox")
+    .select("id,push_id,job_data,created_at")
+    .is("imported_at",null)
+    .order("created_at",{ascending:true});
+  if(error)throw error;
+  return {signedIn:true,user:s.user,items:Array.isArray(data)?data:[]};
+}
+
+export async function markInboxImported(id){
+  const s=await session();
+  if(!s?.user)throw new Error("Not signed in");
+  const {error}=await supabaseClient()
+    .from("calibre_inbox")
+    .update({imported_at:new Date().toISOString()})
+    .eq("id",id);
+  if(error)throw error;
+  return true;
+}
+
 export async function cloudStatus(){
   const s=await session();
   return {configured:true,signedIn:!!s?.user,email:s?.user?.email||""};
