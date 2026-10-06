@@ -18,17 +18,52 @@ function openDB(){
 function getLocal(k){return openDB().then(db=>new Promise((res,rej)=>{const q=db.transaction(STORE).objectStore(STORE).get(k);q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error);}));}
 function putLocal(k,v){return openDB().then(db=>new Promise((res,rej)=>{const tx=db.transaction(STORE,"readwrite");tx.objectStore(STORE).put(v,k);tx.oncomplete=()=>res();tx.onerror=()=>rej(tx.error);}));}
 function ms(v){const n=Date.parse(v||"");return Number.isFinite(n)?n:0;}
+function cleanCategory(v){const s=String(v||"").toLowerCase();if(s.includes("tool"))return "Tool";if(s.includes("strap")||s.includes("band"))return "Strap";if(s.includes("consum"))return "Consumable";if(s.includes("part"))return "Part";return "Other";}
+function cleanStatus(v){const s=String(v||"").toLowerCase();if(s.includes("deliver")||s.includes("received"))return "Delivered";if(s.includes("transit")||s.includes("carrier")||s.includes("departure"))return "In transit";if(s.includes("ship"))return "Shipped";if(s.includes("confirm")||s.includes("order"))return "Ordered";return v||"Ordered";}
+function purchaseKey(p){return String(p.sourceKey||p.pushId||[p.source,p.orderId,p.itemName,p.variant].filter(Boolean).join("|")||p.id||"");}
+function normalisePurchase(p={}){
+  const now=new Date().toISOString();
+  return {
+    id:p.id||"buy-"+Math.random().toString(36).slice(2,9),
+    sourceKey:purchaseKey(p),
+    source:p.source||"",
+    orderId:p.orderId||"",
+    itemName:p.itemName||p.name||"Incoming item",
+    category:cleanCategory(p.category),
+    variant:p.variant||"",
+    quantity:Number(p.quantity)||1,
+    amount:p.amount===""||p.amount==null?"":String(p.amount),
+    currency:p.currency||"AUD",
+    status:cleanStatus(p.status),
+    orderedAt:p.orderedAt||p.purchaseDate||"",
+    tracking:p.tracking||"",
+    sourceRef:p.sourceRef||"",
+    notes:p.notes||"",
+    receivedAt:p.receivedAt||"",
+    createdAt:p.createdAt||now,
+    updatedAt:p.updatedAt||now
+  };
+}
 function normaliseState(state){
   if(!state||!Array.isArray(state.jobs))return null;
   state.jobs=state.jobs.map(j=>{try{return base.normalise(j);}catch{return j;}});
   state.ledger=(Array.isArray(state.ledger)?state.ledger:[]).filter(e=>e&&e.amount);
+  state.incoming=(Array.isArray(state.incoming)?state.incoming:[]).map(normalisePurchase);
   if(state.jobs.length&&!state.jobs.some(j=>j.id===state.currentId))state.currentId=state.jobs[0].id;
   if(!state.jobs.length)state.currentId=null;
   return state;
 }
+function mergePurchaseLists(a=[],b=[]){
+  const byKey=new Map();
+  [...a,...b].forEach(raw=>{
+    const p=normalisePurchase(raw),key=purchaseKey(p)||p.id,prev=byKey.get(key);
+    if(!prev||ms(p.updatedAt)>=ms(prev.updatedAt))byKey.set(key,p);
+  });
+  return [...byKey.values()];
+}
 function mergeStates(local,cloud){
-  local=normaliseState(structuredClone(local))||{jobs:[],currentId:null,ledger:[]};
-  cloud=normaliseState(structuredClone(cloud))||{jobs:[],currentId:null,ledger:[]};
+  local=normaliseState(structuredClone(local))||{jobs:[],currentId:null,ledger:[],incoming:[]};
+  cloud=normaliseState(structuredClone(cloud))||{jobs:[],currentId:null,ledger:[],incoming:[]};
   const byId=new Map();
   [...cloud.jobs,...local.jobs].forEach(job=>{
     const prev=byId.get(job.id);
@@ -39,6 +74,7 @@ function mergeStates(local,cloud){
   return normaliseState({
     ...newer,
     jobs:[...byId.values()],
+    incoming:mergePurchaseLists(cloud.incoming,local.incoming),
     currentId:local.currentId&&byId.has(local.currentId)?local.currentId:(cloud.currentId&&byId.has(cloud.currentId)?cloud.currentId:null),
     ledger:structuredClone((newer.ledger||[])),
     _syncUpdatedAt:new Date(Math.max(localStamp,cloudStamp,Date.now())).toISOString()
@@ -56,22 +92,17 @@ export async function loadState(){
   try{
     const cloud=await readCloudState();
     if(!cloud.signedIn)return local;
-    if(!cloud.state){
-      await writeCloudState(local);
-      return local;
-    }
+    if(!cloud.state){await writeCloudState(local);return local;}
     const merged=mergeStates(local,cloud.state);
     await putLocal("state",merged);
     markCloudSeen(cloud.updatedAt);
     return merged;
-  }catch(err){
-    console.warn("Calibre cloud pull failed; using local data",err);
-    return local;
-  }
+  }catch(err){console.warn("Calibre cloud pull failed; using local data",err);return local;}
 }
 
 export async function saveState(state){
   if(!state||!Array.isArray(state.jobs))throw new Error("Invalid Calibre state");
+  state=normaliseState(state);
   const now=new Date().toISOString();
   const current=state.jobs.find(j=>j.id===state.currentId);
   if(current)current.updatedAt=now;
@@ -86,33 +117,50 @@ export async function saveState(state){
   }
 }
 
+function importPurchase(state,raw){
+  const list=Array.isArray(raw.items)?raw.items:[raw];
+  let added=0,updated=0;
+  for(const source of list){
+    const p=normalisePurchase({...source,sourceKey:source.sourceKey||raw.sourceKey||raw.pushId});
+    const key=purchaseKey(p);
+    const idx=state.incoming.findIndex(x=>purchaseKey(x)===key);
+    if(idx>=0){
+      const old=state.incoming[idx];
+      state.incoming[idx]=normalisePurchase({...old,...Object.fromEntries(Object.entries(p).filter(([,v])=>v!==""&&v!=null)),id:old.id,createdAt:old.createdAt,updatedAt:new Date().toISOString()});
+      updated++;
+    }else{
+      state.incoming.unshift(p);
+      added++;
+    }
+  }
+  return {added,updated};
+}
+
 export async function importInboxItems(items){
-  const state=normaliseState(await getLocal("state"))||{jobs:[],currentId:null,ledger:[]};
+  const state=normaliseState(await getLocal("state"))||{jobs:[],currentId:null,ledger:[],incoming:[]};
   let added=0,updated=0;
   const importedIds=[];
   for(const item of (Array.isArray(items)?items:[])){
     try{
       const raw=item&&item.job_data;
-      if(!raw||raw.type!=="calibrejob")continue;
-      const incoming=base.importCard(raw);
-      incoming.pushId=raw.pushId||incoming.pushId;
-      incoming.updatedAt=new Date().toISOString();
-      const idx=state.jobs.findIndex(j=>(incoming.pushId&&j.pushId===incoming.pushId)||(raw.jobId&&j.jobId===raw.jobId));
-      if(idx>=0){
-        const existing=state.jobs[idx];
-        incoming.id=existing.id;
-        incoming.createdAt=existing.createdAt||incoming.createdAt;
-        state.jobs[idx]=base.normalise(incoming);
-        updated++;
-      }else{
-        state.jobs.push(base.normalise(incoming));
-        added++;
-      }
-      state.currentId=state.jobs[idx>=0?idx:state.jobs.length-1].id;
+      if(!raw)continue;
+      if(raw.type==="calibrejob"){
+        const incoming=base.importCard(raw);
+        incoming.pushId=raw.pushId||incoming.pushId;
+        incoming.updatedAt=new Date().toISOString();
+        const idx=state.jobs.findIndex(j=>(incoming.pushId&&j.pushId===incoming.pushId)||(raw.jobId&&j.jobId===raw.jobId));
+        if(idx>=0){
+          const existing=state.jobs[idx];
+          incoming.id=existing.id;
+          incoming.createdAt=existing.createdAt||incoming.createdAt;
+          state.jobs[idx]=base.normalise(incoming);updated++;
+        }else{state.jobs.push(base.normalise(incoming));added++;}
+        state.currentId=state.jobs[idx>=0?idx:state.jobs.length-1].id;
+      }else if(raw.type==="calibrepurchase"||raw.type==="calibreincoming"){
+        const r=importPurchase(state,raw);added+=r.added;updated+=r.updated;
+      }else continue;
       if(item.id)importedIds.push(item.id);
-    }catch(err){
-      console.warn("Skipped invalid Calibre inbox item",item?.id,err);
-    }
+    }catch(err){console.warn("Skipped invalid Calibre inbox item",item?.id,err);}
   }
   if(added||updated){
     state._syncUpdatedAt=new Date().toISOString();
@@ -127,7 +175,7 @@ export async function forceCloudPull(){
   const cloud=await readCloudState();
   if(!cloud.signedIn)throw new Error("Sign in to Calibre Cloud first.");
   if(!cloud.state)return local;
-  const merged=mergeStates(local||{jobs:[],currentId:null},cloud.state);
+  const merged=mergeStates(local||{jobs:[],currentId:null,incoming:[]},cloud.state);
   await putLocal("state",merged);
   markCloudSeen(cloud.updatedAt);
   return merged;
