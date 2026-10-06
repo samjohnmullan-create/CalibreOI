@@ -34,7 +34,7 @@ document.querySelectorAll("nav.mainnav").forEach(function(nav){
     if (!document.querySelector('script[data-calibre-diagnostics]')) {
       var d = document.createElement("script");
       d.type = "module";
-      d.src = "js/diagnostics-ui.js?v=3";
+      d.src = "js/diagnostics-ui.js?v=4";
       d.dataset.calibreDiagnostics = "1";
       document.head.appendChild(d);
     }
