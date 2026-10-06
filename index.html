@@ -26,7 +26,7 @@
 <section class="card all-jobs"><div class="section-title"><h3 id="listTitle">All jobs</h3><span class="count" id="listCount"></span></div><div id="jobList" class="jobs"></div></section>
 <details class="card tools" style="margin-top:12px"><summary>Job card & backup tools</summary><div style="padding-top:10px"><div class="row"><button id="saveBackup" class="btn secondary" type="button">Save backup</button><button id="loadCard" class="btn secondary" type="button">Load job card</button></div><input id="jobFile" type="file" accept="application/json,text/plain,.json,.txt,.calibrejob,.calibrejobs,*/*" hidden><label style="margin-top:10px">Paste a job card<textarea id="pasteCard" rows="3" placeholder="Paste Calibre job-card JSON"></textarea></label><button id="pasteCardBtn" class="btn secondary" type="button">Add pasted card</button><p id="statusText" class="muted small"></p></div></details>
 </div>
-<script src="js/nav.js?v=50"></script><script type="module">
+<script src="js/nav.js?v=51"></script><script type="module">
 import { STAGES, loadState, saveState, blankJob, current, importCard, money, investment, escapeHtml, coverPhoto, normalise } from "./js/store.js?v=26";
 import { STAGE_COPY } from "./js/stages.js?v=10";
 import { fillResults } from "./js/search.js?v=7";
