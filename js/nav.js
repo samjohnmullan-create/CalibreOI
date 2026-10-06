@@ -22,7 +22,7 @@ document.querySelectorAll("nav.mainnav").forEach(function(nav){
     ["passport.html","Watch","M8 4h8v3a4 4 0 0 1-8 0zM8 20h8v-3a4 4 0 0 1-8 0z"],
     ["business.html","Cost","M6 6h12v12H6zM9 10h6M9 14h4"],
     ["finance.html","Funds","M5 7h14v11H5zM5 11h14M8 15h3"],
-    ["summary.html","Sheet","M7 4h8l4 4v12H7zM15 4v4h4"],
+    ["summary.html","Sheet","M7 4h8l4 4 4v12H7zM15 4v4h4"],
     ["inventory.html","Stock","M5 8h14v11H5zM5 8l2-3h10l2 3"],
     ["suppliers.html","Parts","M12 4l2 4 4 .5-3 3 .8 4.5L12 14l-3.8 2 0.8-4.5-3-3L10 8z"]
   ];
@@ -34,7 +34,7 @@ document.querySelectorAll("nav.mainnav").forEach(function(nav){
     if (!document.querySelector('script[data-calibre-diagnostics]')) {
       var d = document.createElement("script");
       d.type = "module";
-      d.src = "js/diagnostics-ui.js?v=1";
+      d.src = "js/diagnostics-ui.js?v=2";
       d.dataset.calibreDiagnostics = "1";
       document.head.appendChild(d);
     }
