@@ -134,6 +134,52 @@ hr{border:0;border-top:1px solid var(--line);margin:10px 0}
 .home-grid .quick{border-color:color-mix(in srgb,var(--line) 58%,transparent)}
 .home-grid .money-strip{border-color:color-mix(in srgb,var(--line) 58%,transparent);background:color-mix(in srgb,var(--line) 72%,transparent)}
 .home-grid .incoming-item,.home-grid .mini-item,.home-grid .attention{border-bottom-color:color-mix(in srgb,var(--line) 70%,transparent)}
+/* Phase 1 dashboard refinement */
+html:not([data-theme="dark"]) .brandbar{background:transparent;color:var(--ink);border-bottom:0;min-height:58px;padding-top:8px;padding-bottom:8px}
+html:not([data-theme="dark"]) .brand,html:not([data-theme="dark"]) .brand h1{color:var(--ink)}
+html:not([data-theme="dark"]) .themebtn{color:var(--muted);border:1px solid color-mix(in srgb,var(--line) 70%,transparent);background:var(--surface)}
+html:not([data-theme="dark"]) .brandbar .kicker{color:var(--accent)}
+html:not([data-theme="dark"]) .mainnav{margin-top:0;padding:0 0 7px;border-bottom-color:color-mix(in srgb,var(--line) 65%,transparent)}
+html:not([data-theme="dark"]) .navbtn{min-height:36px;padding-inline:12px;border-radius:7px;border-bottom:0;margin-bottom:0}
+html:not([data-theme="dark"]) .navbtn.active{background:color-mix(in srgb,var(--accent) 10%,var(--surface));color:var(--ink)}
+html:not([data-theme="dark"]) .brandmark img{box-shadow:0 0 0 1px color-mix(in srgb,var(--line) 72%,transparent)}
+.home-grid .card{box-shadow:0 1px 2px color-mix(in srgb,var(--ink) 4%,transparent)}
+.current-card{border-color:transparent!important;box-shadow:0 3px 12px color-mix(in srgb,var(--ink) 6%,transparent)!important}
+.current-label{background:linear-gradient(180deg,var(--surface),color-mix(in srgb,var(--surface) 94%,var(--surface-2)));border-bottom-color:color-mix(in srgb,var(--line) 55%,transparent)!important;padding:11px 13px}
+.current-body{padding:14px 13px 12px}
+.current-body h2{font-size:1.33rem;letter-spacing:-.025em}
+.current-meta{margin-top:3px}
+.current-body img,.current-ph{border-radius:10px;box-shadow:0 1px 4px color-mix(in srgb,var(--ink) 10%,transparent)}
+.specs{margin-top:13px;gap:10px 20px}
+.specs span{font-size:.61rem;letter-spacing:.015em}
+.specs strong{font-size:.84rem}
+.current-actions{padding:0 13px 13px;gap:8px}
+.current-actions .btn{min-height:38px}
+.current-actions .btn:first-child{position:relative;justify-content:center;padding-left:38px;padding-right:38px}
+.current-actions .btn:first-child::before{content:"↗";position:absolute;left:14px;font-size:.95rem;transform:rotate(-45deg)}
+.current-actions .btn:first-child::after{content:"→";position:absolute;right:14px;font-size:.95rem}
+.quick{position:relative;min-height:58px;padding:10px 11px 10px 48px!important;border-color:transparent!important;box-shadow:0 1px 2px color-mix(in srgb,var(--ink) 5%,transparent);background:var(--surface)!important}
+.quick::before{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:27px;height:27px;border-radius:50%;display:grid;place-items:center;background:color-mix(in srgb,var(--accent) 10%,var(--surface));color:var(--accent);font-size:.82rem;font-weight:800}
+.quick[data-filter="bench"]::before{content:"⚒"}
+.quick[data-filter="parts"]::before{content:"⌛"}
+.quick[data-filter="ready"]::before{content:"≡"}
+.quick[data-filter="incoming"]::before{content:"□"}
+.quick span{font-size:.64rem!important}
+.quick strong{font-size:1.15rem!important;margin-top:1px!important}
+.home-grid>aside .card{border-color:transparent!important;box-shadow:0 2px 8px color-mix(in srgb,var(--ink) 5%,transparent)}
+.home-grid>aside .section-title{margin-bottom:10px}
+.home-grid>aside .section-title h3{font-size:1rem}
+.money-strip{border:0!important;background:transparent!important;gap:8px!important;overflow:visible!important}
+.money-strip>div{border:1px solid color-mix(in srgb,var(--line) 58%,transparent);border-radius:7px;padding:10px!important;background:color-mix(in srgb,var(--surface) 96%,var(--surface-2))!important}
+.incoming-item,.mini-item{padding:10px 0!important}
+.attention{background:color-mix(in srgb,var(--accent) 4%,var(--surface));border-radius:7px;padding:9px 10px!important;border-bottom:0!important}
+.attention-dot{background:var(--accent)!important}
+@media(max-width:640px){
+  html:not([data-theme="dark"]) .brandbar{min-height:52px;padding-top:4px;padding-bottom:4px}
+  html:not([data-theme="dark"]) .mainnav{background:var(--surface);border:1px solid var(--line);padding:6px}
+  html:not([data-theme="dark"]) .navbtn.active{background:var(--surface-2)}
+  .current-body{padding:11px 10px}.current-actions{padding:0 10px 10px}.quick{min-height:62px}
+}
 @media(max-width:900px){
   .layout,.timing-layout,.split{grid-template-columns:1fr}
   .stages-card{position:static}
