@@ -1,17 +1,17 @@
 :root{
-  --bg:#f2f3ef;
+  --bg:#f4f5f1;
   --surface:#fafbf8;
-  --surface-2:#e7eae3;
-  --ink:#191b18;
-  --muted:#6f746d;
-  --line:#d1d6cc;
-  --nav:#151714;
-  --accent:#6f7f66;
-  --accent-soft:#94a18c;
+  --surface-2:#eef0ea;
+  --ink:#171a16;
+  --muted:#71776f;
+  --line:#d6dad2;
+  --nav:#171a16;
+  --accent:#6f8168;
+  --accent-soft:#9eac97;
   --brass:var(--accent);
   --brass-soft:var(--accent-soft);
-  --ok:#708768;
-  --danger:#aa5f53;
+  --ok:#6f8468;
+  --danger:#b9655b;
   --radius:7px;
   --radius-sm:5px;
   --control-h:36px;
@@ -23,13 +23,13 @@ html[data-theme="dark"]{
   --ink:#f0f1ec;
   --muted:#92978f;
   --line:#2b3029;
-  --nav:#0d0f0c;
-  --accent:#829276;
+  --nav:#0e100d;
+  --accent:#7f9277;
   --accent-soft:#aab69f;
   --brass:var(--accent);
   --brass-soft:var(--accent-soft);
-  --ok:#7c9272;
-  --danger:#b96658;
+  --ok:#799070;
+  --danger:#b9655b;
 }
 html[data-theme="dark"] .btn.secondary,html[data-theme="dark"] input,html[data-theme="dark"] select,html[data-theme="dark"] textarea,html[data-theme="dark"] .job-card,html[data-theme="dark"] .saved-run,html[data-theme="dark"] .yn-btns button,html[data-theme="dark"] .business-metrics>div{background:var(--surface);color:var(--ink)}
 html[data-theme="dark"] .navbtn.active{background:var(--surface-2);color:var(--accent-soft)}
