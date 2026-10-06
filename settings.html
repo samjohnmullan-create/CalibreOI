@@ -1,4 +1,105 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Settings · Calibre & Co.</title><link rel="stylesheet" href="css/app.css?v=10"></head><body>
-<div class="shell"><header class="brandbar"><a class="brand" href="index.html"><div class="brandmark">C&C</div><div><div class="kicker">CALIBRE & CO.</div><h1>Watchmaker's Workbench</h1></div></a></header><nav class="mainnav"></nav><div class="hero"><div><div class="kicker">LOCAL</div><h2>Local workshop data</h2><p class="muted">Jobs, photos, diagnostics, parts and timing runs are stored together on this device.</p></div></div><section class="card"><h3>Backups and job cards</h3><p class="small">Use <strong>Home → Job card & backup tools</strong> to save a full backup, load a <code>.calibrejob</code>, or paste a job card from ChatGPT.</p><p class="small">A Calibre job-card export includes the Passport, business values, workflow checks, diagnostic faults, parts and timing runs. Keep a backup before clearing browser/site data.</p><p class="muted small">The app itself does not contain an AI model or an API key. The Brief page can copy the current job for use in ChatGPT.</p></section></div><script src="js/nav.js?v=31"></script>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Cloud · Calibre & Co.</title><link rel="stylesheet" href="css/app.css?v=10">
+<style>
+.cloud-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.cloud-state{padding:12px;border:1px solid var(--line);border-radius:8px;background:var(--surface-2)}.cloud-state strong{display:block;margin-top:4px}.sqlbox{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:.72rem;min-height:260px}.ok{color:var(--ok)}.warn{color:var(--warning)}@media(max-width:700px){.cloud-grid{grid-template-columns:1fr}}
+</style>
+</head><body>
+<div class="shell">
+<header class="brandbar"><a class="brand" href="index.html"><div class="brandmark">C&C</div><div><div class="kicker">CALIBRE & CO.</div><h1>Watchmaker's Workbench</h1></div></a></header>
+<nav class="mainnav"></nav>
+<div class="hero"><div><div class="kicker">CALIBRE CLOUD</div><h2>One workshop, every device</h2><p class="muted">Supabase is the central copy. IndexedDB remains the local/offline cache on each device.</p></div></div>
+
+<div class="cloud-grid">
+<section class="card">
+<h3>Cloud account</h3>
+<div class="cloud-state"><span class="muted small">Status</span><strong id="cloudStatus">Checking…</strong><span id="cloudEmail" class="muted small"></span></div>
+<div id="authForm">
+<label>Email<input id="email" type="email" autocomplete="email" placeholder="you@example.com"></label>
+<label>Password<input id="password" type="password" autocomplete="current-password" minlength="8" placeholder="8+ characters"></label>
+<div class="row"><button id="signIn" class="btn" type="button">Sign in</button><button id="signUp" class="btn secondary" type="button">Create account</button></div>
+</div>
+<div id="signedInActions" hidden>
+<div class="row"><button id="pull" class="btn secondary" type="button">Pull & merge cloud</button><button id="push" class="btn" type="button">Push this device</button><button id="signOut" class="btn secondary" type="button">Sign out</button></div>
+<p class="muted small">Normal saves sync automatically. Use these buttons only when you want to force a sync.</p>
+</div>
+<p id="statusText" class="muted small"></p>
+</section>
+
+<section class="card">
+<h3>First-time database setup</h3>
+<p class="small">Run this once in <strong>Supabase → SQL Editor</strong>. It creates one private Calibre state row per signed-in user and enables Row Level Security.</p>
+<textarea id="sql" class="sqlbox" readonly>create table if not exists public.calibre_state (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  data jsonb not null default '{}'::jsonb,
+  updated_at timestamptz not null default now()
+);
+
+alter table public.calibre_state enable row level security;
+
+grant select, insert, update, delete on table public.calibre_state to authenticated;
+
+create policy "Calibre users can read own state"
+on public.calibre_state for select
+to authenticated
+using ((select auth.uid()) = user_id);
+
+create policy "Calibre users can insert own state"
+on public.calibre_state for insert
+to authenticated
+with check ((select auth.uid()) = user_id);
+
+create policy "Calibre users can update own state"
+on public.calibre_state for update
+to authenticated
+using ((select auth.uid()) = user_id)
+with check ((select auth.uid()) = user_id);
+
+create policy "Calibre users can delete own state"
+on public.calibre_state for delete
+to authenticated
+using ((select auth.uid()) = user_id);</textarea>
+<button id="copySql" class="btn secondary" type="button">Copy SQL</button>
+<p class="muted small">Do not create an anonymous/public policy. Your publishable key is public by design; your signed-in session plus RLS controls access to the data.</p>
+</section>
+</div>
+
+<section class="card"><h3>How sync works</h3><p class="small">Calibre still saves locally first. When you are signed in, it also pushes the state to Supabase. Opening Calibre on another signed-in device pulls the cloud state and merges watches using their update timestamps.</p><p class="muted small">Version 1 still stores compressed photos inside the job data. We can move photos into Supabase Storage next so cloud records stay small and photo syncing scales better.</p></section>
+</div>
+<script src="js/nav.js?v=32"></script>
+<script type="module">
+import { cloudStatus, signUp, signIn, signOut } from "./js/cloud.js?v=1";
+import { forceCloudPull, forceCloudPush } from "./js/store-cloud.js?v=1";
+const $=id=>document.getElementById(id);
+function say(t,kind=""){$("statusText").textContent=t;$("statusText").className="muted small "+kind;}
+async function paint(){
+  const s=await cloudStatus();
+  $("cloudStatus").textContent=s.signedIn?"Signed in · syncing":"Not signed in";
+  $("cloudStatus").className=s.signedIn?"ok":"warn";
+  $("cloudEmail").textContent=s.email||"";
+  $("authForm").hidden=s.signedIn;
+  $("signedInActions").hidden=!s.signedIn;
+}
+$("copySql").onclick=async()=>{try{await navigator.clipboard.writeText($("sql").value);say("SQL copied.","ok");}catch{$("sql").select();say("Copy was blocked; the SQL is selected for you.");}};
+$("signUp").onclick=async()=>{
+  say("Creating account…");
+  const email=$("email").value.trim(),password=$("password").value;
+  if(!email||password.length<8){say("Enter your email and a password of at least 8 characters.");return;}
+  const {data,error}=await signUp(email,password);
+  if(error){say(error.message);return;}
+  if(data.session){say("Account created and signed in. Run the SQL setup, then Push this device.","ok");await paint();}
+  else say("Account created. Check your email to confirm it, then return here and sign in.","ok");
+};
+$("signIn").onclick=async()=>{
+  say("Signing in…");
+  const {error}=await signIn($("email").value.trim(),$("password").value);
+  if(error){say(error.message);return;}
+  say("Signed in. Calibre can now use the central workshop data.","ok");await paint();
+};
+$("signOut").onclick=async()=>{await signOut();say("Signed out. Local data remains on this device.");await paint();};
+$("pull").onclick=async()=>{try{say("Pulling cloud data…");await forceCloudPull();say("Cloud data merged into this device. Reloading…","ok");location.reload();}catch(e){say(e.message||"Cloud pull failed.");}};
+$("push").onclick=async()=>{try{say("Pushing this device…");await forceCloudPush();say("This device is now saved to Calibre Cloud.","ok");}catch(e){say(e.message||"Cloud push failed. If this is first setup, run the SQL block first.");}};
+await paint();
+</script>
 </body></html>
