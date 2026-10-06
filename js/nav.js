@@ -120,18 +120,48 @@ document.querySelectorAll(".brandbar").forEach(function(bar){
 var markStyle=document.createElement("style");
 markStyle.textContent=`
 .brandmark{padding:0;overflow:hidden;background:transparent}
-.brandmark img{width:42px;height:42px;object-fit:cover;display:block;border-radius:50%}
+.brandmark img{width:36px;height:36px;object-fit:cover;display:block;border-radius:50%}
 .navbtn{position:relative}
 .newsdot{position:absolute;top:7px;right:calc(50% - 17px);width:7px;height:7px;border-radius:50%;background:#ef4444;box-shadow:0 0 0 2px var(--nav,#111)}
 .newsdot[hidden]{display:none}
-.contextnav{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:-5px 0 16px;padding:2px 0 4px}
+.contextnav{display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;margin:-4px 0 12px;padding:1px 0 3px}
 .contextnav::-webkit-scrollbar{display:none}
-.contextnav-btn{flex:0 0 auto;min-height:36px;display:inline-flex;align-items:center;justify-content:center;padding:7px 12px;border:1px solid var(--line);border-radius:999px;background:transparent;color:var(--muted);text-decoration:none;font-size:.75rem;font-weight:750;white-space:nowrap}
+.contextnav-btn{flex:0 0 auto;min-height:31px;display:inline-flex;align-items:center;justify-content:center;padding:5px 10px;border:1px solid var(--line);border-radius:7px;background:transparent;color:var(--muted);text-decoration:none;font-size:.72rem;font-weight:700;white-space:nowrap}
 .contextnav-btn:hover{color:var(--ink);border-color:var(--muted)}
 .contextnav-btn.active{background:var(--surface-2);color:var(--ink);border-color:var(--brass)}
-@media(max-width:760px){
-  .mainnav .navbtn{min-width:64px}
-  .contextnav{margin:10px 0 14px;padding:2px 2px 4px}
+
+/* Desktop and laptop: compact, horizontal and information-dense. */
+@media (min-width:601px), (pointer:fine){
+  body{padding-bottom:0!important}
+  .shell{max-width:1280px;padding-left:18px;padding-right:18px}
+  .brandbar{min-height:54px!important;margin-left:-18px!important;margin-right:-18px!important;padding:0 18px!important}
+  .brand{gap:9px!important}
+  .brand h1{font-size:.96rem!important;margin:0!important}
+  .kicker{font-size:.61rem!important;letter-spacing:.12em!important}
+  .themebtn{min-height:30px!important;padding:4px 9px!important;font-size:.72rem!important}
+  .mainnav{position:static!important;left:auto!important;right:auto!important;bottom:auto!important;margin:9px 0 11px!important;padding:3px!important;display:flex!important;flex-wrap:nowrap!important;overflow:visible!important;border-radius:8px!important;gap:2px!important}
+  .mainnav .navbtn{flex:1 1 0!important;min-width:0!important;min-height:38px!important;padding:5px 9px!important;flex-direction:row!important;gap:6px!important;border-radius:5px!important;font-size:.72rem!important}
+  .mainnav .navbtn svg{width:15px!important;height:15px!important}
+  .newsdot{top:8px;right:14px}
+  .contextnav{margin:-2px 0 10px!important;gap:4px!important;padding-bottom:2px!important}
+  .contextnav-btn{min-height:29px!important;padding:4px 9px!important;border-radius:6px!important;font-size:.69rem!important}
+  .hero{gap:12px!important;margin-bottom:10px!important;padding-bottom:10px!important}
+  .hero h2{font-size:clamp(1.25rem,1.8vw,1.6rem)!important;line-height:1.12!important;margin:1px 0 3px!important}
+  .hero p{font-size:.82rem!important;line-height:1.42!important;max-width:760px!important}
+  .hero-stats{gap:12px!important}
+  .hero-stats strong{font-size:.92rem!important}
+  .hero-stats span{font-size:.62rem!important}
+  .card{padding:14px!important}
+  .section-block{margin-top:14px!important;padding-top:13px!important}
+  .btn{min-height:36px!important;padding:7px 11px!important;font-size:.78rem!important}
+  input,select,textarea{padding:8px 9px!important}
+}
+
+/* Only genuinely small touch layouts get the floating bottom navigation. */
+@media (max-width:600px) and (pointer:coarse){
+  .brandmark img{width:38px;height:38px}
+  .contextnav{margin:10px 0 12px;padding:1px 2px 3px}
+  .contextnav-btn{min-height:34px;padding:6px 10px;border-radius:999px;font-size:.72rem}
   .watch-contextnav,.calibre-contextnav{position:static}
 }
 `;
