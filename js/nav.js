@@ -56,6 +56,7 @@ document.querySelectorAll(".brandbar").forEach(function(bar){
     "business.html":"workshop",
     "summary.html":"workshop",
     "suppliers.html":"workshop",
+    "documents.html":"workshop",
     "inventory.html":"collection",
     "finance.html":"business",
     "calibre.html":"calibre",
@@ -73,7 +74,7 @@ document.querySelectorAll(".brandbar").forEach(function(bar){
     }).join("");
   });
 
-  var watchPages=["workbench.html","passport.html","timegrapher.html","business.html","summary.html","suppliers.html"];
+  var watchPages=["workbench.html","passport.html","timegrapher.html","business.html","summary.html","suppliers.html","documents.html"];
   if(watchPages.indexOf(here)>=0){
     document.body.classList.add("watch-page");
     var main=document.querySelector("nav.mainnav");
@@ -89,7 +90,8 @@ document.querySelectorAll(".brandbar").forEach(function(bar){
       ["timegrapher.html?v=5","Timing"],
       ["suppliers.html","Parts"],
       ["business.html","Money"],
-      ["summary.html","Summary"]
+      ["summary.html","Summary"],
+      ["documents.html","Documents"]
     ];
     var sub=document.createElement("nav");
     sub.className="contextnav watch-contextnav";
