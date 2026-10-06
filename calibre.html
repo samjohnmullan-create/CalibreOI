@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Calibre · Calibre & Co.</title><link rel="stylesheet" href="css/app.css?v=10">
+<style>
+.calibre-hero{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:18px;align-items:end;margin:18px 0}.calibre-hero h2{margin:4px 0 6px;font-size:clamp(1.8rem,4vw,2.4rem);letter-spacing:-.035em}.calibre-hero p{margin:0;max-width:680px}.hub-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:12px}.hub-stack{display:grid;gap:12px}.hub-card{display:block;text-decoration:none;transition:border-color .15s ease,transform .15s ease}.hub-card:hover{border-color:var(--brass);transform:translateY(-1px)}.hub-card h3{margin:4px 0 6px}.hub-card p{margin:0}.hub-icon{width:38px;height:38px;border:1px solid var(--line);border-radius:10px;display:grid;place-items:center;margin-bottom:12px;background:var(--surface-2)}.hub-icon svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.7}.watch-panel{display:grid;grid-template-columns:72px minmax(0,1fr);gap:12px;align-items:center}.watch-panel img,.watch-ph{width:72px;height:72px;border-radius:12px;object-fit:cover;background:var(--surface-2)}.watch-ph{display:grid;place-items:center;color:var(--muted);font-size:.7rem}.watch-meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.quick-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px}.quick-actions .btn{width:100%}.statusline{display:flex;align-items:center;gap:8px;margin-top:8px}.statusdot{width:8px;height:8px;border-radius:50%;background:var(--ok)}@media(max-width:820px){.hub-grid{grid-template-columns:1fr}.calibre-hero{grid-template-columns:1fr}.quick-actions{grid-template-columns:1fr 1fr}}@media(max-width:520px){.quick-actions{grid-template-columns:1fr}.watch-panel{grid-template-columns:58px minmax(0,1fr)}.watch-panel img,.watch-ph{width:58px;height:58px}}
+</style></head><body>
+<div class="shell">
+<header class="brandbar"><a class="brand" href="index.html"><div class="brandmark">C&C</div><div><div class="kicker">CALIBRE & CO.</div><h1>Watchmaker's Workbench</h1></div></a></header>
+<nav class="mainnav"></nav>
+<div class="calibre-hero"><div><div class="kicker">CALIBRE</div><h2>Workbench intelligence</h2><p class="muted">Research, job handoff, updates and cloud tools — without cluttering the watch workflow.</p></div></div>
+<div class="hub-grid">
+  <div class="hub-stack">
+    <section class="card" id="currentWatch"><div class="muted">Loading current watch…</div></section>
+    <a class="card hub-card" href="assistant.html"><div class="hub-icon"><svg viewBox="0 0 24 24"><path d="M7 4h10v16H7zM10 8h4M10 12h4M10 16h3"/></svg></div><div class="kicker">JOB HANDOFF</div><h3>Job brief</h3><p class="muted small">Create a clean, copyable snapshot of the current watch for research, listings, valuations or ChatGPT follow-up.</p></a>
+  </div>
+  <div class="hub-stack">
+    <a class="card hub-card" href="news.html"><div class="hub-icon"><svg viewBox="0 0 24 24"><path d="M5 5h14v14H5zM8 9h8M8 13h8M8 17h5"/></svg></div><div class="kicker">UPDATES</div><h3>Calibre updates</h3><p class="muted small">See new jobcards, system notices and workshop updates.</p></a>
+    <a class="card hub-card" href="settings.html"><div class="hub-icon"><svg viewBox="0 0 24 24"><path d="M12 3a4 4 0 0 0-4 4v1H7a4 4 0 0 0 0 8h10a4 4 0 0 0 .6-7.95A6 6 0 0 0 12 3z"/></svg></div><div class="kicker">SYSTEM</div><h3>Cloud & settings</h3><p class="muted small">Check sync status, account state and advanced cloud controls.</p><div class="statusline"><span class="statusdot"></span><span id="cloudLine" class="muted small">Checking cloud…</span></div></a>
+  </div>
+</div>
+</div>
+<script src="js/nav.js?v=36"></script>
+<script type="module">
+import { loadState, current, coverPhoto, escapeHtml } from "./js/store.js?v=26";
+const box=document.getElementById("currentWatch");
+try{
+ const state=await loadState(),job=current(state);
+ if(!job){box.innerHTML=`<div class="kicker">CURRENT WATCH</div><h3 style="margin:4px 0 6px">No watch open</h3><p class="muted small">Choose a watch from Collection or start a new job from Home.</p><div class="quick-actions"><a class="btn" href="index.html">Go to Home</a><a class="btn secondary" href="inventory.html">Open Collection</a></div>`;}
+ else{
+  const p=job.passport||{},src=coverPhoto(job);
+  box.innerHTML=`<div class="kicker">CURRENT WATCH</div><div class="watch-panel">${src?`<img src="${src}" alt="">`:`<div class="watch-ph">No photo</div>`}<div><h3 style="margin:0 0 3px">${escapeHtml(job.watchName||"Untitled watch")}</h3><div class="muted small">${escapeHtml([p.maker,p.model,p.calibre&&("Cal. "+p.calibre)].filter(Boolean).join(" · ")||job.jobId||"Current job")}</div><div class="watch-meta"><span class="badge">${escapeHtml(job.status||"On bench")}</span><span class="badge">Stage ${(Number(job.stage)||0)+1}</span></div></div></div><div class="quick-actions"><a class="btn" href="workbench.html">Open workshop</a><a class="btn secondary" href="assistant.html">Create job brief</a></div>`;
+ }
+}catch(e){box.innerHTML=`<div class="kicker">CURRENT WATCH</div><h3 style="margin:4px 0 6px">Could not load</h3><p class="muted small">${escapeHtml(e?.message||"Unknown error")}</p>`;}
+try{const mod=await import("./js/cloud.js?v=3"),s=await mod.session();document.getElementById("cloudLine").textContent=s?.user?"Signed in · automatic sync on":"Not signed in";}catch{document.getElementById("cloudLine").textContent="Cloud status unavailable";}
+</script>
+</body></html>
