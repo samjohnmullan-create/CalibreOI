@@ -17,7 +17,7 @@ document.querySelectorAll("nav.mainnav").forEach(function(nav){
   if (!here || here.indexOf(".") === -1) here = "index.html";
   var items = [
     ["index.html","Home","M4 7h16v12H4zM8 7V5h8v2"],
-    ["workbench.html?v=7","Bench","M4 18h16M6 18V8h4v10M14 18V5h4v13"],
+    ["workbench.html?v=8","Bench","M4 18h16M6 18V8h4v10M14 18V5h4v13"],
     ["timegrapher.html?v=3","Rate","M12 7v6l4 2M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z"],
     ["passport.html","Watch","M8 4h8v3a4 4 0 0 1-8 0zM8 20h8v-3a4 4 0 0 1-8 0z"],
     ["business.html","Cost","M6 6h12v12H6zM9 10h6M9 14h4"],
@@ -34,9 +34,16 @@ document.querySelectorAll("nav.mainnav").forEach(function(nav){
     if (!document.querySelector('script[data-calibre-diagnostics]')) {
       var d = document.createElement("script");
       d.type = "module";
-      d.src = "js/diagnostics-ui.js?v=4";
+      d.src = "js/diagnostics-ui.js?v=5";
       d.dataset.calibreDiagnostics = "1";
       document.head.appendChild(d);
+    }
+    if (!document.querySelector('script[data-calibre-diagnostic-actions]')) {
+      var a = document.createElement("script");
+      a.type = "module";
+      a.src = "js/diagnostics-actions.js?v=1";
+      a.dataset.calibreDiagnosticActions = "1";
+      document.head.appendChild(a);
     }
     if (!document.querySelector('script[data-calibre-workbench-layout]')) {
       var w = document.createElement("script");
