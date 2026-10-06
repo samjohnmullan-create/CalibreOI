@@ -25,7 +25,7 @@
 <div class="footer-actions"><button id="prevStage" class="btn secondary" type="button">Previous</button><button id="completeJob" class="btn" type="button">Complete job</button><button id="writeOff" class="btn secondary" type="button">Write off</button><button id="nextStage" class="btn" type="button">Next</button></div>
 <p class="autosave" id="statusText">Loading…</p>
 </section></div>
-<script src="js/nav.js?v=30"></script>
+<script src="js/nav.js?v=31"></script>
 <script type="module">
 import { loadState, saveState, current, markSpares, compressImage, stagesFor, JOB_TYPES, normalise, blankPart, partsCost, money, escapeHtml } from "./js/store.js?v=26";
 import { STAGE_COPY } from "./js/stages.js?v=10";
@@ -35,6 +35,7 @@ try{state=await Promise.race([loadState(),new Promise((_,rej)=>setTimeout(()=>re
 job=current(state);if(!job){$("watchTitle").textContent="No watch open";$("statusText").textContent="Pick a watch on Home.";}else init();
 function init(){
  const path=()=>stagesFor(job),stage=()=>job.stages[job.stage],hint=t=>$("statusText").textContent=t;
+ window.calibreWorkbench={getState:()=>state,getJob:()=>job,save:()=>saveState(state),repaint:()=>paint()};
  function capture(){job.watchName=$("watchName").value;job.diagnosis=$("diagnosis").value;job.repairPerformed=$("repair").value;const s=stage();if(!s)return;s.notes=$("stageNotes").value;s.condition=$("stageCondition").value;s.measure=$("stageMeasure").value;if(["Intake","Final QC"].includes(s.name))s.complete=$("stageComplete").checked;s.updatedAt=new Date().toISOString();}
  function schedule(){clearTimeout(timer);hint("Saving…");timer=setTimeout(async()=>{capture();await saveState(state);hint("Saved");},350);}
  const stepObj=(step,i)=>typeof step==="string"?{id:String(i),text:step}:step;
@@ -60,7 +61,7 @@ function init(){
  ["watchName","stageNotes","stageMeasure","diagnosis","repair"].forEach(id=>$(id).addEventListener("input",schedule));$("stageCondition").addEventListener("change",schedule);$("decision").addEventListener("change",()=>changeDecision($("decision").value));$("stageComplete").addEventListener("change",async()=>{capture();await saveState(state);paint();});
  $("timerBtn").onclick=async()=>{job.labour=job.labour||{running:false,startedAt:null};if(job.labour.running){job.business.labourMinutes=String(Math.round((Number(job.business.labourMinutes)||0)+elapsedMinutes()));job.labour.running=false;job.labour.startedAt=null;}else{job.labour.running=true;job.labour.startedAt=new Date().toISOString();}await saveState(state);paint();};
  $("awaitParts").onclick=async()=>{job.status=job.status==="Awaiting parts"?"On bench":"Awaiting parts";await saveState(state);paint();};
- $("takeStage").onclick=()=>{$("stagePhoto").setAttribute("capture","environment");$("stagePhoto").click();};$("uploadStage").onclick=()=>{$("stagePhoto").removeAttribute("capture");$("stagePhoto").click();};$("stagePhoto").onchange=async()=>{const file=$("stagePhoto").files?.[0];if(!file)return;hint("Saving photo…");const s=stage();s.photos=s.photos||[];s.photos.push(await compressImage(file));await saveState(state);$("stagePhoto").value="";paint();};
+ $("takeStage").onclick=()=>{$("stagePhoto").value="";$("stagePhoto").setAttribute("capture","environment");$("stagePhoto").click();};$("uploadStage").onclick=()=>{$("stagePhoto").value="";$("stagePhoto").removeAttribute("capture");$("stagePhoto").click();};$("stagePhoto").onchange=async()=>{const file=$("stagePhoto").files?.[0];if(!file)return;hint("Saving photo…");const s=stage();s.photos=s.photos||[];s.photos.push(await compressImage(file));await saveState(state);$("stagePhoto").value="";paint();};
  $("prevStage").onclick=async()=>{capture();job.stage=Math.max(0,job.stage-1);await saveState(state);paint();};$("nextStage").onclick=async()=>{capture();job.stage=Math.min(path().length-1,job.stage+1);await saveState(state);paint();};
  $("completeJob").onclick=async()=>{capture();if(!confirm("Mark "+job.watchName+" complete?"))return;job.status="Ready to list";job.completedAt=new Date().toISOString();await saveState(state);location.href="inventory.html";};$("writeOff").onclick=async()=>{capture();const reason=prompt("What was lost or damaged?",job.writeOff||"Movement retained for spares.");if(!reason)return;job.writeOff=reason;markSpares(job);job.completedAt=new Date().toISOString();await saveState(state);location.href="suppliers.html";};
  paint();
