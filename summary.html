@@ -1,87 +1,52 @@
 <!doctype html>
 <html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Summary · Calibre & Co.</title><link rel="stylesheet" href="css/app.css?v=9">
-<style>@media print { .mainnav,.footer-actions,.no-print{display:none!important} body{background:#fff} .card{box-shadow:none} } .line{display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px solid var(--line)} .line span{color:var(--muted)}</style></head><body>
+<title>Summary · Calibre & Co.</title><link rel="stylesheet" href="css/app.css?v=10">
+<style>@media print{.mainnav,.footer-actions,.no-print{display:none!important}body{background:#fff}.card{box-shadow:none}}.line{display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px solid var(--line)}.line span{color:var(--muted)}.line strong{text-align:right;overflow-wrap:anywhere}</style></head><body>
 <div class="shell">
 <header class="brandbar"><a class="brand" href="index.html"><div class="brandmark">C&C</div><div><div class="kicker">CALIBRE & CO.</div><h1>Watchmaker's Workbench</h1></div></a></header>
-<nav class="mainnav no-print"><a class="navbtn" href="index.html">Start</a><a class="navbtn" href="workbench.html">Bench</a><a class="navbtn" href="timegrapher.html">Time</a><a class="navbtn" href="passport.html">Identity</a><a class="navbtn" href="business.html">Cost</a><a class="navbtn active" href="summary.html" aria-current="page">Sheet</a><a class="navbtn" href="inventory.html">Stock</a><a class="navbtn" href="suppliers.html">Parts</a></nav>
+<nav class="mainnav no-print"></nav>
 <div class="hero no-print"><div><div class="kicker">FINISH</div><h2 id="watchTitle">Job sheet</h2><p class="muted">Complete if it came back. Write off if it is now parts.</p></div></div>
 <section class="card sheet" id="sheet"><p class="muted">Loading…</p></section>
-<div class="footer-actions no-print">
-<button id="completeJob" class="btn" type="button">Complete job</button>
-<button id="writeOff" class="btn secondary" type="button">Write off as spares</button>
-<button id="buyerSheet" class="btn secondary" type="button">Buyer passport</button>
-<button id="exportCard" class="btn secondary" type="button">Export job card</button>
-<button id="copyBrief" class="btn secondary" type="button">Copy for ChatGPT</button>
-</div>
+<div class="footer-actions no-print"><button id="completeJob" class="btn" type="button">Complete job</button><button id="writeOff" class="btn secondary" type="button">Write off as spares</button><button id="buyerSheet" class="btn secondary" type="button">Buyer passport</button><button id="exportCard" class="btn secondary" type="button">Export job card</button><button id="copyBrief" class="btn secondary" type="button">Copy for ChatGPT</button></div>
 <p id="statusText" class="muted small no-print"></p>
 </div>
-<script src="js/nav.js?v=20"></script>
-<script>
-window.addEventListener("error", function (e) {
-  var sheet = document.getElementById("sheet");
-  if (sheet && /Loading/.test(sheet.textContent)) sheet.innerHTML = "<p class='muted'>Sheet failed. " + (e.message || "Script error") + "</p>";
-});
-</script>
+<script src="js/nav.js?v=30"></script>
 <script type="module">
-import { STAGES, loadState, saveState, current, exportCard, money, labourCost, investment, markSpares, PHOTO_SLOTS } from "./js/store.js?v=23";
-import { STAGE_COPY } from "./js/stages.js?v=9";
-const $ = id => document.getElementById(id);
-const slow = setTimeout(() => { if (/Loading/.test($("sheet").textContent)) $("sheet").innerHTML = "<p class='muted'>Still reading the jobs on this phone.</p>"; }, 6000);
-try {
-const state = await loadState();
-clearTimeout(slow);
-const job = current(state);
-if (!job) {
-  $("sheet").innerHTML = "<p class='muted'>No watch is open. Pick one on Start.</p>";
-  $("statusText").textContent = "No open watch.";
-} else {
-const p = job.passport || {}, b = job.business || {};
-const sale = Number(b.actualSale) || Number(b.targetSale) || 0;
-const total = investment(b);
-$("watchTitle").textContent = job.watchName;
-const lines = [["Decision", job.decision],["Status", job.status],["Write-off", job.writeOff],["Maker", p.maker],["Model", p.model],["Calibre", p.calibre],["Jewels", p.jewels],["Serial", p.serial],["Case", [p.caseMaterial, p.caseNumber].filter(Boolean).join(" ")],["Purchase", b.purchasePrice?money(b.purchasePrice):""],["Parts", b.partsCost?money(b.partsCost):""],["Labour", labourCost(b)?money(labourCost(b)):""],["Investment", money(total)],["Sale", sale?money(sale):""],["Profit", sale?money(sale-total):""]].filter(x => x[1]);
-const stages = (job.stages || []).map((s,i) => {
-  const name = s.name || STAGES[i];
-  const copy = STAGE_COPY[name] || {};
-  const title = copy.title || name;
-  const answers = (copy.steps || []).map((q,n) => ({ q, a: s.checks && (s.checks[n] === true ? "yes" : s.checks[n]) })).filter(x => x.a === "yes" || x.a === "no" || x.a === "na");
-  const tally = answers.length ? ["yes","no","na"].map(k => { const n = answers.filter(x => x.a === k).length; return n ? (k === "na" ? "N/A " : k[0].toUpperCase()+k.slice(1)+" ") + n : ""; }).filter(Boolean).join(" · ") : "";
-  const nos = answers.filter(x => x.a === "no").map(x => x.q).join(" ");
-  const bits = [s.condition,s.measure,s.parts,s.notes,tally,nos].filter(Boolean).join(" · ");
-  if (!bits && !s.complete) return "";
-  return `<div class='line'><span>${title}</span><strong>${s.complete?"Done. ":""}${bits||"Opened"}</strong></div>`;
-}).join("");
-const runs = (job.timingRuns||[]).slice(0,4).map(r => `<div class='line'><span>${r.phase||r.position}</span><strong>${r.rate>=0?"+":""}${Number(r.rate).toFixed(0)} s/day</strong></div>`).join("");
-const shots = PHOTO_SLOTS.map(([key, label]) => (job.photos && job.photos[key] && job.photos[key][0]) ? `<figure style="margin:0"><img src="${job.photos[key][0]}" alt="" style="width:72px;height:72px;object-fit:cover;border-radius:8px"><figcaption class="muted small">${label}</figcaption></figure>` : "").join("");
-const internal = `<img class="wordmark" src="assets/wordmark.png?v=4" alt="Calibre vintage watches" style="display:block;width:100%;max-width:420px;height:auto;margin:0 auto 12px"><h2>${job.watchName}</h2><p class='muted small'>${job.jobId}</p>`+(shots?`<div style="display:flex;gap:8px;overflow:auto;margin:8px 0">${shots}</div>`:"")+lines.map(x=>`<div class='line'><span>${x[0]}</span><strong>${x[1]}</strong></div>`).join("")+(p.notes?`<p>${p.notes}</p>`:"")+`<h3>Work</h3>`+(stages||"<p class='muted'>No stage notes.</p>")+(runs?`<h3>Timing</h3>${runs}`:"");
-const buyerLines = [["Passport", job.jobId],["Maker", p.maker],["Model", p.model],["Year", p.year],["Country", p.country],["Movement", [p.movementMaker, p.calibre].filter(Boolean).join(" ")],["Beat", p.beatRate],["Case", p.caseStyle],["Condition", job.stages[0] && job.stages[0].condition],["Work", job.repairPerformed]].filter(x => x[1]);
-const buyer = `<h2>${job.watchName}</h2><p class='muted small'>Calibre passport ${job.jobId}</p>`+(shots?`<div style="display:flex;gap:8px;overflow:auto;margin:8px 0">${shots}</div>`:"")+buyerLines.map(x=>`<div class='line'><span>${x[0]}</span><strong>${x[1]}</strong></div>`).join("")+(p.history?`<h3>History</h3><p>${p.history}</p>`:"")+(runs?`<h3>Timing</h3>${runs}`:"")+"<p class='muted small'>Identity, work and timing. No prices.</p>";
-let mode = "internal";
-function draw(){ $("sheet").innerHTML = mode === "buyer" ? buyer : internal; }
-draw();
-$("buyerSheet").onclick = () => { mode = mode === "buyer" ? "internal" : "buyer"; $("buyerSheet").textContent = mode === "buyer" ? "Workshop sheet" : "Buyer passport"; draw(); };
-function download(name, data){ const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:"application/json"})); a.download = name; a.click(); }
-$("completeJob").onclick = async () => {
-  if (!confirm("Mark "+job.watchName+" complete?")) return;
-  job.status = "Ready to list"; job.completedAt = new Date().toISOString();
-  await saveState(state); location.href = "inventory.html";
-};
-$("writeOff").onclick = async () => {
-  const reason = prompt("What was lost or damaged?", job.writeOff || "Keyless works lost. Movement is spares.");
-  if (!reason) return;
-  job.writeOff = reason; markSpares(job); job.completedAt = new Date().toISOString();
-  await saveState(state); location.href = "suppliers.html";
-};
-$("exportCard").onclick = () => { const card = exportCard(job); download((card.pushId||"job")+".calibrejob", card); $("statusText").textContent = "Job card saved with " + card.photoCount + " photos."; };
-$("copyBrief").onclick = async () => {
-  const text = ["Write a one-page service summary from this Calibre job. Only claim work that is marked done. No hype.", "", JSON.stringify(exportCard(job), null, 2)].join("\n");
-  try { await navigator.clipboard.writeText(text); $("statusText").textContent = "Copied for ChatGPT."; } catch { $("statusText").textContent = "Copy failed. Export the card."; }
-};
-}
-} catch (err) {
-  clearTimeout(slow);
-  $("sheet").innerHTML = "<p class='muted'>Sheet could not load. " + (err && err.message ? err.message : "Unknown error") + "</p>";
-}
+import { STAGES, loadState, saveState, current, exportCard, money, labourCost, investment, markSpares, PHOTO_SLOTS, escapeHtml } from "./js/store.js?v=26";
+import { STAGE_COPY } from "./js/stages.js?v=10";
+const $=id=>document.getElementById(id), esc=escapeHtml;
+const slow=setTimeout(()=>{if(/Loading/.test($("sheet").textContent))$("sheet").innerHTML="<p class='muted'>Still reading the jobs on this phone.</p>";},6000);
+const qObj=(q,i)=>typeof q==="string"?{id:String(i),text:q}:q;
+const val=v=>esc(v==null?"":String(v));
+function line(k,v){return `<div class='line'><span>${val(k)}</span><strong>${val(v)}</strong></div>`;}
+function timingRate(r){const n=Number(r&&((r.rateSecondsPerDay??r.rate)));return Number.isFinite(n)?n:null;}
+function download(name,data){const url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:"application/json"}));const a=document.createElement("a");a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+try{
+ const state=await loadState();clearTimeout(slow);const job=current(state);
+ if(!job){$("sheet").innerHTML="<p class='muted'>No watch is open. Pick one on Home.</p>";$("statusText").textContent="No open watch.";}
+ else{
+  const p=job.passport||{},b=job.business||{},sale=Number(b.actualSale)||Number(b.targetSale)||0,total=investment(b);$("watchTitle").textContent=job.watchName||"Job sheet";
+  const lines=[["Decision",job.decision],["Status",job.status],["Write-off",job.writeOff],["Maker",p.maker],["Model",p.model],["Calibre",p.calibre],["Jewels",p.jewels],["Serial",p.serial],["Case",[p.caseMaterial,p.caseNumber].filter(Boolean).join(" ")],["Diagnosis",job.diagnosis],["Repair",job.repairPerformed],["Purchase",b.purchasePrice?money(b.purchasePrice):""],["Parts",b.partsCost?money(b.partsCost):""],["Labour",labourCost(b)?money(labourCost(b)):""],["Investment",money(total)],["Sale",sale?money(sale):""],["Profit",sale?money(sale-total):""]].filter(x=>x[1]);
+  const stages=(job.stages||[]).map((s,i)=>{
+   const name=s.name||STAGES[i],copy=STAGE_COPY[name]||{},title=copy.title||name,checks=s.checks||{};
+   const answers=(copy.steps||[]).map((raw,n)=>{const q=qObj(raw,n),a=checks[q.id]??checks[n]??"";return {q:q.text,a:a===true?"yes":a===false?"no":a};}).filter(x=>["yes","no","na"].includes(x.a));
+   const tally=["yes","no","na"].map(k=>{const n=answers.filter(x=>x.a===k).length;return n?(k==="na"?"N/A ":k[0].toUpperCase()+k.slice(1)+" ")+n:"";}).filter(Boolean).join(" · ");
+   const nos=answers.filter(x=>x.a==="no").map(x=>x.q).join("; ");
+   const bits=[s.condition,s.measure,s.parts,s.notes,tally,nos].filter(Boolean).join(" · ");if(!bits&&!s.complete)return "";return `<div class='line'><span>${val(title)}</span><strong>${s.complete?"Done. ":""}${val(bits||"Opened")}</strong></div>`;
+  }).join("");
+  const runs=(job.timingRuns||[]).slice(0,6).map(r=>{const rate=timingRate(r);if(rate==null)return "";const tag=[r.phase,r.position].filter(Boolean).join(" · ")||"Timing";return `<div class='line'><span>${val(tag)}</span><strong>${rate>=0?"+":""}${rate.toFixed(1)} s/day${r.bph?` · ${val(r.bph)} BPH`:""}</strong></div>`;}).join("");
+  const shots=PHOTO_SLOTS.map(([key,label])=>{const src=job.photos?.[key]?.[0];return src?`<figure style="margin:0"><img src="${src}" alt="" style="width:72px;height:72px;object-fit:cover;border-radius:8px"><figcaption class="muted small">${val(label)}</figcaption></figure>`:"";}).join("");
+  const faultRows=(job.diagnosticFaults||[]).filter(f=>f.status!=="ruledout").map(f=>line(`${f.status==="confirmed"?"Confirmed":"Possible"} fault`,f.text)).join("");
+  const internal=`<img class="wordmark" src="assets/wordmark.png?v=4" alt="Calibre vintage watches" style="display:block;width:100%;max-width:420px;height:auto;margin:0 auto 12px"><h2>${val(job.watchName)}</h2><p class='muted small'>${val(job.jobId)}</p>${shots?`<div style="display:flex;gap:8px;overflow:auto;margin:8px 0">${shots}</div>`:""}${lines.map(x=>line(x[0],x[1])).join("")}${p.notes?`<p>${val(p.notes)}</p>`:""}${faultRows?`<h3>Open faults</h3>${faultRows}`:""}<h3>Work</h3>${stages||"<p class='muted'>No stage notes.</p>"}${runs?`<h3>Timing</h3>${runs}`:""}`;
+  const buyerLines=[["Passport",job.jobId],["Maker",p.maker],["Model",p.model],["Year",p.year],["Country",p.country],["Movement",[p.movementMaker,p.calibre].filter(Boolean).join(" ")],["Beat",p.beatRate],["Case",p.caseStyle],["Condition",job.stages?.[0]?.condition],["Work",job.repairPerformed]].filter(x=>x[1]);
+  const buyer=`<h2>${val(job.watchName)}</h2><p class='muted small'>Calibre passport ${val(job.jobId)}</p>${shots?`<div style="display:flex;gap:8px;overflow:auto;margin:8px 0">${shots}</div>`:""}${buyerLines.map(x=>line(x[0],x[1])).join("")}${p.history?`<h3>History</h3><p>${val(p.history)}</p>`:""}${runs?`<h3>Timing</h3>${runs}`:""}<p class='muted small'>Identity, work and timing. No prices.</p>`;
+  let mode="internal";const draw=()=>{$("sheet").innerHTML=mode==="buyer"?buyer:internal;};draw();
+  $("buyerSheet").onclick=()=>{mode=mode==="buyer"?"internal":"buyer";$("buyerSheet").textContent=mode==="buyer"?"Workshop sheet":"Buyer passport";draw();};
+  $("completeJob").onclick=async()=>{if(!confirm("Mark "+job.watchName+" complete?"))return;job.status="Ready to list";job.completedAt=new Date().toISOString();await saveState(state);location.href="inventory.html";};
+  $("writeOff").onclick=async()=>{const reason=prompt("What was lost or damaged?",job.writeOff||"Movement retained for spares.");if(!reason)return;job.writeOff=reason;markSpares(job);job.completedAt=new Date().toISOString();await saveState(state);location.href="suppliers.html";};
+  $("exportCard").onclick=()=>{const card=exportCard(job);download((card.pushId||"job")+".calibrejob",card);$("statusText").textContent="Job card saved with "+card.photoCount+" photos.";};
+  $("copyBrief").onclick=async()=>{const text=["Write a one-page service summary from this Calibre job. Only claim work that is marked done. No hype.","",JSON.stringify(exportCard(job),null,2)].join("\n");try{await navigator.clipboard.writeText(text);$("statusText").textContent="Copied for ChatGPT.";}catch{$("statusText").textContent="Copy failed. Export the card.";}};
+ }
+}catch(err){clearTimeout(slow);$("sheet").innerHTML="<p class='muted'>Sheet could not load. "+val(err?.message||"Unknown error")+"</p>";}
 </script></body></html>
