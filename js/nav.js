@@ -166,28 +166,30 @@ document.querySelectorAll(".brandbar").forEach(function(bar){
 var markStyle=document.createElement("style");
 markStyle.textContent=`
 .brandmark{padding:0;overflow:hidden;background:transparent}
-.brandmark img{width:42px;height:42px;object-fit:cover;display:block;border-radius:50%}
+.brandmark img{width:34px;height:34px;object-fit:cover;display:block;border-radius:50%}
 .navbtn{position:relative}
-.newsdot{position:absolute;top:7px;right:calc(50% - 17px);width:7px;height:7px;border-radius:50%;background:#ef4444;box-shadow:0 0 0 2px var(--nav,#111)}
+.newsdot{position:absolute;top:6px;right:5px;width:6px;height:6px;border-radius:50%;background:#ef4444;box-shadow:0 0 0 2px var(--bg,#111)}
 .newsdot[hidden]{display:none}
-.contextnav{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:-4px 0 14px;padding:2px 0 4px}
+.contextnav{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;margin:0 0 8px;padding:0;border-bottom:1px solid var(--line)}
 .contextnav::-webkit-scrollbar{display:none}
-.contextnav-btn{flex:0 0 auto;min-height:34px;display:inline-flex;align-items:center;justify-content:center;padding:6px 11px;border:1px solid var(--line);border-radius:7px;background:transparent;color:var(--muted);text-decoration:none;font-size:.74rem;font-weight:700;white-space:nowrap}
-.contextnav-btn:hover{color:var(--ink);border-color:var(--muted)}
-.contextnav-btn.active{background:var(--surface-2);color:var(--ink);border-color:var(--brass)}
-.watch-strip{display:grid;grid-template-columns:54px minmax(0,1fr) auto;gap:12px;align-items:center;padding:11px 12px;margin:0 0 10px;background:var(--surface);border:1px solid var(--line);border-radius:9px}
-.watch-strip-photo{width:54px;height:54px;border-radius:8px;overflow:hidden;background:var(--surface-2);display:grid;place-items:center;color:var(--muted);font-weight:800;font-size:1.1rem}
+.contextnav-btn{flex:0 0 auto;min-height:30px;display:inline-flex;align-items:center;justify-content:center;padding:5px 8px 7px;border:0;border-bottom:2px solid transparent;background:transparent;color:var(--muted);text-decoration:none;font-size:.68rem;font-weight:700;white-space:nowrap;margin-bottom:-1px}
+.contextnav-btn:hover{color:var(--ink)}
+.contextnav-btn.active{background:transparent;color:var(--ink);border-bottom-color:var(--accent,var(--brass))}
+.watch-strip{display:grid;grid-template-columns:42px minmax(0,1fr) auto;gap:9px;align-items:center;padding:7px 0 8px;margin:0;background:transparent;border:0;border-bottom:1px solid var(--line);border-radius:0}
+.watch-strip-photo{width:42px;height:42px;border-radius:6px;overflow:hidden;background:var(--surface-2);display:grid;place-items:center;color:var(--muted);font-weight:800;font-size:.92rem}
 .watch-strip-photo img{width:100%;height:100%;object-fit:cover;display:block}
-.watch-strip-name{font-size:1.05rem;font-weight:800;letter-spacing:-.015em;color:var(--ink)}
-.watch-strip-meta{margin-top:3px;color:var(--muted);font-size:.76rem;line-height:1.35}
-.watch-strip-state{display:flex;align-items:flex-end;flex-direction:column;gap:5px;text-align:right}
-.watch-strip-job{font-size:.68rem;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.watch-strip-name{font-size:.93rem;font-weight:800;letter-spacing:-.012em;color:var(--ink)}
+.watch-strip-meta{margin-top:2px;color:var(--muted);font-size:.68rem;line-height:1.3}
+.watch-strip-state{display:flex;align-items:flex-end;flex-direction:column;gap:3px;text-align:right}
+.watch-strip-job{font-size:.62rem;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
 @media(max-width:640px){
-  .watch-strip{grid-template-columns:44px minmax(0,1fr);padding:9px 10px;gap:9px}
+  .brandmark img{width:38px;height:38px}
+  .watch-strip{grid-template-columns:44px minmax(0,1fr);padding:8px 0;gap:9px}
   .watch-strip-photo{width:44px;height:44px}
   .watch-strip-state{grid-column:2;align-items:flex-start;flex-direction:row;flex-wrap:wrap;text-align:left;margin-top:-2px}
-  .contextnav{margin:8px 0 12px;padding-bottom:2px}
-  .contextnav-btn{min-height:32px;padding:5px 10px;border-radius:999px}
+  .contextnav{margin:6px 0 10px;border-bottom:0;gap:5px}
+  .contextnav-btn{min-height:32px;padding:5px 10px;border:1px solid var(--line);border-radius:999px;margin:0}
+  .contextnav-btn.active{background:var(--surface-2);border-color:var(--accent,var(--brass))}
 }
 `;
 document.head.appendChild(markStyle);
