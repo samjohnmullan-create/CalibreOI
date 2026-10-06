@@ -18,8 +18,8 @@ function openDB(){
 function getLocal(k){return openDB().then(db=>new Promise((res,rej)=>{const q=db.transaction(STORE).objectStore(STORE).get(k);q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error);}));}
 function putLocal(k,v){return openDB().then(db=>new Promise((res,rej)=>{const tx=db.transaction(STORE,"readwrite");tx.objectStore(STORE).put(v,k);tx.oncomplete=()=>res();tx.onerror=()=>rej(tx.error);}));}
 function ms(v){const n=Date.parse(v||"");return Number.isFinite(n)?n:0;}
-function cleanCategory(v){const s=String(v||"").toLowerCase();if(s.includes("tool"))return "Tool";if(s.includes("strap")||s.includes("band"))return "Strap";if(s.includes("consum"))return "Consumable";if(s.includes("part"))return "Part";return "Other";}
-function cleanStatus(v){const s=String(v||"").toLowerCase();if(s.includes("deliver")||s.includes("received"))return "Delivered";if(s.includes("transit")||s.includes("carrier")||s.includes("departure"))return "In transit";if(s.includes("ship"))return "Shipped";if(s.includes("confirm")||s.includes("order"))return "Ordered";return v||"Ordered";}
+function cleanCategory(v){const s=String(v||"").toLowerCase();if(s.includes("watch"))return "Watch";if(s.includes("tool"))return "Tool";if(s.includes("strap")||s.includes("band"))return "Strap";if(s.includes("consum"))return "Consumable";if(s.includes("part"))return "Part";return "Other";}
+function cleanStatus(v){const s=String(v||"").toLowerCase();if(s.includes("cancel")||s.includes("closed"))return "Cancelled / closed";if(s.includes("out for delivery"))return "Out for delivery";if(s.includes("deliver")||s.includes("received"))return "Delivered";if(s.includes("transit")||s.includes("departure"))return "In transit";if(s.includes("carrier")||s.includes("collected"))return "Collected by carrier";if(s.includes("ready")||s.includes("dispatch"))return "Awaiting dispatch";if(s.includes("ship"))return "Shipped";if(s.includes("confirm")||s.includes("order"))return "Ordered";return v||"Ordered";}
 function purchaseKey(p){return String(p.sourceKey||p.pushId||[p.source,p.orderId,p.itemName,p.variant].filter(Boolean).join("|")||p.id||"");}
 function normalisePurchase(p={}){
   const now=new Date().toISOString();
@@ -37,6 +37,7 @@ function normalisePurchase(p={}){
     status:cleanStatus(p.status),
     orderedAt:p.orderedAt||p.purchaseDate||"",
     tracking:p.tracking||"",
+    eta:p.eta||"",
     sourceRef:p.sourceRef||"",
     notes:p.notes||"",
     receivedAt:p.receivedAt||"",
@@ -136,6 +137,71 @@ function importPurchase(state,raw){
   return {added,updated};
 }
 
+function meaningful(v){
+  if(v==null)return false;
+  if(typeof v==="string")return v.trim()!=="";
+  if(Array.isArray(v))return v.length>0;
+  if(typeof v==="object")return Object.keys(v).length>0;
+  return true;
+}
+function mergeObject(existing={},incoming={},incomingWins=true){
+  const out=structuredClone(existing||{});
+  for(const [k,v] of Object.entries(incoming||{})){
+    if(!meaningful(v))continue;
+    if(v&&typeof v==="object"&&!Array.isArray(v))out[k]=mergeObject(out[k]||{},v,incomingWins);
+    else if(incomingWins||!meaningful(out[k]))out[k]=structuredClone(v);
+  }
+  return out;
+}
+function stableKey(v){
+  if(v&&typeof v==="object")return String(v.id||v.key||v.code||v.name||v.text||v.partNumber||v.ref||JSON.stringify(v));
+  return String(v);
+}
+function mergeArray(existing=[],incoming=[]){
+  const out=Array.isArray(existing)?structuredClone(existing):[];
+  const seen=new Set(out.map(stableKey));
+  for(const item of (Array.isArray(incoming)?incoming:[])){
+    const key=stableKey(item);
+    if(!seen.has(key)){out.push(structuredClone(item));seen.add(key);}
+  }
+  return out;
+}
+function earlyStatus(v){return !v||["Purchased","Awaiting inspection"].includes(v);}
+function mergeJob(existing,incoming,raw={}){
+  const now=new Date().toISOString();
+  const merged={...structuredClone(existing)};
+
+  // Research/passport/business fields can improve with later pushes.
+  for(const k of ["watchName","jobId","jobType","channel","askingPrice","research","references","notes"]){
+    if(meaningful(incoming[k]))merged[k]=structuredClone(incoming[k]);
+  }
+  merged.passport=mergeObject(existing.passport||{},incoming.passport||{},true);
+  merged.business=mergeObject(existing.business||{},incoming.business||{},true);
+
+  // Additive fields: new information is appended, never wipes bench-entered entries.
+  merged.faults=mergeArray(existing.faults,incoming.faults);
+  merged.parts=mergeArray(existing.parts,incoming.parts);
+  merged.photos=mergeObject(incoming.photos||{},existing.photos||{},true); // existing photos win; incoming fills gaps.
+
+  // Bench progress is local-authoritative once work has started.
+  for(const k of ["stages","timingRuns","diagnostics","diagnosticFaults","repairPerformed","diagnosis","decision","service","serviceNotes"]){
+    if(!meaningful(existing[k])&&meaningful(incoming[k]))merged[k]=structuredClone(incoming[k]);
+  }
+
+  // Preserve workflow status after the watch has moved beyond intake unless explicitly forced.
+  if(raw.forceStatus===true&&meaningful(incoming.status))merged.status=incoming.status;
+  else if(earlyStatus(existing.status)&&meaningful(incoming.status))merged.status=incoming.status;
+  else merged.status=existing.status||incoming.status;
+
+  merged.id=existing.id;
+  merged.createdAt=existing.createdAt||incoming.createdAt;
+  merged.pushId=incoming.pushId||existing.pushId||raw.pushId||"";
+  merged.updatedAt=now;
+  merged.lastInboxMergeAt=now;
+  merged.lastInboxPushId=raw.pushId||incoming.pushId||"";
+  return base.normalise(merged);
+}
+
 export async function importInboxItems(items){
   const state=normaliseState(await getLocal("state"))||{jobs:[],currentId:null,ledger:[],incoming:[]};
   let added=0,updated=0;
@@ -150,11 +216,12 @@ export async function importInboxItems(items){
         incoming.updatedAt=new Date().toISOString();
         const idx=state.jobs.findIndex(j=>(incoming.pushId&&j.pushId===incoming.pushId)||(raw.jobId&&j.jobId===raw.jobId));
         if(idx>=0){
-          const existing=state.jobs[idx];
-          incoming.id=existing.id;
-          incoming.createdAt=existing.createdAt||incoming.createdAt;
-          state.jobs[idx]=base.normalise(incoming);updated++;
-        }else{state.jobs.push(base.normalise(incoming));added++;}
+          state.jobs[idx]=mergeJob(state.jobs[idx],incoming,raw);
+          updated++;
+        }else{
+          state.jobs.push(base.normalise(incoming));
+          added++;
+        }
         state.currentId=state.jobs[idx>=0?idx:state.jobs.length-1].id;
       }else if(raw.type==="calibrepurchase"||raw.type==="calibreincoming"){
         const r=importPurchase(state,raw);added+=r.added;updated+=r.updated;
