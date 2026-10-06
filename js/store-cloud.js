@@ -1,7 +1,7 @@
-import * as base from "./store.js?v=26";
+import * as base from "./store-base.js?v=1";
 import { readCloudState, writeCloudState } from "./cloud.js?v=1";
 
-export * from "./store.js?v=26";
+export * from "./store-base.js?v=1";
 
 const DB="calibre-co-v1", STORE="kv";
 let dbp;
