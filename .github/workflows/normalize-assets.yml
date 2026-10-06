@@ -1,0 +1,46 @@
+name: Normalize Calibre assets
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  normalize:
+    if: github.event.head_commit.message != 'Normalize Calibre asset versions'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Normalize shared asset references
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          for path in Path('.').glob('*.html'):
+              text = path.read_text(encoding='utf-8')
+              original = text
+              text = re.sub(r'css/app\.css\?v=\d+', 'css/app.css?v=12', text)
+              text = re.sub(r'js/nav\.js\?v=\d+', 'js/nav.js?v=50', text)
+              if path.name == 'workbench.html':
+                  marker = '@media (hover:hover) and (pointer:fine){'
+                  start = text.find(marker)
+                  if start != -1:
+                      end = text.find('\n}\n</style>', start)
+                      if end != -1:
+                          text = text[:start] + text[end+3:]
+              if text != original:
+                  path.write_text(text, encoding='utf-8')
+          PY
+      - name: Commit normalized references
+        shell: bash
+        run: |
+          if git diff --quiet; then
+            echo 'Nothing to normalize.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add '*.html'
+          git commit -m 'Normalize Calibre asset versions'
+          git push
