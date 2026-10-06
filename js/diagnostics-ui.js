@@ -10,6 +10,8 @@ style.textContent=`
 .diagnostic-item:first-of-type{border-top:0}.diagnostic-copy{display:grid;gap:2px;min-width:0}.diagnostic-copy strong{font-size:.82rem}.diagnostic-copy span{font-size:.68rem;color:var(--muted)}
 .diagnostic-actions{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}.diag-btn{border:1px solid var(--line);background:var(--surface);color:var(--muted);border-radius:6px;padding:6px 8px;font-size:.66rem;font-weight:700;cursor:pointer}.diag-btn.on{border-color:var(--brass);color:var(--ink);box-shadow:inset 0 0 0 1px var(--brass)}.diag-btn:disabled{opacity:.55;cursor:wait}
 .diagnostic-note{font-size:.64rem;color:var(--muted);margin-top:7px}.fault-register-row{display:flex;justify-content:space-between;gap:10px;align-items:start;padding:10px 0;border-bottom:1px solid var(--line)}.fault-register-row>div{display:grid;gap:3px}.fault-register-row span{font-size:.72rem;color:var(--muted)}.fault-register-row small{font-size:.66rem}.fault-status{font-size:.64rem;font-weight:800;letter-spacing:.03em;text-transform:uppercase}.diag-ruled{margin-top:10px}.diag-ruled summary{cursor:pointer;color:var(--muted);font-size:.75rem;font-weight:700}.diag-manual{display:flex;gap:8px;margin-top:12px}.diag-manual input{flex:1}.diag-manual .btn{white-space:nowrap}
+.stage-btn.diag-relevant{border-color:var(--brass);box-shadow:inset 0 -2px 0 var(--brass)}.stage-fault-count{position:absolute;top:8px;left:9px;font-size:.6rem;font-weight:800;letter-spacing:.02em;color:var(--brass-soft);background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:3px 6px}.stage-btn.active .stage-fault-count{background:var(--surface)}
+.stage-relevance{margin:12px 0 4px;padding:11px 12px;border:1px solid var(--line);border-left:3px solid var(--brass);border-radius:8px;background:var(--surface-2)}.stage-relevance h3{margin:0 0 6px;font-size:.8rem}.stage-relevance p{margin:0 0 7px}.stage-relevance ul{margin:0;padding-left:18px}.stage-relevance li{margin:4px 0;font-size:.75rem}.stage-relevance .fault-state{color:var(--muted);font-size:.66rem;text-transform:uppercase;font-weight:800}
 @media(max-width:640px){.diagnostic-item{align-items:stretch;flex-direction:column}.diagnostic-actions{justify-content:flex-start}.diag-manual{flex-direction:column}}
 `;
 document.head.appendChild(style);
@@ -20,6 +22,40 @@ const diagKey=(stageName,stepId,faultId)=>`${stageName}::${stepId}::${faultId}`;
 const statusLabel=v=>v==="confirmed"?"Confirmed":v==="ruledout"?"Ruled out":"Possible";
 function ensureDiag(job){if(!Array.isArray(job.diagnosticFaults))job.diagnosticFaults=[];return job.diagnosticFaults;}
 async function fresh(){const state=await loadState();return {state,job:current(state)};}
+
+const CATEGORY_STAGES={
+  Power:["Dismantling & inspection","Cleaning & parts inspection","Repairs & parts","Reassembly & lubrication","Balance & beat","Final QC"],
+  Winding:["Dismantling & inspection","Repairs & parts","Reassembly & lubrication","Casing & function","Final QC"],
+  Setting:["Dismantling & inspection","Repairs & parts","Reassembly & lubrication","Casing & function","Final QC"],
+  "Keyless works":["Dismantling & inspection","Repairs & parts","Reassembly & lubrication","Casing & function","Final QC"],
+  Barrel:["Dismantling & inspection","Cleaning & parts inspection","Repairs & parts","Reassembly & lubrication","Final QC"],
+  Mainspring:["Dismantling & inspection","Cleaning & parts inspection","Repairs & parts","Reassembly & lubrication","Final QC"],
+  Train:["Dismantling & inspection","Cleaning & parts inspection","Repairs & parts","Reassembly & lubrication","Train & escapement","Regulation","Final QC"],
+  Escapement:["Dismantling & inspection","Cleaning & parts inspection","Repairs & parts","Reassembly & lubrication","Train & escapement","Balance & beat","Regulation"],
+  Balance:["Dismantling & inspection","Cleaning & parts inspection","Repairs & parts","Reassembly & lubrication","Balance & beat","Regulation","Final QC"],
+  Hairspring:["Dismantling & inspection","Cleaning & parts inspection","Repairs & parts","Reassembly & lubrication","Balance & beat","Regulation"],
+  Timing:["Pre-service timing","Balance & beat","Regulation","Final QC"],
+  Automatic:["Automatic works","Final QC"],
+  "Automatic winding":["Automatic works","Final QC"],
+  Lubrication:["Reassembly & lubrication","Train & escapement","Balance & beat","Regulation"],
+  Jewels:["Dismantling & inspection","Cleaning & parts inspection","Repairs & parts","Reassembly & lubrication","Balance & beat"],
+  Pivots:["Dismantling & inspection","Cleaning & parts inspection","Repairs & parts","Reassembly & lubrication","Train & escapement"],
+  Case:["Uncasing","Case / hands / crystal","Casing & function","Final QC"],
+  Casing:["Uncasing","Case / hands / crystal","Casing & function","Final QC"],
+  Hands:["Case / hands / crystal","Casing & function","Final QC"],
+  Dial:["Case / hands / crystal","Casing & function","Final QC"],
+  Calendar:["Dismantling & inspection","Repairs & parts","Reassembly & lubrication","Casing & function","Final QC"],
+  Quartz:["Battery & electrical","Movement inspection","Cleaning & contacts","Repair & reassembly","Hands & calendar","Casing & function","Final QC"],
+  Parts:["Cleaning & parts inspection","Repairs & parts"],
+  General:["Dismantling & inspection","Cleaning & parts inspection","Repairs & parts","Final QC"]
+};
+function targetStages(fault){return CATEGORY_STAGES[fault.category]||CATEGORY_STAGES.General;}
+function activeFaults(job){return ensureDiag(job).filter(f=>f.status!=="ruledout");}
+function relevanceByStage(job){
+  const map={};
+  activeFaults(job).forEach(f=>targetStages(f).forEach(stage=>{(map[stage]||(map[stage]=[])).push(f);}));
+  return map;
+}
 
 function addPossible(job,stageName,step,question,fault){
   const arr=ensureDiag(job),key=diagKey(stageName,step.id,fault.id);
@@ -106,6 +142,25 @@ function renderRegister(root,job){
   const paint=(el,items)=>{if(!el)return;el.innerHTML=items.length?items.map(x=>`<div class="fault-register-row"><div><strong>${esc(x.text)}</strong><span>${esc(x.category||"General")} · <span class="fault-status">${statusLabel(x.status)}</span><br><small>Raised at ${esc(x.sourceStage||"Manual")}${x.sourceQuestion?" — "+esc(x.sourceQuestion):""}</small></span></div><div>${actionButtons(x.key,x.status)}<button class="diag-btn diag-remove" data-diag-remove="1" data-diag-key="${esc(x.key)}" type="button">Remove</button></div></div>`).join(""):`<p class="muted small">No faults suggested yet.</p>`;};
   paint(root.querySelector("#diagActive"),active);paint(root.querySelector("#diagRuled"),ruled);
 }
+function paintStageRelevance(job){
+  const map=relevanceByStage(job);
+  document.querySelectorAll("#stageList .stage-btn").forEach(btn=>{
+    btn.classList.remove("diag-relevant");btn.querySelectorAll(".stage-fault-count").forEach(x=>x.remove());
+    const title=btn.querySelector(".stage-name")?.textContent||"";
+    const key=Object.keys(STAGE_COPY).find(k=>(STAGE_COPY[k]?.title||k)===title)||title;
+    const faults=map[key]||[];
+    if(!faults.length)return;
+    btn.classList.add("diag-relevant");
+    const badge=document.createElement("span");badge.className="stage-fault-count";badge.textContent=`${faults.length} fault${faults.length===1?"":"s"}`;btn.appendChild(badge);
+  });
+
+  document.querySelectorAll(".stage-relevance").forEach(x=>x.remove());
+  const stage=job.stages?.[job.stage];if(!stage)return;
+  const faults=map[stage.name]||[];if(!faults.length)return;
+  const box=document.createElement("div");box.className="stage-relevance";
+  box.innerHTML=`<h3>Why this stage matters</h3><p class="muted small">These open faults point to checks in this stage:</p><ul>${faults.map(f=>`<li><strong>${esc(f.text)}</strong> <span class="fault-state">${statusLabel(f.status)}</span></li>`).join("")}</ul>`;
+  const steps=document.getElementById("steps");if(steps)steps.parentNode.insertBefore(box,steps);
+}
 
 let rendering=false,pending=false;
 async function render(force=false){
@@ -122,6 +177,7 @@ async function render(force=false){
       row.appendChild(panelFor(stage.name,step,suggestions,known));
     });
     const root=document.getElementById("faults");if(root)renderRegister(root,job);
+    paintStageRelevance(job);
   }catch(err){console.warn("Calibre diagnostics",err);}finally{
     rendering=false;
     if(pending){pending=false;setTimeout(()=>render(),20);}
