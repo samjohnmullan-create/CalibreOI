@@ -76,6 +76,12 @@ function syncAutomaticCompletion(job){
  });
  return changed;
 }
+function syncCompletionUi(job){
+ const stage=job.stages?.[job.stage],manual=stage&&["Intake","Final QC"].includes(stage.name),checkbox=$("#stageComplete");
+ if(stage&&checkbox&&!manual)checkbox.checked=!!stage.complete;
+ const state=$("#stageState");if(stage&&state)state.textContent=stage.complete?"Complete":"In progress";
+ document.querySelectorAll("#stageList .stage-btn").forEach((btn,i)=>{const done=!!job.stages?.[i]?.complete;btn.classList.toggle("done",done);const mark=btn.querySelector(".stage-check");if(mark)mark.textContent=done?"✓":"";});
+}
 function guideMarkup(fault){
  const g=guidanceFor(fault);if(!g)return "";
  const list=(t,a)=>a?.length?`<h4>${t}</h4><ul>${a.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:"";
@@ -99,22 +105,27 @@ function renderStageRelevance(job){
 function arrangeWorkflowControls(job){
  const card=$("section.card"),footer=$(".footer-actions");if(!card||!footer)return;
  let host=$(".workflow-runtime-footer");if(!host){host=document.createElement("div");host.className="workflow-runtime-footer";card.insertBefore(host,footer);}
- const decision=$("#decision"),note=$("#decisionNote"),complete=$("#stageComplete");
+ const decision=$("#decision"),complete=$("#stageComplete");
  if(decision){const block=decision.closest("label")?.parentElement;if(block&&!block.dataset.runtimeMoved){block.dataset.runtimeMoved="1";host.appendChild(block);}}
  if(complete){const lab=complete.closest("label");if(lab&&!lab.dataset.runtimeMoved){lab.dataset.runtimeMoved="1";const wrap=document.createElement("div");wrap.className="section-block";wrap.id="runtimeCompleteBlock";wrap.appendChild(lab);host.appendChild(wrap);}}
  const stage=job.stages?.[job.stage]?.name||"";const decisionBlock=decision?.closest(".section-block");if(decisionBlock)decisionBlock.hidden=stage!=="Intake";const cb=$("#runtimeCompleteBlock");if(cb)cb.hidden=!(["Intake","Final QC"].includes(stage));
 }
 async function paint(){
  if(painting)return;painting=true;
- try{const state=await loadState(),job=current(state);if(!job)return;const changed=addSuggestions(job)|syncAutomaticCompletion(job);syncLegacy(job);if(changed)await saveState(state);renderFaults(job);renderStageRelevance(job);arrangeWorkflowControls(job);}catch(e){console.error("Calibre Workbench runtime",e);const s=$("#statusText");if(s)s.textContent="Workbench runtime error: "+(e.message||e);}finally{painting=false;}}
+ try{const state=await loadState(),job=current(state);if(!job)return;const changed=Boolean(addSuggestions(job)|syncAutomaticCompletion(job));syncLegacy(job);if(changed)await saveState(state);syncCompletionUi(job);renderFaults(job);renderStageRelevance(job);arrangeWorkflowControls(job);}catch(e){console.error("Calibre Workbench runtime",e);const s=$("#statusText");if(s)s.textContent="Workbench runtime error: "+(e.message||e);}finally{painting=false;}}
 function schedule(ms=80){clearTimeout(paintTimer);paintTimer=setTimeout(paint,ms);}
-async function setStatus(key,status){if(saving.has(key))return;saving.add(key);try{const state=await loadState(),job=current(state),f=ensure(job).find(x=>x.key===key);if(!f)throw new Error("Fault not found");f.status=status;f.updatedAt=new Date().toISOString();syncLegacy(job);await saveState(state);const s=$("#statusText");if(s)s.textContent=`${f.text}: ${label(status)}`;await paint();}finally{saving.delete(key);}}
+async function setStatus(key,status){if(saving.has(key))return;saving.add(key);try{const state=await loadState(),job=current(state),f=ensure(job).find(x=>x.key===key);if(!f)throw new Error("Fault not found");f.status=status;f.updatedAt=new Date().toISOString();syncLegacy(job);await saveState(state);const s=$("#statusText");if(s)s.textContent=`${f.text}: ${label(status)}`;await paint();}catch(e){const s=$("#statusText");if(s)s.textContent="Could not update fault: "+(e.message||e);console.error(e);}finally{saving.delete(key);}}
 
 document.addEventListener("click",async e=>{
  const b=e.target.closest("[data-runtime-status]");if(b){e.preventDefault();e.stopPropagation();await setStatus(b.dataset.runtimeKey,b.dataset.runtimeStatus);return;}
  const add=e.target.closest("#runtimeFaultAdd");if(add){e.preventDefault();const input=$("#runtimeFaultText"),text=input?.value.trim();if(!text)return;const state=await loadState(),job=current(state),key=`manual::${Date.now()}`;ensure(job).push({key,id:key,text,category:"Manual",severity:"Moderate",sourceStage:"Manual",sourceCheck:"manual",sourceQuestion:"Added manually",status:"confirmed",createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()});syncLegacy(job);await saveState(state);await paint();return;}
- if(e.target.closest("#steps .yn-btns button,.stage-btn,.type,#decision,#stageComplete"))schedule(180);
+ if(e.target.closest("section.card button,section.card select"))schedule(180);
 },true);
-document.addEventListener("change",e=>{if(e.target.closest("#decision,#stageComplete"))schedule(150);});
-function start(){const steps=$("#steps"),faults=$("#faults");if(!steps||!faults)return setTimeout(start,120);new MutationObserver(()=>schedule(120)).observe(steps,{childList:true,subtree:true});schedule(40);}
+document.addEventListener("change",()=>schedule(160));
+function start(){
+ const steps=$("#steps"),faults=$("#faults");if(!steps||!faults)return setTimeout(start,120);
+ new MutationObserver(()=>schedule(120)).observe(steps,{childList:true,subtree:true});
+ new MutationObserver(()=>{if(faults.querySelector(".chip,#addFault")||faults.querySelector("h3")?.textContent?.trim()==="Faults found")schedule(25);}).observe(faults,{childList:true,subtree:true});
+ schedule(40);
+}
 start();
