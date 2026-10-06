@@ -17,66 +17,29 @@ export const SPARE_PARTS = [
 ];
 
 export function ensureSpares(job){
-  const prev = new Map((Array.isArray(job.sparesParts) ? job.sparesParts : []).map(p => [p.id, p]));
-  job.sparesParts = SPARE_PARTS.map(p => ({
-    id: p.id,
-    name: p.name,
-    keep: prev.has(p.id) ? !!prev.get(p.id).keep : p.id !== "dial"
-  }));
-  if (typeof job.fitsNote !== "string") job.fitsNote = "";
+  const prev=new Map((Array.isArray(job.sparesParts)?job.sparesParts:[]).map(p=>[p.id,p]));
+  job.sparesParts=SPARE_PARTS.map(p=>({id:p.id,name:p.name,keep:prev.has(p.id)?!!prev.get(p.id).keep:p.id!=="dial"}));
+  if(typeof job.fitsNote!=="string")job.fitsNote="";
   return job;
 }
-
-function fold(s){
-  return String(s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9.]+/g, " ").trim();
+function fold(s){return String(s||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9.]+/g," ").trim();}
+function plate(s){const n=parseFloat(String(s||"").replace(",",".").replace(/[^\d.]/g,""));return Number.isFinite(n)&&n>0?n:0;}
+function calibre(job){return fold(job.passport&&job.passport.calibre).replace(/\s/g,"");}
+export function judgeDonor(need,donor,part){
+  const kept=(donor.sparesParts||[]).find(p=>p.id===part.id),have=kept?!!kept.keep:part.id!=="dial",sameCal=calibre(need)&&calibre(need)===calibre(donor),note=fold(donor.fitsNote);
+  const tokens=[need.watchName,need.passport&&need.passport.maker,need.passport&&need.passport.model,need.passport&&need.passport.calibre].map(fold).filter(t=>t.length>2),wrote=tokens.some(t=>note.includes(t));
+  const a=plate(need.passport&&need.passport.movementMm),b=plate(donor.passport&&donor.passport.movementMm),close=a&&b&&Math.abs(a-b)<=.5;
+  let kind="skip",why="";
+  if(!have){kind="gone";why="Ticked off. Not in the drawer.";}
+  else if(wrote){kind="use";why="You wrote that this donor fits the open watch.";}
+  else if(sameCal&&a&&b&&Math.abs(a-b)>.5){kind="measure";why="Calibre matches, but the pillar-plate sizes do not. Check which figure is wrong before you rob it.";}
+  else if(sameCal){kind="use";why="Same calibre. This part is worth trying.";}
+  else if(close){kind="measure";why="Different maker, pillar plate within 0.5 mm. "+part.rule;}
+  else if(!a||!b){kind="size";why="No pillar-plate size, so another maker is not offered.";}
+  return {donor,kind,why,have};
 }
-function plate(s){
-  const n = parseFloat(String(s || "").replace(",", ".").replace(/[^\d.]/g, ""));
-  return Number.isFinite(n) && n > 0 ? n : 0;
-}
-function calibre(job){
-  return fold(job.passport && job.passport.calibre).replace(/\s/g, "");
-}
-
-export function judgeDonor(need, donor, part){
-  const kept = (donor.sparesParts || []).find(p => p.id === part.id);
-  const have = kept ? !!kept.keep : part.id !== "dial";
-  const sameCal = calibre(need) && calibre(need) === calibre(donor);
-  const note = fold(donor.fitsNote);
-  const tokens = [need.watchName, need.passport && need.passport.maker, need.passport && need.passport.model, need.passport && need.passport.calibre]
-    .map(fold).filter(t => t.length > 2);
-  const wrote = tokens.some(t => note.includes(t));
-  const a = plate(need.passport && need.passport.movementMm);
-  const b = plate(donor.passport && donor.passport.movementMm);
-  const close = a && b && Math.abs(a - b) <= 0.5;
-  let kind = "skip";
-  let why = "";
-  if (!have){
-    kind = "gone";
-    why = "Ticked off. Not in the drawer.";
-  } else if (wrote){
-    kind = "use";
-    why = "You wrote that this donor fits the open watch.";
-  } else if (sameCal && a && b && Math.abs(a - b) > 0.5){
-    kind = "measure";
-    why = "Calibre matches, but the pillar-plate sizes do not. Check which figure is wrong before you rob it.";
-  } else if (sameCal){
-    kind = "use";
-    why = "Same calibre. This part is worth trying.";
-  } else if (close){
-    kind = "measure";
-    why = "Different maker, pillar plate within 0.5 mm. " + part.rule;
-  } else if (!a || !b){
-    kind = "size";
-    why = "No pillar-plate size, so another maker is not offered.";
-  }
-  return { donor, kind, why, have };
-}
-
-export function matchPart(need, donors, partId){
-  const part = SPARE_PARTS.find(p => p.id === partId) || SPARE_PARTS[0];
-  const rows = (donors || [])
-    .filter(d => d && d.id !== need.id && d.status === "spares")
-    .map(d => judgeDonor(need, d, part));
-  return { part, rows };
+export function matchPart(need,donors,partId){
+  const part=SPARE_PARTS.find(p=>p.id===partId)||SPARE_PARTS[0];
+  const rows=(donors||[]).filter(d=>d&&need&&d.id!==need.id&&d.status==="Spares").map(d=>judgeDonor(need,d,part));
+  return {part,rows};
 }
