@@ -1,7 +1,6 @@
 import { loadState, current } from "./store.js?v=25";
 
 const $ = id => document.getElementById(id);
-const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
 
 function currentFile(){
   return (location.pathname.split("/").pop() || "").split("?")[0];
@@ -46,7 +45,7 @@ function ensureStyles(){
     .decision-card{border:1px solid var(--line);background:var(--surface-2);border-radius:9px;padding:14px}
     .decision-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
     .decision-rec{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--brass);color:var(--brass-soft);border-radius:999px;padding:4px 8px;font-size:.68rem;font-weight:800;letter-spacing:.03em}
-    .decision-rec[hidden]{display:none}
+    .decision-rec[hidden],.stage-finish[hidden],.decision-card[hidden]{display:none!important}
     .decision-reason{margin:8px 0 0;color:var(--muted);font-size:.76rem;line-height:1.35}
     .stage-finish{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border:1px solid var(--line);border-radius:9px;padding:14px}
     .stage-finish-copy strong{display:block}.stage-finish-copy span{display:block;color:var(--muted);font-size:.75rem;margin-top:2px}
@@ -75,12 +74,12 @@ async function applyLayout(){
     wrap.className = "workflow-footer";
     wrap.innerHTML = `
       <div class="decision-card" id="decisionCard">
-        <div class="decision-head"><div><h3>Service decision</h3><div class="muted small">Choose this after the checks and diagnosis above.</div></div><span class="decision-rec" id="decisionRec" hidden>Recommended</span></div>
+        <div class="decision-head"><div><h3>Service decision</h3><div class="muted small">Choose this after the Assessment checks and diagnosis.</div></div><span class="decision-rec" id="decisionRec" hidden>Recommended</span></div>
         <div id="decisionMount"></div>
         <p class="decision-reason" id="decisionReason"></p>
       </div>
-      <div class="stage-finish">
-        <div class="stage-finish-copy"><strong>Finish this stage</strong><span>Mark complete when the checks, diagnosis and notes for this stage are finished.</span></div>
+      <div class="stage-finish" id="stageFinish">
+        <div class="stage-finish-copy"><strong>Finish this stage</strong><span id="stageFinishHelp">Use this only when you need to override the automatic check-based completion.</span></div>
         <div id="completeMount"></div>
       </div>`;
     footerActions.parentNode.insertBefore(wrap, footerActions);
@@ -100,6 +99,19 @@ async function applyLayout(){
   try {
     const state = await loadState();
     const job = current(state);
+    if (!job) return true;
+    const stageName = job.stages?.[job.stage]?.name || "";
+
+    const decisionCard = $("decisionCard");
+    const stageFinish = $("stageFinish");
+    decisionCard.hidden = stageName !== "Intake";
+    stageFinish.hidden = !["Intake","Final QC"].includes(stageName);
+    if ($("stageFinishHelp")) {
+      $("stageFinishHelp").textContent = stageName === "Final QC"
+        ? "Use this when the final checks and running test are genuinely complete."
+        : "Assessment normally completes from its checks; use this only as a manual override.";
+    }
+
     const rec = recommendedDecision(job);
     const badge = $("decisionRec");
     const reason = $("decisionReason");
@@ -107,7 +119,7 @@ async function applyLayout(){
       if (o.dataset.baseLabel) o.textContent = o.dataset.baseLabel;
       else o.dataset.baseLabel = o.textContent;
     });
-    if (rec.value) {
+    if (rec.value && stageName === "Intake") {
       badge.hidden = false;
       const opt = [...decision.options].find(o => o.value === rec.value || o.textContent === rec.value);
       if (opt) {
@@ -117,7 +129,7 @@ async function applyLayout(){
       reason.textContent = rec.reason;
     } else {
       badge.hidden = true;
-      reason.textContent = "No recommendation yet — complete the diagnostic checks first.";
+      reason.textContent = stageName === "Intake" ? "No recommendation yet — complete the diagnostic checks first." : "";
     }
   } catch (err) {
     console.warn("Workbench recommendation", err);
@@ -140,7 +152,7 @@ function start(){
   const obs = new MutationObserver(() => setTimeout(refresh, 40));
   obs.observe(root, { childList:true, subtree:true });
   document.addEventListener("click", e => {
-    if (e.target.closest("#steps button,.diag-btn,.diag-remove,.type,.stage-btn")) setTimeout(refresh, 180);
+    if (e.target.closest("#steps button,.diag-btn,.diag-remove,.type,.stage-btn,#prevStage,#nextStage")) setTimeout(refresh, 180);
   });
   document.addEventListener("change", e => {
     if (e.target.id === "decision" || e.target.id === "stageComplete") setTimeout(refresh, 80);
