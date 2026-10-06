@@ -65,7 +65,6 @@ document.querySelectorAll(".brandbar").forEach(function(bar){
   };
 
   var activeGroup=pageGroup[here]||"home";
-
   document.querySelectorAll("nav.mainnav").forEach(function(nav){
     nav.innerHTML=primary.map(function(item){
       var on=item.id===activeGroup;
@@ -76,6 +75,14 @@ document.querySelectorAll(".brandbar").forEach(function(bar){
 
   var watchPages=["workbench.html","passport.html","timegrapher.html","business.html","summary.html","suppliers.html"];
   if(watchPages.indexOf(here)>=0){
+    document.body.classList.add("watch-page");
+    var main=document.querySelector("nav.mainnav");
+    var strip=document.createElement("section");
+    strip.className="watch-strip";
+    strip.setAttribute("aria-label","Current watch");
+    strip.innerHTML='<div class="watch-strip-photo" data-watch-photo></div><div class="watch-strip-main"><div class="watch-strip-name" data-watch-name>Loading watch…</div><div class="watch-strip-meta" data-watch-meta></div></div><div class="watch-strip-state"><span class="badge" data-watch-status>—</span><span class="watch-strip-job" data-watch-job></span></div>';
+    if(main)main.insertAdjacentElement("afterend",strip);
+
     var watchTabs=[
       ["workbench.html?v=22","Repair"],
       ["passport.html","Identity"],
@@ -86,13 +93,48 @@ document.querySelectorAll(".brandbar").forEach(function(bar){
     ];
     var sub=document.createElement("nav");
     sub.className="contextnav watch-contextnav";
-    sub.setAttribute("aria-label","Current watch");
+    sub.setAttribute("aria-label","Current watch sections");
     sub.innerHTML=watchTabs.map(function(item){
       var on=here===item[0].split("?")[0];
       return "<a class=\"contextnav-btn"+(on?" active":"")+"\" href=\""+item[0]+"\""+(on?" aria-current=\"page\"":"")+">"+item[1]+"</a>";
     }).join("");
-    var main=document.querySelector("nav.mainnav");
-    if(main)main.insertAdjacentElement("afterend",sub);
+    strip.insertAdjacentElement("afterend",sub);
+
+    (async function(){
+      try{
+        var mod=await import("./store.js?v=26");
+        var state=await mod.loadState();
+        var job=mod.current(state);
+        if(!job){
+          strip.querySelector("[data-watch-name]").textContent="No watch open";
+          strip.querySelector("[data-watch-meta]").textContent="Choose a watch from Collection or Home.";
+          strip.querySelector("[data-watch-status]").textContent="—";
+          return;
+        }
+        var p=job.passport||{};
+        var meta=[];
+        if(p.maker)meta.push(p.maker);
+        if(p.model)meta.push(p.model);
+        if(p.calibre)meta.push("Cal. "+p.calibre);
+        if(p.jewels)meta.push(p.jewels+" jewels");
+        if(p.year)meta.push(p.year);
+        strip.querySelector("[data-watch-name]").textContent=job.watchName||[p.maker,p.model].filter(Boolean).join(" ")||"Untitled watch";
+        strip.querySelector("[data-watch-meta]").textContent=meta.join(" · ")||"Identity not completed yet";
+        strip.querySelector("[data-watch-status]").textContent=job.status||"On bench";
+        var stageTotal=Array.isArray(job.stages)?job.stages.length:0;
+        var stageNow=stageTotal?Math.min(stageTotal,Math.max(1,(Number(job.stage)||0)+1)):0;
+        var jobBits=[];
+        if(job.jobId)jobBits.push(job.jobId);
+        if(stageTotal)jobBits.push("Stage "+stageNow+"/"+stageTotal);
+        strip.querySelector("[data-watch-job]").textContent=jobBits.join(" · ");
+        var src=typeof mod.coverPhoto==="function"?mod.coverPhoto(job):"";
+        var photo=strip.querySelector("[data-watch-photo]");
+        if(src){var img=document.createElement("img");img.src=src;img.alt="";photo.appendChild(img);}else{photo.textContent=(job.watchName||p.maker||"W").trim().charAt(0).toUpperCase();}
+      }catch(e){
+        console.warn("Watch header unavailable",e);
+        strip.querySelector("[data-watch-name]").textContent="Current watch";
+      }
+    })();
   }
 
   if(["calibre.html","assistant.html","news.html","settings.html"].indexOf(here)>=0){
@@ -120,63 +162,28 @@ document.querySelectorAll(".brandbar").forEach(function(bar){
 var markStyle=document.createElement("style");
 markStyle.textContent=`
 .brandmark{padding:0;overflow:hidden;background:transparent}
-.brandmark img{width:34px;height:34px;object-fit:cover;display:block;border-radius:50%}
+.brandmark img{width:42px;height:42px;object-fit:cover;display:block;border-radius:50%}
 .navbtn{position:relative}
 .newsdot{position:absolute;top:7px;right:calc(50% - 17px);width:7px;height:7px;border-radius:50%;background:#ef4444;box-shadow:0 0 0 2px var(--nav,#111)}
 .newsdot[hidden]{display:none}
-.contextnav{display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;margin:-4px 0 12px;padding:1px 0 3px}
+.contextnav{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:-4px 0 14px;padding:2px 0 4px}
 .contextnav::-webkit-scrollbar{display:none}
-.contextnav-btn{flex:0 0 auto;min-height:31px;display:inline-flex;align-items:center;justify-content:center;padding:5px 10px;border:1px solid var(--line);border-radius:7px;background:transparent;color:var(--muted);text-decoration:none;font-size:.72rem;font-weight:700;white-space:nowrap}
+.contextnav-btn{flex:0 0 auto;min-height:34px;display:inline-flex;align-items:center;justify-content:center;padding:6px 11px;border:1px solid var(--line);border-radius:7px;background:transparent;color:var(--muted);text-decoration:none;font-size:.74rem;font-weight:700;white-space:nowrap}
 .contextnav-btn:hover{color:var(--ink);border-color:var(--muted)}
 .contextnav-btn.active{background:var(--surface-2);color:var(--ink);border-color:var(--brass)}
-
-/* Anything wider than a true phone gets the compact workshop layout. */
-@media (min-width:481px){
-  html{font-size:14px!important}
-  body{padding-bottom:0!important}
-  .shell{max-width:1280px!important;padding-left:16px!important;padding-right:16px!important}
-  .brandbar{min-height:48px!important;margin-left:-16px!important;margin-right:-16px!important;padding:0 16px!important}
-  .brand{gap:8px!important}
-  .brand h1{font-size:.9rem!important;margin:0!important}
-  .kicker{font-size:.56rem!important;letter-spacing:.11em!important}
-  .themebtn{min-height:28px!important;padding:3px 8px!important;font-size:.68rem!important}
-  .mainnav{position:static!important;left:auto!important;right:auto!important;bottom:auto!important;margin:7px 0 8px!important;padding:2px!important;display:flex!important;flex-wrap:nowrap!important;overflow:visible!important;border-radius:7px!important;gap:2px!important}
-  .mainnav .navbtn{flex:1 1 0!important;min-width:0!important;min-height:33px!important;padding:4px 7px!important;flex-direction:row!important;gap:5px!important;border-radius:5px!important;font-size:.68rem!important}
-  .mainnav .navbtn svg{width:14px!important;height:14px!important}
-  .newsdot{top:7px!important;right:12px!important}
-  .contextnav{margin:-1px 0 7px!important;gap:3px!important;padding-bottom:1px!important}
-  .contextnav-btn{min-height:27px!important;padding:3px 8px!important;border-radius:5px!important;font-size:.65rem!important}
-  .hero{gap:10px!important;margin-bottom:7px!important;padding-bottom:7px!important}
-  .hero h2{font-size:1.28rem!important;line-height:1.08!important;margin:1px 0 2px!important}
-  .hero p{font-size:.75rem!important;line-height:1.34!important;max-width:700px!important;margin:.25rem 0!important}
-  .hero-stats{gap:9px!important}
-  .hero-stats strong{font-size:.84rem!important}
-  .hero-stats span{font-size:.58rem!important}
-  .card{padding:11px!important;border-radius:7px!important}
-  .section-block{margin-top:10px!important;padding-top:10px!important}
-  .section-head h2,.section-head h3,.section-block h3{font-size:.98rem!important;margin-bottom:5px!important}
-  .btn{min-height:32px!important;padding:5px 9px!important;font-size:.72rem!important;border-radius:6px!important}
-  input,select,textarea{padding:6px 8px!important;font-size:.78rem!important;border-radius:6px!important}
-  label{font-size:.7rem!important;gap:4px!important}
-  .row,.footer-actions{gap:7px!important;margin-top:9px!important}
-  .badge{font-size:.62rem!important;padding:3px 6px!important}
-  .small{font-size:.72rem!important}
-  .stage-list{min-height:58px!important;margin-bottom:8px!important;gap:5px!important}
-  .stage-list .stage-btn{min-width:118px!important;min-height:56px!important;padding:18px 9px 7px!important;border-radius:6px!important}
-  .stage-list .stage-check{top:6px!important;right:6px!important;width:14px!important;height:14px!important;font-size:.58rem!important}
-  .stage-list .stage-num{font-size:.62rem!important}
-  .stage-list .stage-name{font-size:.72rem!important;line-height:1.05!important}
-  .yn{padding:7px 0!important;font-size:.76rem!important}
-  .yn-btns button{min-height:30px!important;min-width:44px!important;padding:4px 7px!important;font-size:.7rem!important}
-  textarea{min-height:82px!important}
-}
-
-/* Actual phone layout only. */
-@media (max-width:480px){
-  .brandmark img{width:38px;height:38px}
-  .contextnav{margin:10px 0 12px;padding:1px 2px 3px}
-  .contextnav-btn{min-height:34px;padding:6px 10px;border-radius:999px;font-size:.72rem}
-  .watch-contextnav,.calibre-contextnav{position:static}
+.watch-strip{display:grid;grid-template-columns:54px minmax(0,1fr) auto;gap:12px;align-items:center;padding:11px 12px;margin:0 0 10px;background:var(--surface);border:1px solid var(--line);border-radius:9px}
+.watch-strip-photo{width:54px;height:54px;border-radius:8px;overflow:hidden;background:var(--surface-2);display:grid;place-items:center;color:var(--muted);font-weight:800;font-size:1.1rem}
+.watch-strip-photo img{width:100%;height:100%;object-fit:cover;display:block}
+.watch-strip-name{font-size:1.05rem;font-weight:800;letter-spacing:-.015em;color:var(--ink)}
+.watch-strip-meta{margin-top:3px;color:var(--muted);font-size:.76rem;line-height:1.35}
+.watch-strip-state{display:flex;align-items:flex-end;flex-direction:column;gap:5px;text-align:right}
+.watch-strip-job{font-size:.68rem;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+@media(max-width:640px){
+  .watch-strip{grid-template-columns:44px minmax(0,1fr);padding:9px 10px;gap:9px}
+  .watch-strip-photo{width:44px;height:44px}
+  .watch-strip-state{grid-column:2;align-items:flex-start;flex-direction:row;flex-wrap:wrap;text-align:left;margin-top:-2px}
+  .contextnav{margin:8px 0 12px;padding-bottom:2px}
+  .contextnav-btn{min-height:32px;padding:5px 10px;border-radius:999px}
 }
 `;
 document.head.appendChild(markStyle);
