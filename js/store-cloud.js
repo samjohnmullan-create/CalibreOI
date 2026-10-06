@@ -1,5 +1,5 @@
 import * as base from "./store-base.js?v=1";
-import { readCloudState, writeCloudState, markCloudSeen } from "./cloud.js?v=2";
+import { readCloudState, writeCloudState, markCloudSeen } from "./cloud.js?v=3";
 
 export * from "./store-base.js?v=1";
 
@@ -84,6 +84,42 @@ export async function saveState(state){
     state._cloud={signedIn:true,lastPush:null,error:err?.message||"Cloud sync failed"};
     console.warn("Calibre cloud push failed; local save kept",err);
   }
+}
+
+export async function importInboxItems(items){
+  const state=normaliseState(await getLocal("state"))||{jobs:[],currentId:null,ledger:[]};
+  let added=0,updated=0;
+  const importedIds=[];
+  for(const item of (Array.isArray(items)?items:[])){
+    try{
+      const raw=item&&item.job_data;
+      if(!raw||raw.type!=="calibrejob")continue;
+      const incoming=base.importCard(raw);
+      incoming.pushId=raw.pushId||incoming.pushId;
+      incoming.updatedAt=new Date().toISOString();
+      const idx=state.jobs.findIndex(j=>(incoming.pushId&&j.pushId===incoming.pushId)||(raw.jobId&&j.jobId===raw.jobId));
+      if(idx>=0){
+        const existing=state.jobs[idx];
+        incoming.id=existing.id;
+        incoming.createdAt=existing.createdAt||incoming.createdAt;
+        state.jobs[idx]=base.normalise(incoming);
+        updated++;
+      }else{
+        state.jobs.push(base.normalise(incoming));
+        added++;
+      }
+      state.currentId=state.jobs[idx>=0?idx:state.jobs.length-1].id;
+      if(item.id)importedIds.push(item.id);
+    }catch(err){
+      console.warn("Skipped invalid Calibre inbox item",item?.id,err);
+    }
+  }
+  if(added||updated){
+    state._syncUpdatedAt=new Date().toISOString();
+    await putLocal("state",state);
+    try{await writeCloudState(state);}catch(err){console.warn("Inbox imported locally but cloud push failed",err);}
+  }
+  return {state,added,updated,importedIds};
 }
 
 export async function forceCloudPull(){
