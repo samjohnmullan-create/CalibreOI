@@ -21,8 +21,8 @@
 <div class="row"><button id="signIn" class="btn" type="button">Sign in</button><button id="signUp" class="btn secondary" type="button">Create account</button></div>
 </div>
 <div id="signedInActions" hidden>
-<div class="row"><button id="pull" class="btn secondary" type="button">Pull & merge cloud</button><button id="push" class="btn" type="button">Push this device</button><button id="signOut" class="btn secondary" type="button">Sign out</button></div>
-<p class="muted small">Normal saves sync automatically. Use these buttons only when you want to force a sync.</p>
+<div class="row"><button id="pull" class="btn secondary" type="button">Pull & merge now</button><button id="push" class="btn secondary" type="button">Push now</button><button id="signOut" class="btn secondary" type="button">Sign out</button></div>
+<p class="muted small">Calibre saves to the cloud automatically. It also checks for changes from your other devices about every 15 seconds and whenever you return to the app. These buttons are only manual overrides.</p>
 </div>
 <p id="statusText" class="muted small"></p>
 </section>
@@ -65,17 +65,17 @@ using ((select auth.uid()) = user_id);</textarea>
 </section>
 </div>
 
-<section class="card"><h3>How sync works</h3><p class="small">Calibre still saves locally first. When you are signed in, it also pushes the state to Supabase. Opening Calibre on another signed-in device pulls the cloud state and merges watches using their update timestamps.</p><p class="muted small">Version 1 still stores compressed photos inside the job data. We can move photos into Supabase Storage next so cloud records stay small and photo syncing scales better.</p></section>
+<section class="card"><h3>How automatic sync works</h3><p class="small">Calibre saves locally first and pushes changes to Supabase when you are signed in. While the app is open it checks the cloud roughly every 15 seconds, and checks again when you return to the tab or app. If another device has newer data, Calibre merges it and refreshes the page automatically.</p><p class="small">If you are typing or editing a field, the refresh waits until you stop so it does not interrupt your work.</p><p class="muted small">Photos are still stored inside the synced job data for now. Moving them into Supabase Storage remains the next cloud optimisation.</p></section>
 </div>
-<script src="js/nav.js?v=32"></script>
+<script src="js/nav.js?v=33"></script>
 <script type="module">
-import { cloudStatus, signUp, signIn, signOut } from "./js/cloud.js?v=1";
-import { forceCloudPull, forceCloudPush } from "./js/store-cloud.js?v=1";
+import { cloudStatus, signUp, signIn, signOut } from "./js/cloud.js?v=2";
+import { forceCloudPull, forceCloudPush } from "./js/store-cloud.js?v=2";
 const $=id=>document.getElementById(id);
 function say(t,kind=""){$("statusText").textContent=t;$("statusText").className="muted small "+kind;}
 async function paint(){
   const s=await cloudStatus();
-  $("cloudStatus").textContent=s.signedIn?"Signed in · syncing":"Not signed in";
+  $("cloudStatus").textContent=s.signedIn?"Signed in · automatic sync on":"Not signed in";
   $("cloudStatus").className=s.signedIn?"ok":"warn";
   $("cloudEmail").textContent=s.email||"";
   $("authForm").hidden=s.signedIn;
@@ -88,18 +88,18 @@ $("signUp").onclick=async()=>{
   if(!email||password.length<8){say("Enter your email and a password of at least 8 characters.");return;}
   const {data,error}=await signUp(email,password);
   if(error){say(error.message);return;}
-  if(data.session){say("Account created and signed in. Run the SQL setup, then Push this device.","ok");await paint();}
+  if(data.session){say("Account created and signed in. Run the SQL setup, then Push now once.","ok");await paint();}
   else say("Account created. Check your email to confirm it, then return here and sign in.","ok");
 };
 $("signIn").onclick=async()=>{
   say("Signing in…");
   const {error}=await signIn($("email").value.trim(),$("password").value);
   if(error){say(error.message);return;}
-  say("Signed in. Calibre can now use the central workshop data.","ok");await paint();
+  say("Signed in. Automatic cloud sync is active.","ok");await paint();
 };
 $("signOut").onclick=async()=>{await signOut();say("Signed out. Local data remains on this device.");await paint();};
-$("pull").onclick=async()=>{try{say("Pulling cloud data…");await forceCloudPull();say("Cloud data merged into this device. Reloading…","ok");location.reload();}catch(e){say(e.message||"Cloud pull failed.");}};
-$("push").onclick=async()=>{try{say("Pushing this device…");await forceCloudPush();say("This device is now saved to Calibre Cloud.","ok");}catch(e){say(e.message||"Cloud push failed. If this is first setup, run the SQL block first.");}};
+$("pull").onclick=async()=>{try{say("Pulling cloud data…");await forceCloudPull();say("Cloud data merged. Reloading…","ok");location.reload();}catch(e){say(e.message||"Cloud pull failed.");}};
+$("push").onclick=async()=>{try{say("Pushing this device…");await forceCloudPush();say("This device is saved to Calibre Cloud.","ok");}catch(e){say(e.message||"Cloud push failed.");}};
 await paint();
 </script>
 </body></html>
