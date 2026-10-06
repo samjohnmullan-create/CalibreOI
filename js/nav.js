@@ -30,6 +30,13 @@ document.querySelectorAll("nav.mainnav").forEach(function(nav){
     var on = here === item[0].split("?")[0];
     return "<a class=\"navbtn"+(on?" active":"")+"\" href=\""+item[0]+"\""+(on?" aria-current=\"page\"":"")+"><svg viewBox=\"0 0 24 24\"><path d=\""+item[2]+"\"/></svg>"+item[1]+"</a>";
   }).join("");
+  if (here === "workbench.html" && !document.querySelector('script[data-calibre-diagnostics]')) {
+    var d = document.createElement("script");
+    d.type = "module";
+    d.src = "js/diagnostics-ui.js?v=1";
+    d.dataset.calibreDiagnostics = "1";
+    document.head.appendChild(d);
+  }
 });
 var markStyle = document.createElement("style");
 markStyle.textContent = ".brandmark{padding:0;overflow:hidden;background:transparent}.brandmark img{width:42px;height:42px;object-fit:cover;display:block;border-radius:50%}";
