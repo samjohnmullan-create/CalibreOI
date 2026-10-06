@@ -41,7 +41,7 @@ document.querySelectorAll("nav.mainnav").forEach(function(nav){
     if (!document.querySelector('script[data-calibre-workbench-layout]')) {
       var w = document.createElement("script");
       w.type = "module";
-      w.src = "js/workbench-layout.js?v=1";
+      w.src = "js/workbench-layout.js?v=2";
       w.dataset.calibreWorkbenchLayout = "1";
       document.head.appendChild(w);
     }
