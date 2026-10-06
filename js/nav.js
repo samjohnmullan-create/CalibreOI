@@ -30,12 +30,21 @@ document.querySelectorAll("nav.mainnav").forEach(function(nav){
     var on = here === item[0].split("?")[0];
     return "<a class=\"navbtn"+(on?" active":"")+"\" href=\""+item[0]+"\""+(on?" aria-current=\"page\"":"")+"><svg viewBox=\"0 0 24 24\"><path d=\""+item[2]+"\"/></svg>"+item[1]+"</a>";
   }).join("");
-  if (here === "workbench.html" && !document.querySelector('script[data-calibre-diagnostics]')) {
-    var d = document.createElement("script");
-    d.type = "module";
-    d.src = "js/diagnostics-ui.js?v=1";
-    d.dataset.calibreDiagnostics = "1";
-    document.head.appendChild(d);
+  if (here === "workbench.html") {
+    if (!document.querySelector('script[data-calibre-diagnostics]')) {
+      var d = document.createElement("script");
+      d.type = "module";
+      d.src = "js/diagnostics-ui.js?v=1";
+      d.dataset.calibreDiagnostics = "1";
+      document.head.appendChild(d);
+    }
+    if (!document.querySelector('script[data-calibre-workbench-layout]')) {
+      var w = document.createElement("script");
+      w.type = "module";
+      w.src = "js/workbench-layout.js?v=1";
+      w.dataset.calibreWorkbenchLayout = "1";
+      document.head.appendChild(w);
+    }
   }
 });
 var markStyle = document.createElement("style");
