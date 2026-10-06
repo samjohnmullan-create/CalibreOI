@@ -28,6 +28,14 @@
 </section>
 
 <section class="card">
+<h3>Inbox diagnostic</h3>
+<div class="cloud-state"><span class="muted small">Pending jobcards visible to this account</span><strong id="inboxCount">Not checked</strong><span id="inboxDetail" class="muted small"></span></div>
+<div class="row"><button id="checkInbox" class="btn secondary" type="button">Check inbox</button><button id="importInbox" class="btn" type="button">Import pending now</button></div>
+<p class="muted small">Use this only for testing or troubleshooting. Normal inbox imports happen automatically in the background.</p>
+</section>
+</div>
+
+<section class="card">
 <h3>First-time database setup</h3>
 <p class="small">Run this once in <strong>Supabase → SQL Editor</strong>. It creates one private Calibre state row per signed-in user and enables Row Level Security.</p>
 <textarea id="sql" class="sqlbox" readonly>create table if not exists public.calibre_state (
@@ -63,14 +71,13 @@ using ((select auth.uid()) = user_id);</textarea>
 <button id="copySql" class="btn secondary" type="button">Copy SQL</button>
 <p class="muted small">Do not create an anonymous/public policy. Your publishable key is public by design; your signed-in session plus RLS controls access to the data.</p>
 </section>
-</div>
 
-<section class="card"><h3>How automatic sync works</h3><p class="small">Calibre saves locally first and pushes changes to Supabase when you are signed in. While the app is open it checks the cloud roughly every 15 seconds, and checks again when you return to the tab or app. If another device has newer data, Calibre merges it and refreshes the page automatically.</p><p class="small">If you are typing or editing a field, the refresh waits until you stop so it does not interrupt your work.</p><p class="muted small">Photos are still stored inside the synced job data for now. Moving them into Supabase Storage remains the next cloud optimisation.</p></section>
+<section class="card"><h3>How automatic sync works</h3><p class="small">Calibre saves locally first and pushes changes to Supabase when you are signed in. While the app is open it checks the cloud roughly every 15 seconds, and checks again when you return to the tab or app. If another device has newer data, Calibre merges it and refreshes the page automatically.</p><p class="small">The same background check also looks for unimported jobcards in your private Calibre inbox. If one is found, it is imported, marked as used, and synced into the main workshop state.</p><p class="small">If you are typing or editing a field, the refresh waits until you stop so it does not interrupt your work.</p><p class="muted small">Photos are still stored inside the synced job data for now. Moving them into Supabase Storage remains the next cloud optimisation.</p></section>
 </div>
-<script src="js/nav.js?v=33"></script>
+<script src="js/nav.js?v=35"></script>
 <script type="module">
-import { cloudStatus, signUp, signIn, signOut } from "./js/cloud.js?v=2";
-import { forceCloudPull, forceCloudPush } from "./js/store-cloud.js?v=2";
+import { cloudStatus, signUp, signIn, signOut, readInbox, markInboxImported } from "./js/cloud.js?v=3";
+import { forceCloudPull, forceCloudPush, importInboxItems } from "./js/store-cloud.js?v=3";
 const $=id=>document.getElementById(id);
 function say(t,kind=""){$("statusText").textContent=t;$("statusText").className="muted small "+kind;}
 async function paint(){
@@ -80,6 +87,19 @@ async function paint(){
   $("cloudEmail").textContent=s.email||"";
   $("authForm").hidden=s.signedIn;
   $("signedInActions").hidden=!s.signedIn;
+}
+async function checkInbox(){
+  try{
+    const inbox=await readInbox();
+    if(!inbox.signedIn){$("inboxCount").textContent="Not signed in";$("inboxDetail").textContent="";return inbox;}
+    $("inboxCount").textContent=String(inbox.items.length);
+    $("inboxDetail").textContent=inbox.items.length?inbox.items.map(x=>x.push_id).join(", "):"No pending jobcards visible.";
+    return inbox;
+  }catch(e){
+    $("inboxCount").textContent="Error";
+    $("inboxDetail").textContent=e.message||String(e);
+    throw e;
+  }
 }
 $("copySql").onclick=async()=>{try{await navigator.clipboard.writeText($("sql").value);say("SQL copied.","ok");}catch{$("sql").select();say("Copy was blocked; the SQL is selected for you.");}};
 $("signUp").onclick=async()=>{
@@ -95,11 +115,13 @@ $("signIn").onclick=async()=>{
   say("Signing in…");
   const {error}=await signIn($("email").value.trim(),$("password").value);
   if(error){say(error.message);return;}
-  say("Signed in. Automatic cloud sync is active.","ok");await paint();
+  say("Signed in. Automatic cloud sync is active.","ok");await paint();await checkInbox();
 };
 $("signOut").onclick=async()=>{await signOut();say("Signed out. Local data remains on this device.");await paint();};
 $("pull").onclick=async()=>{try{say("Pulling cloud data…");await forceCloudPull();say("Cloud data merged. Reloading…","ok");location.reload();}catch(e){say(e.message||"Cloud pull failed.");}};
 $("push").onclick=async()=>{try{say("Pushing this device…");await forceCloudPush();say("This device is saved to Calibre Cloud.","ok");}catch(e){say(e.message||"Cloud push failed.");}};
-await paint();
+$("checkInbox").onclick=async()=>{try{await checkInbox();say("Inbox check complete.","ok");}catch(e){say("Inbox check failed: "+(e.message||e));}};
+$("importInbox").onclick=async()=>{try{say("Checking and importing inbox…");const inbox=await checkInbox();if(!inbox.signedIn)return;const result=await importInboxItems(inbox.items);for(const id of result.importedIds)await markInboxImported(id);say(`Imported ${result.added} new and updated ${result.updated} jobcard(s).`,"ok");await checkInbox();if(result.added||result.updated)setTimeout(()=>location.reload(),500);}catch(e){say("Inbox import failed: "+(e.message||e));}};
+await paint();await checkInbox();
 </script>
 </body></html>
