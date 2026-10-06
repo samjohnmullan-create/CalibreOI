@@ -1,6 +1,6 @@
 (function(){
   if(!document.querySelector('script[data-calibre-store-map]')){
-    var cloud=new URL("js/store-cloud.js?v=1",document.baseURI).href;
+    var cloud=new URL("js/store-cloud.js?v=2",document.baseURI).href;
     var imports={};
     ["js/store.js","js/store.js?v=23","js/store.js?v=24","js/store.js?v=25","js/store.js?v=26"].forEach(function(p){imports[new URL(p,document.baseURI).href]=cloud;});
     var map=document.createElement("script");
@@ -8,6 +8,13 @@
     map.dataset.calibreStoreMap="1";
     map.textContent=JSON.stringify({imports:imports});
     document.head.appendChild(map);
+  }
+  if(!document.querySelector('script[data-calibre-cloud-auto]')){
+    var sync=document.createElement("script");
+    sync.type="module";
+    sync.src="js/cloud-auto.js?v=1";
+    sync.dataset.calibreCloudAuto="1";
+    document.head.appendChild(sync);
   }
 })();
 
