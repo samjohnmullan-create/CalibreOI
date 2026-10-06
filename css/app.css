@@ -1,16 +1,16 @@
 :root{
-  --bg:#f4f5f1;
-  --surface:#fafbf8;
-  --surface-2:#eef0ea;
-  --ink:#171a16;
-  --muted:#71776f;
-  --line:#d6dad2;
-  --nav:#171a16;
-  --accent:#6f8168;
-  --accent-soft:#9eac97;
+  --bg:#f1f3ee;
+  --surface:#ffffff;
+  --surface-2:#e8ece5;
+  --ink:#151815;
+  --muted:#687067;
+  --line:#d5dad2;
+  --nav:#151815;
+  --accent:#607558;
+  --accent-soft:#91a28a;
   --brass:var(--accent);
   --brass-soft:var(--accent-soft);
-  --ok:#6f8468;
+  --ok:#6b8065;
   --danger:#b9655b;
   --radius:7px;
   --radius-sm:5px;
@@ -50,7 +50,7 @@ a{color:inherit}
 .navbtn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.7}
 .navbtn:hover{color:var(--ink)}
 .navbtn.active{background:transparent;color:var(--ink);font-weight:800;border-bottom-color:var(--accent)}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:12px}
+.card{background:var(--surface);border:1px solid color-mix(in srgb,var(--line) 62%,transparent);border-radius:var(--radius);padding:12px}
 .hero{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin-bottom:9px;padding-bottom:9px;border-bottom:1px solid var(--line)}
 .hero h2{margin:1px 0 3px;font-size:clamp(1.22rem,2vw,1.55rem);font-weight:750;letter-spacing:-.025em}
 .muted{color:var(--muted)}
@@ -107,7 +107,7 @@ textarea{resize:vertical;min-height:104px;line-height:1.42}
 .graph-wrap canvas{display:block;width:100%;height:auto;border-radius:4px}
 .kv{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid var(--line);font-size:.74rem}
 .kv span{color:var(--muted)}
-.saved-run,.job-card,.chat-bubble{border:1px solid var(--line);border-radius:var(--radius);padding:9px;margin-top:7px;background:var(--surface)}
+.saved-run,.job-card,.chat-bubble{border:1px solid color-mix(in srgb,var(--line) 72%,transparent);border-radius:var(--radius);padding:9px;margin-top:7px;background:var(--surface)}
 .job-card{display:grid;grid-template-columns:46px minmax(0,1fr) auto;gap:8px;align-items:center;text-decoration:none;background:var(--surface)}
 .thumb{width:46px;height:46px;border-radius:var(--radius-sm);object-fit:cover;background:var(--surface-2)}
 .star{border:0;background:transparent;color:var(--accent);font-size:1.1rem;min-width:32px;min-height:32px}
@@ -130,6 +130,10 @@ textarea{resize:vertical;min-height:104px;line-height:1.42}
 .jobs{display:grid;gap:8px}
 .split{display:grid;grid-template-columns:1.1fr .9fr;gap:10px}
 hr{border:0;border-top:1px solid var(--line);margin:10px 0}
+.home-grid .card,.all-jobs.card{border-color:color-mix(in srgb,var(--line) 48%,transparent)}
+.home-grid .quick{border-color:color-mix(in srgb,var(--line) 58%,transparent)}
+.home-grid .money-strip{border-color:color-mix(in srgb,var(--line) 58%,transparent);background:color-mix(in srgb,var(--line) 72%,transparent)}
+.home-grid .incoming-item,.home-grid .mini-item,.home-grid .attention{border-bottom-color:color-mix(in srgb,var(--line) 70%,transparent)}
 @media(max-width:900px){
   .layout,.timing-layout,.split{grid-template-columns:1fr}
   .stages-card{position:static}
