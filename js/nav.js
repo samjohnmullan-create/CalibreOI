@@ -120,7 +120,7 @@ document.querySelectorAll(".brandbar").forEach(function(bar){
 var markStyle=document.createElement("style");
 markStyle.textContent=`
 .brandmark{padding:0;overflow:hidden;background:transparent}
-.brandmark img{width:36px;height:36px;object-fit:cover;display:block;border-radius:50%}
+.brandmark img{width:34px;height:34px;object-fit:cover;display:block;border-radius:50%}
 .navbtn{position:relative}
 .newsdot{position:absolute;top:7px;right:calc(50% - 17px);width:7px;height:7px;border-radius:50%;background:#ef4444;box-shadow:0 0 0 2px var(--nav,#111)}
 .newsdot[hidden]{display:none}
@@ -130,35 +130,49 @@ markStyle.textContent=`
 .contextnav-btn:hover{color:var(--ink);border-color:var(--muted)}
 .contextnav-btn.active{background:var(--surface-2);color:var(--ink);border-color:var(--brass)}
 
-/* Desktop and laptop: compact, horizontal and information-dense. */
-@media (min-width:601px), (pointer:fine){
+/* Anything wider than a true phone gets the compact workshop layout. */
+@media (min-width:481px){
+  html{font-size:14px!important}
   body{padding-bottom:0!important}
-  .shell{max-width:1280px;padding-left:18px;padding-right:18px}
-  .brandbar{min-height:54px!important;margin-left:-18px!important;margin-right:-18px!important;padding:0 18px!important}
-  .brand{gap:9px!important}
-  .brand h1{font-size:.96rem!important;margin:0!important}
-  .kicker{font-size:.61rem!important;letter-spacing:.12em!important}
-  .themebtn{min-height:30px!important;padding:4px 9px!important;font-size:.72rem!important}
-  .mainnav{position:static!important;left:auto!important;right:auto!important;bottom:auto!important;margin:9px 0 11px!important;padding:3px!important;display:flex!important;flex-wrap:nowrap!important;overflow:visible!important;border-radius:8px!important;gap:2px!important}
-  .mainnav .navbtn{flex:1 1 0!important;min-width:0!important;min-height:38px!important;padding:5px 9px!important;flex-direction:row!important;gap:6px!important;border-radius:5px!important;font-size:.72rem!important}
-  .mainnav .navbtn svg{width:15px!important;height:15px!important}
-  .newsdot{top:8px;right:14px}
-  .contextnav{margin:-2px 0 10px!important;gap:4px!important;padding-bottom:2px!important}
-  .contextnav-btn{min-height:29px!important;padding:4px 9px!important;border-radius:6px!important;font-size:.69rem!important}
-  .hero{gap:12px!important;margin-bottom:10px!important;padding-bottom:10px!important}
-  .hero h2{font-size:clamp(1.25rem,1.8vw,1.6rem)!important;line-height:1.12!important;margin:1px 0 3px!important}
-  .hero p{font-size:.82rem!important;line-height:1.42!important;max-width:760px!important}
-  .hero-stats{gap:12px!important}
-  .hero-stats strong{font-size:.92rem!important}
-  .hero-stats span{font-size:.62rem!important}
-  .card{padding:14px!important}
-  .section-block{margin-top:14px!important;padding-top:13px!important}
-  .btn{min-height:36px!important;padding:7px 11px!important;font-size:.78rem!important}
-  input,select,textarea{padding:8px 9px!important}
+  .shell{max-width:1280px!important;padding-left:16px!important;padding-right:16px!important}
+  .brandbar{min-height:48px!important;margin-left:-16px!important;margin-right:-16px!important;padding:0 16px!important}
+  .brand{gap:8px!important}
+  .brand h1{font-size:.9rem!important;margin:0!important}
+  .kicker{font-size:.56rem!important;letter-spacing:.11em!important}
+  .themebtn{min-height:28px!important;padding:3px 8px!important;font-size:.68rem!important}
+  .mainnav{position:static!important;left:auto!important;right:auto!important;bottom:auto!important;margin:7px 0 8px!important;padding:2px!important;display:flex!important;flex-wrap:nowrap!important;overflow:visible!important;border-radius:7px!important;gap:2px!important}
+  .mainnav .navbtn{flex:1 1 0!important;min-width:0!important;min-height:33px!important;padding:4px 7px!important;flex-direction:row!important;gap:5px!important;border-radius:5px!important;font-size:.68rem!important}
+  .mainnav .navbtn svg{width:14px!important;height:14px!important}
+  .newsdot{top:7px!important;right:12px!important}
+  .contextnav{margin:-1px 0 7px!important;gap:3px!important;padding-bottom:1px!important}
+  .contextnav-btn{min-height:27px!important;padding:3px 8px!important;border-radius:5px!important;font-size:.65rem!important}
+  .hero{gap:10px!important;margin-bottom:7px!important;padding-bottom:7px!important}
+  .hero h2{font-size:1.28rem!important;line-height:1.08!important;margin:1px 0 2px!important}
+  .hero p{font-size:.75rem!important;line-height:1.34!important;max-width:700px!important;margin:.25rem 0!important}
+  .hero-stats{gap:9px!important}
+  .hero-stats strong{font-size:.84rem!important}
+  .hero-stats span{font-size:.58rem!important}
+  .card{padding:11px!important;border-radius:7px!important}
+  .section-block{margin-top:10px!important;padding-top:10px!important}
+  .section-head h2,.section-head h3,.section-block h3{font-size:.98rem!important;margin-bottom:5px!important}
+  .btn{min-height:32px!important;padding:5px 9px!important;font-size:.72rem!important;border-radius:6px!important}
+  input,select,textarea{padding:6px 8px!important;font-size:.78rem!important;border-radius:6px!important}
+  label{font-size:.7rem!important;gap:4px!important}
+  .row,.footer-actions{gap:7px!important;margin-top:9px!important}
+  .badge{font-size:.62rem!important;padding:3px 6px!important}
+  .small{font-size:.72rem!important}
+  .stage-list{min-height:58px!important;margin-bottom:8px!important;gap:5px!important}
+  .stage-list .stage-btn{min-width:118px!important;min-height:56px!important;padding:18px 9px 7px!important;border-radius:6px!important}
+  .stage-list .stage-check{top:6px!important;right:6px!important;width:14px!important;height:14px!important;font-size:.58rem!important}
+  .stage-list .stage-num{font-size:.62rem!important}
+  .stage-list .stage-name{font-size:.72rem!important;line-height:1.05!important}
+  .yn{padding:7px 0!important;font-size:.76rem!important}
+  .yn-btns button{min-height:30px!important;min-width:44px!important;padding:4px 7px!important;font-size:.7rem!important}
+  textarea{min-height:82px!important}
 }
 
-/* Only genuinely small touch layouts get the floating bottom navigation. */
-@media (max-width:600px) and (pointer:coarse){
+/* Actual phone layout only. */
+@media (max-width:480px){
   .brandmark img{width:38px;height:38px}
   .contextnav{margin:10px 0 12px;padding:1px 2px 3px}
   .contextnav-btn{min-height:34px;padding:6px 10px;border-radius:999px;font-size:.72rem}
