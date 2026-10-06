@@ -1,169 +1,34 @@
 <!doctype html>
 <html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Parts · Calibre & Co.</title><link rel="stylesheet" href="css/app.css?v=9">
-<style>
-.donor{border:1px solid var(--line);border-radius:10px;padding:12px;margin-top:10px}
-.donor-parts{display:grid;grid-template-columns:1fr 1fr;gap:2px 12px;margin:8px 0}
-.match-block{margin-top:12px}
-.match-block h3{margin-bottom:6px}
-</style>
-</head><body>
-<div class="shell">
-<header class="brandbar"><a class="brand" href="index.html"><div class="brandmark">C&C</div><div><div class="kicker">CALIBRE & CO.</div><h1>Watchmaker's Workbench</h1></div></a></header>
-<nav class="mainnav"><a class="navbtn" href="index.html">Start</a><a class="navbtn" href="workbench.html">Bench</a><a class="navbtn" href="timegrapher.html">Time</a><a class="navbtn" href="passport.html">Identity</a><a class="navbtn" href="business.html">Cost</a><a class="navbtn" href="summary.html">Sheet</a><a class="navbtn" href="inventory.html">Stock</a><a class="navbtn active" href="suppliers.html" aria-current="page">Parts</a></nav>
+<title>Parts · Calibre & Co.</title><link rel="stylesheet" href="css/app.css?v=10">
+<style>.donor{border:1px solid var(--line);border-radius:10px;padding:12px;margin-top:10px}.donor-parts{display:grid;grid-template-columns:1fr 1fr;gap:2px 12px;margin:8px 0}.match-block{margin-top:12px}.match-block h3{margin-bottom:6px}</style>
+</head><body><div class="shell">
+<header class="brandbar"><a class="brand" href="index.html"><div class="brandmark">C&C</div><div><div class="kicker">CALIBRE & CO.</div><h1>Watchmaker's Workbench</h1></div></a></header><nav class="mainnav"></nav>
 <div class="hero"><div><div class="kicker">PARTS</div><h2>Spares</h2><p class="muted">A written-off watch stays here as a donor. Another maker is only a candidate when the pillar plates are the same size, and you still measure the part.</p></div></div>
-<section class="card">
-<label>Search<input id="q" autocomplete="off" enterkeyhint="search" placeholder="Serial, brand, part, calibre"></label>
-<div id="found" class="jobs"></div>
-</section>
-<section class="card">
-<h3>In the drawer</h3>
-<div id="donorList"></div>
-</section>
-<section class="card">
-<h3>Match a part</h3>
-<p id="matchFor" class="muted small"></p>
-<label>Part<select id="partPick"></select></label>
-<p id="partRule" class="muted small"></p>
-<div id="matchOut"></div>
-</section>
-<section class="card">
-<h3>Australia first</h3>
-<p><strong>Australian Watch & Clock Supplies</strong>, Sydney. Pocket mainsprings, crystals, bows, stems. A watchmaker will talk through the size.<br><a href="https://www.australianwatchclocksupplies.com.au/">australianwatchclocksupplies.com.au</a></p>
-<p><strong>Australian Jewellers Supplies</strong>. Pocket springs are listed, but branch stock moves. Check before you rely on it.<br><a href="https://www.jewellerssupplies.com.au/">jewellerssupplies.com.au</a></p>
-<p><strong>All Time Co.</strong> ETA, Sellita, Seiko and ordinary case parts. Weak for an Olma staff.<br><a href="https://alltimeco.com.au/">alltimeco.com.au</a></p>
-</section>
-<section class="card">
-<h3>Overseas, when nobody here has it</h3>
-<p><strong>Cousins UK</strong>. Swiss pocket material, white-alloy springs by size, Bergeon. Ships to Hobart.<br><a href="https://www.cousinsuk.com/">cousinsuk.com</a></p>
-<p><strong>Otto Frei</strong>. Old American and Swiss material lists. Small parts orders can go by international mail.<br><a href="https://www.ofrei.com/">ofrei.com</a></p>
-<p><strong>Jules Borel</strong>. Tools and modern material. Same Oakland house as Otto Frei.<br><a href="https://www.julesborel.com/">julesborel.com</a></p>
-</section>
-<section class="card">
-<h3>Not a catalogue</h3>
-<p>A matching hand, a bow of the right wire, or an obsolete staff usually comes from a donor movement, not a listing. Buy the movement. Crown Vintage in Sydney is dials and bracelets, not a parts bench.</p>
-<p class="muted small">Untick a part when it is gone. Write a size on the bench stage that used it. The cost goes on Cost.</p>
-</section>
-</div>
-<script src="js/nav.js?v=20"></script>
+<section class="card"><label>Search<input id="q" autocomplete="off" enterkeyhint="search" placeholder="Serial, brand, part, calibre"></label><div id="found" class="jobs"></div></section>
+<section class="card"><h3>In the drawer</h3><div id="donorList"></div></section>
+<section class="card"><h3>Match a part</h3><p id="matchFor" class="muted small"></p><label>Part<select id="partPick"></select></label><p id="partRule" class="muted small"></p><div id="matchOut"></div></section>
+<section class="card"><h3>Australia first</h3><p><strong>Australian Watch & Clock Supplies</strong>, Sydney. Pocket mainsprings, crystals, bows, stems.<br><a href="https://www.australianwatchclocksupplies.com.au/">australianwatchclocksupplies.com.au</a></p><p><strong>Australian Jewellers Supplies</strong>. Pocket springs are listed, but branch stock moves.<br><a href="https://www.jewellerssupplies.com.au/">jewellerssupplies.com.au</a></p><p><strong>All Time Co.</strong> ETA, Sellita, Seiko and ordinary case parts.<br><a href="https://alltimeco.com.au/">alltimeco.com.au</a></p></section>
+<section class="card"><h3>Overseas, when nobody here has it</h3><p><strong>Cousins UK</strong>. Swiss pocket material, white-alloy springs by size, Bergeon.<br><a href="https://www.cousinsuk.com/">cousinsuk.com</a></p><p><strong>Otto Frei</strong>. Old American and Swiss material lists.<br><a href="https://www.ofrei.com/">ofrei.com</a></p><p><strong>Jules Borel</strong>. Tools and modern material.<br><a href="https://www.julesborel.com/">julesborel.com</a></p></section>
+<section class="card"><h3>Not a catalogue</h3><p>A matching hand, a bow of the right wire, or an obsolete staff usually comes from a donor movement, not a listing. Buy the movement when the measurements and calibre justify it.</p><p class="muted small">Untick a part when it is gone. Write a size on the bench stage that used it. The cost goes on Cost.</p></section>
+</div><script src="js/nav.js?v=30"></script>
 <script type="module">
-import { loadState, saveState, current, escapeHtml } from "./js/store.js?v=23";
-import { SPARE_PARTS, matchPart } from "./js/match.js?v=5";
+import { loadState, saveState, current, escapeHtml } from "./js/store.js?v=26";
+import { SPARE_PARTS, matchPart } from "./js/match.js?v=6";
 import { fillResults, searchTerms, searchJobs } from "./js/search.js?v=7";
-const $ = id => document.getElementById(id);
-let state = await loadState();
-let timer;
-const pick = $("partPick");
-SPARE_PARTS.forEach(p => {
-  const o = document.createElement("option");
-  o.value = p.id; o.textContent = p.name;
-  pick.appendChild(o);
-});
-pick.value = "mainspring";
-
-function meta(job){
-  const p = job.passport || {};
-  return [p.maker, p.calibre && ("cal. "+p.calibre), p.jewels && (p.jewels+"j"), p.movementMm && (p.movementMm+" mm")].filter(Boolean).join(" · ");
-}
-function noted(job){
-  return (job.stages || []).map(s => [s.parts, s.measure].filter(Boolean).join(" · ")).filter(Boolean);
-}
+const $=id=>document.getElementById(id);let state=await loadState(),timer;const pick=$("partPick");
+SPARE_PARTS.forEach(p=>{const o=document.createElement("option");o.value=p.id;o.textContent=p.name;pick.appendChild(o);});pick.value="mainspring";
+function meta(job){const p=job.passport||{};return [p.maker,p.calibre&&("cal. "+p.calibre),p.jewels&&(p.jewels+"j"),p.movementMm&&(p.movementMm+" mm")].filter(Boolean).join(" · ");}
+function noted(job){return (job.stages||[]).map(s=>[s.parts,s.measure].filter(Boolean).join(" · ")).filter(Boolean);}
 function paintDonors(){
-  const filtering = searchTerms($("q").value).length > 0;
-  const hitIds = new Set(searchJobs(state.jobs, $("q").value).map(r => r.job.id));
-  const donors = state.jobs.filter(j => j.status === "spares" && (!filtering || hitIds.has(j.id)));
-  const box = $("donorList");
-  box.innerHTML = "";
-  if (!donors.length){
-    box.innerHTML = filtering
-      ? "<p class='muted'>No donor matches that search.</p>"
-      : "<p class='muted'>Nothing written off. Mark a watch as spares on the bench and its parts land here.</p>";
-    return;
-  }
-  donors.forEach(job => {
-    const art = document.createElement("article");
-    art.className = "donor";
-    art.id = "donor-" + job.id;
-    const kept = (job.sparesParts || []).filter(p => p.keep).length;
-    art.innerHTML = `<strong>${escapeHtml(job.watchName)}</strong><div class="muted small">${escapeHtml(meta(job) || "No identity yet")} · ${kept} kept</div><p class="small">${escapeHtml(job.writeOff || "No reason written")}</p>`;
-    const notes = noted(job);
-    if (notes.length){
-      const n = document.createElement("p");
-      n.className = "muted small";
-      n.textContent = "On the bench: " + notes.join(" / ");
-      art.appendChild(n);
-    }
-    const grid = document.createElement("div");
-    grid.className = "donor-parts";
-    (job.sparesParts || []).forEach(part => {
-      const label = document.createElement("label");
-      label.className = "checkline";
-      const input = document.createElement("input");
-      input.type = "checkbox";
-      input.checked = !!part.keep;
-      input.onchange = async () => { part.keep = input.checked; await saveState(state); paint(); };
-      const span = document.createElement("span");
-      span.textContent = part.name;
-      label.appendChild(input); label.appendChild(span);
-      grid.appendChild(label);
-    });
-    art.appendChild(grid);
-    const fits = document.createElement("label");
-    fits.textContent = "Also fits";
-    const area = document.createElement("textarea");
-    area.rows = 2;
-    area.placeholder = "Calibre or watch this donor has already fitted";
-    area.value = job.fitsNote || "";
-    area.addEventListener("input", () => {
-      job.fitsNote = area.value;
-      clearTimeout(timer);
-      timer = setTimeout(async () => { await saveState(state); paintMatch(); }, 400);
-    });
-    fits.appendChild(area);
-    art.appendChild(fits);
-    box.appendChild(art);
-  });
+ const filtering=searchTerms($("q").value).length>0,hitIds=new Set(searchJobs(state.jobs,$("q").value).map(r=>r.job.id)),donors=state.jobs.filter(j=>j.status==="Spares"&&(!filtering||hitIds.has(j.id))),box=$("donorList");box.innerHTML="";
+ if(!donors.length){box.innerHTML=filtering?"<p class='muted'>No donor matches that search.</p>":"<p class='muted'>Nothing written off. Mark a watch as spares and its parts land here.</p>";return;}
+ donors.forEach(job=>{const art=document.createElement("article");art.className="donor";art.id="donor-"+job.id;const kept=(job.sparesParts||[]).filter(p=>p.keep).length;art.innerHTML=`<strong>${escapeHtml(job.watchName)}</strong><div class="muted small">${escapeHtml(meta(job)||"No identity yet")} · ${kept} kept</div><p class="small">${escapeHtml(job.writeOff||"No reason written")}</p>`;const notes=noted(job);if(notes.length){const n=document.createElement("p");n.className="muted small";n.textContent="On the bench: "+notes.join(" / ");art.appendChild(n);}const grid=document.createElement("div");grid.className="donor-parts";(job.sparesParts||[]).forEach(part=>{const label=document.createElement("label");label.className="checkline";const input=document.createElement("input");input.type="checkbox";input.checked=!!part.keep;input.onchange=async()=>{part.keep=input.checked;await saveState(state);paint();};const span=document.createElement("span");span.textContent=part.name;label.append(input,span);grid.appendChild(label);});art.appendChild(grid);const fits=document.createElement("label");fits.textContent="Also fits";const area=document.createElement("textarea");area.rows=2;area.placeholder="Calibre or watch this donor has already fitted";area.value=job.fitsNote||"";area.addEventListener("input",()=>{job.fitsNote=area.value;clearTimeout(timer);timer=setTimeout(async()=>{await saveState(state);paintMatch();},400);});fits.appendChild(area);art.appendChild(fits);box.appendChild(art);});
 }
-function line(row){
-  const d = row.donor;
-  return `<div class="saved-run"><strong>${escapeHtml(d.watchName)}</strong> · ${escapeHtml((d.sparesParts||[]).find(p => p.id === pick.value)?.name || "")}<div class="muted small">${escapeHtml(meta(d))}</div><div>${escapeHtml(row.why)}</div></div>`;
-}
-function paintMatch(){
-  const need = current(state);
-  const plate = need.passport && need.passport.movementMm;
-  $("matchFor").textContent = "For " + need.watchName + (plate ? " · pillar plate " + plate + " mm." : ". No pillar-plate size on Identity yet, so other makers stay hidden.");
-  const { part, rows } = matchPart(need, state.jobs, pick.value);
-  $("partRule").textContent = part.rule;
-  const use = rows.filter(r => r.kind === "use");
-  const measure = rows.filter(r => r.kind === "measure");
-  const gone = rows.filter(r => r.kind === "gone").length;
-  const size = rows.filter(r => r.kind === "size").length;
-  let html = "";
-  html += `<div class="match-block"><h3>Use</h3>${use.length ? use.map(line).join("") : "<p class='muted small'>No donor shares the calibre, and none is marked as already fitting.</p>"}</div>`;
-  html += `<div class="match-block"><h3>Measure first</h3>${measure.length ? measure.map(line).join("") : "<p class='muted small'>No other maker is within 0.5 mm on the pillar plate.</p>"}</div>`;
-  const notes = [];
-  if (gone) notes.push(gone + (gone === 1 ? " donor has this part ticked off." : " donors have this part ticked off."));
-  if (size) notes.push(size + (size === 1 ? " donor has no pillar-plate size, so it was not offered." : " donors have no pillar-plate size, so they were not offered."));
-  html += notes.length ? `<p class="muted small">${notes.join(" ")}</p>` : "";
-  $("matchOut").innerHTML = html;
-}
-function paint(){ paintDonors(); paintMatch(); }
-function paintSearch(){
-  fillResults($("found"), state.jobs, $("q").value, async (job) => {
-    state.currentId = job.id;
-    await saveState(state);
-    if (job.status === "spares") {
-      paint();
-      const node = document.getElementById("donor-" + job.id);
-      if (node) node.scrollIntoView({ block:"nearest" });
-      return;
-    }
-    location.href = (job.status === "complete" || job.status === "sold") ? "summary.html" : "workbench.html";
-  });
-  paintDonors();
-}
-pick.onchange = paintMatch;
-$("q").addEventListener("input", paintSearch);
-paint();
+function line(row){const d=row.donor;return `<div class="saved-run"><strong>${escapeHtml(d.watchName)}</strong> · ${escapeHtml((d.sparesParts||[]).find(p=>p.id===pick.value)?.name||"")}<div class="muted small">${escapeHtml(meta(d))}</div><div>${escapeHtml(row.why)}</div></div>`;}
+function paintMatch(){const need=current(state);if(!need){$("matchFor").textContent="Open a watch first to match donor parts.";$("partRule").textContent="";$("matchOut").innerHTML="";return;}const plate=need.passport?.movementMm;$("matchFor").textContent="For "+need.watchName+(plate?" · pillar plate "+plate+" mm.":". No pillar-plate size on Identity yet, so other makers stay hidden.");const {part,rows}=matchPart(need,state.jobs,pick.value);$("partRule").textContent=part.rule;const use=rows.filter(r=>r.kind==="use"),measure=rows.filter(r=>r.kind==="measure"),gone=rows.filter(r=>r.kind==="gone").length,size=rows.filter(r=>r.kind==="size").length;let html=`<div class="match-block"><h3>Use</h3>${use.length?use.map(line).join(""):"<p class='muted small'>No donor shares the calibre, and none is marked as already fitting.</p>"}</div><div class="match-block"><h3>Measure first</h3>${measure.length?measure.map(line).join(""):"<p class='muted small'>No other maker is within 0.5 mm on the pillar plate.</p>"}</div>`;const notes=[];if(gone)notes.push(gone+(gone===1?" donor has this part ticked off.":" donors have this part ticked off."));if(size)notes.push(size+(size===1?" donor has no pillar-plate size, so it was not offered.":" donors have no pillar-plate size, so they were not offered."));if(notes.length)html+=`<p class="muted small">${notes.join(" ")}</p>`;$("matchOut").innerHTML=html;}
+function paint(){paintDonors();paintMatch();}
+function paintSearch(){fillResults($("found"),state.jobs,$("q").value,async job=>{state.currentId=job.id;await saveState(state);if(job.status==="Spares"){paint();document.getElementById("donor-"+job.id)?.scrollIntoView({block:"nearest"});return;}location.href=(job.status==="Ready to list"||job.status==="Listed"||job.status==="Sold")?"summary.html":"workbench.html";});paintDonors();}
+pick.onchange=paintMatch;$("q").addEventListener("input",paintSearch);paint();
 </script></body></html>
