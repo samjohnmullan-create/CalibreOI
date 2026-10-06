@@ -54,6 +54,7 @@ document.querySelectorAll(".brandbar").forEach(function(bar){
     "passport.html":"workshop",
     "timegrapher.html":"workshop",
     "business.html":"workshop",
+    "sales.html":"workshop",
     "summary.html":"workshop",
     "suppliers.html":"workshop",
     "documents.html":"workshop",
@@ -74,7 +75,7 @@ document.querySelectorAll(".brandbar").forEach(function(bar){
     }).join("");
   });
 
-  var watchPages=["workbench.html","passport.html","timegrapher.html","business.html","summary.html","suppliers.html","documents.html"];
+  var watchPages=["workbench.html","passport.html","timegrapher.html","business.html","sales.html","summary.html","suppliers.html","documents.html"];
   if(watchPages.indexOf(here)>=0){
     document.body.classList.add("watch-page");
     var main=document.querySelector("nav.mainnav");
@@ -90,6 +91,7 @@ document.querySelectorAll(".brandbar").forEach(function(bar){
       ["timegrapher.html?v=5","Timing"],
       ["suppliers.html","Parts"],
       ["business.html","Money"],
+      ["sales.html","Sale"],
       ["summary.html","Summary"],
       ["documents.html","Documents"]
     ];
