@@ -1,5 +1,5 @@
 import { readCloudState, seenCloudAt, markCloudSeen, readInbox, markInboxImported } from "./cloud.js?v=3";
-import { forceCloudPull, importInboxItems } from "./store-cloud.js?v=3";
+import { forceCloudPull, importInboxItems } from "./store-cloud.js?v=4";
 
 const POLL_MS=15000;
 const EDIT_GRACE_MS=1800;
@@ -27,10 +27,7 @@ async function importInbox(){
   if(!inbox.signedIn||!inbox.items.length)return false;
   const result=await importInboxItems(inbox.items);
   for(const id of result.importedIds)await markInboxImported(id);
-  if(result.added>0||result.updated>0){
-    pending=true;
-    return true;
-  }
+  if(result.added>0||result.updated>0){pending=true;return true;}
   return false;
 }
 
