@@ -38,7 +38,7 @@ export function stagesFor(job){
 export const FAULT_CHIPS = ["Crown/winder non-functional","Movement loose","Strap missing","Case scratched","Water resistance unverified","Poor timing","High beat error","Magnetised","Mainspring/barrel fault","Keyless works fault","Balance/hairspring fault"];
 export const SEVERITIES = ["Minor","Moderate","Critical","Parts required"];
 export const STATUSES = ["Purchased","Awaiting inspection","On bench","Awaiting parts","Ready for photos","Ready to list","Listed","Sold","Spares"];
-export const CHANNELS = ["Not listed","eBay","Etsy","Instagram","Shop","Auction","Other"];
+export const CHANNELS = ["Not listed","eBay","Facebook Marketplace","Instagram","Shopify","Etsy","Auction","Private sale","Other"];
 const STATUS_MAP = { "on the bench":"On bench", "waiting parts":"Awaiting parts", "complete":"Ready to list", "sold":"Sold", "spares":"Spares" };
 
 export function stockAge(job){ const from = job.acquiredAt || job.createdAt; return from ? Math.floor((Date.now()-new Date(from).getTime())/86400000) : 0; }
@@ -56,7 +56,7 @@ export function blankPart(){ return {part:"",supplier:"",partNumber:"",quantity:
 export function blankStage(){ return {name:"",notes:"",condition:"",parts:"",measure:"",complete:false,photos:[],checks:{},updatedAt:null}; }
 export function partsCost(job){ return (job.parts||[]).reduce((n,p)=>n+(Number(p.cost)||0)*(Number(p.quantity)||1),0); }
 export function coverPhoto(job){ const shots=job&&job.photos||{}; for(const key of ["intake","hero","finished","dial","caseback","movement","damage","progress"]) if(shots[key]&&shots[key][0]) return shots[key][0]; if(job&&job.passport&&job.passport.photos&&job.passport.photos[0])return job.passport.photos[0]; for(const s of (job&&job.stages)||[]) if(s.photos&&s.photos[0]) return s.photos[0]; return ""; }
-export function blankPassport(){ return {maker:"",model:"",country:"",year:"",confidence:"Unknown",dialMarkings:"",movementMaker:"",calibre:"",calibreFamily:"",beatRate:"",powerReserve:"",settingType:"",jewels:"",movementType:"",movementMm:"",escapement:"",serial:"",caseNumber:"",reference:"",caseMaterial:"",caseStyle:"",casebackType:"",crystalType:"",crownType:"",lugWidth:"",width:"",height:"",thickness:"",complications:"",waterMark:"",strap:"",hallmarks:"",engravings:"",notes:"",history:"",warnings:"",auctionHouse:"",lotNumber:"",auctionDate:"",seller:"",invoiceNumber:"",listingText:"",invoicePhoto:"",sources:[],photos:[]}; }
+export function blankPassport(){ return {maker:"",model:"",country:"",year:"",confidence:"Unknown",fieldConfidence:{},dialMarkings:"",movementMaker:"",calibre:"",calibreFamily:"",beatRate:"",powerReserve:"",settingType:"",jewels:"",movementType:"",movementMm:"",escapement:"",serial:"",caseNumber:"",reference:"",caseMaterial:"",caseStyle:"",casebackType:"",crystalType:"",crownType:"",lugWidth:"",width:"",height:"",thickness:"",complications:"",waterMark:"",strap:"",hallmarks:"",engravings:"",notes:"",history:"",warnings:"",auctionHouse:"",lotNumber:"",auctionDate:"",seller:"",invoiceNumber:"",listingText:"",invoicePhoto:"",sources:[],photos:[]}; }
 export function blankBusiness(){ return {purchasePrice:"",buyerPremium:"",postage:"",strapCost:"",batteryCost:"",partsCost:"",consumables:"",externalService:"",marketplaceFees:"",shippingToBuyer:"",otherCost:"",labourMinutes:"",labourRate:"",targetSale:"",actualSale:"",minSale:"",title:"",text:""}; }
 
 const LEGACY_STAGE_MAP={
@@ -93,6 +93,7 @@ export function normalise(job){
   job.passport=Object.assign(blankPassport(),job.passport,{photos:Array.isArray(job.passport&&job.passport.photos)?job.passport.photos:[],sources:Array.isArray(job.passport&&job.passport.sources)?job.passport.sources:[]});
   job.photos=Object.assign(blankPhotos(),job.photos||{}); PHOTO_SLOTS.forEach(([k])=>job.photos[k]=Array.isArray(job.photos[k])?job.photos[k]:[]);
   job.business=Object.assign(blankBusiness(),job.business); if(!job.business.partsCost&&job.business.repairCost)job.business.partsCost=job.business.repairCost;
+  job.sale=Object.assign({listedDate:"",notes:"",listingTitle:"",listingText:"",shortText:""},job.sale||{});
   job.timingRuns=Array.isArray(job.timingRuns)?job.timingRuns:[]; job.chat=Array.isArray(job.chat)?job.chat:[];
   job.diagnosticFaults=normaliseDiagnosticFaults(job.diagnosticFaults);
   job.faults=(Array.isArray(job.faults)?job.faults:[]).filter(f=>f&&f.text).map(f=>({text:String(f.text),severity:SEVERITIES.includes(f.severity)?f.severity:"Moderate"}));

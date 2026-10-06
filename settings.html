@@ -74,7 +74,7 @@ using ((select auth.uid()) = user_id);</textarea>
 
 <section class="card"><h3>How automatic sync works</h3><p class="small">Calibre saves locally first and pushes changes to Supabase when you are signed in. While the app is open it checks the cloud roughly every 15 seconds, and checks again when you return to the tab or app. If another device has newer data, Calibre merges it and refreshes the page automatically.</p><p class="small">The same background check also looks for unimported jobcards in your private Calibre inbox. If one is found, it is imported, marked as used, and synced into the main workshop state.</p><p class="small">If you are typing or editing a field, the refresh waits until you stop so it does not interrupt your work.</p><p class="muted small">Photos are still stored inside the synced job data for now. Moving them into Supabase Storage remains the next cloud optimisation.</p></section>
 </div>
-<script src="js/nav.js?v=51"></script>
+<script src="js/nav.js?v=53"></script>
 <script type="module">
 import { cloudStatus, signUp, signIn, signOut, readInbox, markInboxImported } from "./js/cloud.js?v=3";
 import { forceCloudPull, forceCloudPush, importInboxItems } from "./js/store-cloud.js?v=3";

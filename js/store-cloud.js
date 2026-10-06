@@ -50,6 +50,8 @@ function normaliseState(state){
   state.jobs=state.jobs.map(j=>{try{return base.normalise(j);}catch{return j;}});
   state.ledger=(Array.isArray(state.ledger)?state.ledger:[]).filter(e=>e&&e.amount);
   state.incoming=(Array.isArray(state.incoming)?state.incoming:[]).map(normalisePurchase);
+  state.tools=Array.isArray(state.tools)?state.tools:[];
+  state.partsStock=Array.isArray(state.partsStock)?state.partsStock:[];
   if(state.jobs.length&&!state.jobs.some(j=>j.id===state.currentId))state.currentId=state.jobs[0].id;
   if(!state.jobs.length)state.currentId=null;
   return state;
@@ -61,6 +63,16 @@ function mergePurchaseLists(a=[],b=[]){
     if(!prev||ms(p.updatedAt)>=ms(prev.updatedAt))byKey.set(key,p);
   });
   return [...byKey.values()];
+}
+function mergeRecordLists(a=[],b=[]){
+  const byId=new Map();
+  [...a,...b].forEach(item=>{
+    if(!item||typeof item!=="object")return;
+    const key=String(item.id||[item.name,item.reference,item.model,item.location].filter(Boolean).join("|")||Math.random());
+    const prev=byId.get(key);
+    if(!prev||ms(item.updatedAt)>=ms(prev.updatedAt))byId.set(key,structuredClone(item));
+  });
+  return [...byId.values()];
 }
 function mergeStates(local,cloud){
   local=normaliseState(structuredClone(local))||{jobs:[],currentId:null,ledger:[],incoming:[]};
@@ -76,6 +88,8 @@ function mergeStates(local,cloud){
     ...newer,
     jobs:[...byId.values()],
     incoming:mergePurchaseLists(cloud.incoming,local.incoming),
+    tools:mergeRecordLists(cloud.tools,local.tools),
+    partsStock:mergeRecordLists(cloud.partsStock,local.partsStock),
     currentId:local.currentId&&byId.has(local.currentId)?local.currentId:(cloud.currentId&&byId.has(cloud.currentId)?cloud.currentId:null),
     ledger:structuredClone((newer.ledger||[])),
     _syncUpdatedAt:new Date(Math.max(localStamp,cloudStamp,Date.now())).toISOString()
