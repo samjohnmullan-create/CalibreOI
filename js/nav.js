@@ -45,7 +45,7 @@ document.querySelectorAll(".brandbar").forEach(function(bar){
     {id:"workshop",href:"workbench.html?v=22",label:"Workshop",icon:"M4 18h16M6 18V8h4v10M14 18V5h4v13"},
     {id:"collection",href:"inventory.html",label:"Collection",icon:"M5 7h14v13H5zM8 7V4h8v3M8 11h8"},
     {id:"business",href:"finance.html",label:"Business",icon:"M5 7h14v11H5zM5 11h14M8 15h3"},
-    {id:"calibre",href:"assistant.html",label:"Calibre",icon:"M12 3a4 4 0 0 1 4 4v1a4 4 0 1 1 0 8v1a4 4 0 1 1-8 0v-1a4 4 0 1 1 0-8V7a4 4 0 0 1 4-4z"}
+    {id:"calibre",href:"calibre.html",label:"Calibre",icon:"M12 3a4 4 0 0 1 4 4v1a4 4 0 1 1 0 8v1a4 4 0 1 1-8 0v-1a4 4 0 1 1 0-8V7a4 4 0 0 1 4-4z"}
   ];
 
   var pageGroup={
@@ -58,6 +58,7 @@ document.querySelectorAll(".brandbar").forEach(function(bar){
     "suppliers.html":"workshop",
     "inventory.html":"collection",
     "finance.html":"business",
+    "calibre.html":"calibre",
     "assistant.html":"calibre",
     "news.html":"calibre",
     "settings.html":"calibre"
@@ -94,8 +95,8 @@ document.querySelectorAll(".brandbar").forEach(function(bar){
     if(main)main.insertAdjacentElement("afterend",sub);
   }
 
-  if(["assistant.html","news.html","settings.html"].indexOf(here)>=0){
-    var calibreTabs=[["assistant.html","Ask Calibre"],["news.html","Updates"],["settings.html","Cloud & settings"]];
+  if(["calibre.html","assistant.html","news.html","settings.html"].indexOf(here)>=0){
+    var calibreTabs=[["calibre.html","Overview"],["assistant.html","Job brief"],["news.html","Updates"],["settings.html","Settings"]];
     var csub=document.createElement("nav");
     csub.className="contextnav calibre-contextnav";
     csub.setAttribute("aria-label","Calibre");
