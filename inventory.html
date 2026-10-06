@@ -1,47 +1,14 @@
 <!doctype html>
-<html lang="en"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Stock · Calibre & Co.</title><link rel="stylesheet" href="css/app.css?v=9">
-</head><body>
-<div class="shell">
-<header class="brandbar"><a class="brand" href="index.html"><div class="brandmark">C&C</div><div><div class="kicker">CALIBRE & CO.</div><h1>Watchmaker's Workbench</h1></div></a></header>
-<nav class="mainnav"><a class="navbtn" href="index.html">Start</a><a class="navbtn" href="workbench.html">Bench</a><a class="navbtn" href="timegrapher.html">Time</a><a class="navbtn" href="passport.html">Identity</a><a class="navbtn" href="business.html">Cost</a><a class="navbtn" href="summary.html">Sheet</a><a class="navbtn active" href="inventory.html" aria-current="page">Stock</a><a class="navbtn" href="suppliers.html">Parts</a></nav>
-<div class="hero"><div><div class="kicker">STOCK</div><h2>Inventory</h2><p id="capital" class="muted">Loading…</p></div></div>
-<div id="groups"></div>
-</div>
-<script src="js/nav.js?v=20"></script>
-<script type="module">
-import { loadState, saveState, money, cashOut, stockAge, STATUSES, coverPhoto } from "./js/store.js?v=23";
-const capital = document.getElementById("capital");
-const groups = document.getElementById("groups");
-try {
-  const state = await loadState();
-  const unsold = (state.jobs || []).filter(j => j.status !== "Sold" && j.status !== "Spares");
-  const tied = unsold.reduce((n, j) => n + cashOut(j.business || {}), 0);
-  capital.textContent = "You currently have " + money(tied) + " tied up in unsold watches.";
-  function ageNote(j){
-    if (j.status === "Sold") return "";
-    const d = stockAge(j);
-    if (d >= 90) return " · 90+ days";
-    if (d >= 60) return " · 60+ days";
-    if (d >= 30) return " · 30+ days";
-    return d ? " · " + d + " days" : "";
-  }
-  function row(j){
-    const name = String(j.watchName || "Untitled").replace(/[&<>]/g, c => ({"&":"&","<":"<",">":">"}[c]));
-    const src = coverPhoto(j);
-    return `<a class="job-card" data-id="${j.id}" href="summary.html">${src ? `<img class="thumb" src="${src}" alt="">` : `<span class="thumb"></span>`}<div><strong>${name}</strong><div class="muted small">${j.jobId || ""} · ${j.channel || "Not listed"}${ageNote(j)}</div></div><div><span class="badge">${j.status || "On bench"}</span></div></a>`;
-  }
-  const known = new Set(STATUSES);
-  const extra = [...new Set(state.jobs.map(j => j.status || "On bench").filter(s => !known.has(s)))];
-  groups.innerHTML = STATUSES.concat(extra).map(status => {
-    const list = state.jobs.filter(j => (j.status || "On bench") === status);
-    if (!list.length) return "";
-    return `<section class="card"><h3>${status} <span class="muted">${list.length}</span></h3><div class="jobs">${list.map(row).join("")}</div></section>`;
-  }).join("") || "<p class='muted'>No watches on this phone.</p>";
-  document.querySelectorAll(".job-card").forEach(a => a.onclick = async () => { state.currentId = a.dataset.id; await saveState(state); });
-} catch (err) {
-  capital.textContent = "Stock could not load.";
-  groups.innerHTML = "<p class='muted'>" + (err && err.message ? err.message : "Unknown error") + "</p>";
-}
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Stock · Calibre & Co.</title><link rel="stylesheet" href="css/app.css?v=10"></head><body>
+<div class="shell"><header class="brandbar"><a class="brand" href="index.html"><div class="brandmark">C&C</div><div><div class="kicker">CALIBRE & CO.</div><h1>Watchmaker's Workbench</h1></div></a></header><nav class="mainnav"></nav><div class="hero"><div><div class="kicker">STOCK</div><h2>Inventory</h2><p id="capital" class="muted">Loading…</p></div></div><div id="groups"></div></div>
+<script src="js/nav.js?v=30"></script><script type="module">
+import { loadState, saveState, money, cashOut, stockAge, STATUSES, coverPhoto, escapeHtml } from "./js/store.js?v=26";
+const capital=document.getElementById("capital"),groups=document.getElementById("groups");
+try{
+ const state=await loadState(),unsold=(state.jobs||[]).filter(j=>j.status!=="Sold"&&j.status!=="Spares"),tied=unsold.reduce((n,j)=>n+cashOut(j.business||{}),0);capital.textContent="You currently have "+money(tied)+" tied up in unsold watches.";
+ function ageNote(j){if(j.status==="Sold")return "";const d=stockAge(j);if(d>=90)return " · 90+ days";if(d>=60)return " · 60+ days";if(d>=30)return " · 30+ days";return d?" · "+d+" days":"";}
+ function row(j){const src=coverPhoto(j),id=escapeHtml(j.id||"");return `<a class="job-card" data-id="${id}" href="summary.html">${src?`<img class="thumb" src="${src}" alt="">`:`<span class="thumb"></span>`}<div><strong>${escapeHtml(j.watchName||"Untitled")}</strong><div class="muted small">${escapeHtml(j.jobId||"")} · ${escapeHtml(j.channel||"Not listed")}${escapeHtml(ageNote(j))}</div></div><div><span class="badge">${escapeHtml(j.status||"On bench")}</span></div></a>`;}
+ const known=new Set(STATUSES),extra=[...new Set((state.jobs||[]).map(j=>j.status||"On bench").filter(s=>!known.has(s)))];groups.innerHTML=STATUSES.concat(extra).map(status=>{const list=(state.jobs||[]).filter(j=>(j.status||"On bench")===status);return list.length?`<section class="card"><h3>${escapeHtml(status)} <span class="muted">${list.length}</span></h3><div class="jobs">${list.map(row).join("")}</div></section>`:"";}).join("")||"<p class='muted'>No watches on this phone.</p>";
+ document.querySelectorAll(".job-card").forEach(a=>a.onclick=async()=>{state.currentId=a.dataset.id;await saveState(state);});
+}catch(err){capital.textContent="Stock could not load.";groups.innerHTML="<p class='muted'>"+escapeHtml(err?.message||"Unknown error")+"</p>";}
 </script></body></html>
