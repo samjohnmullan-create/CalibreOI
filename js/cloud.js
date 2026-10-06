@@ -2,6 +2,7 @@ import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 
 export const SUPABASE_URL = "https://jdeqnboljrgrpnvkfthx.supabase.co";
 export const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_fWijlFfBeTw4Ku8EPkno7w_BgOARn0j";
+export const CLOUD_SEEN_KEY = "calibre-cloud-seen-at";
 
 let client;
 export function supabaseClient(){
@@ -38,6 +39,9 @@ function cleanState(state){
   return copy;
 }
 
+export function seenCloudAt(){ return localStorage.getItem(CLOUD_SEEN_KEY)||""; }
+export function markCloudSeen(updatedAt){ if(updatedAt)localStorage.setItem(CLOUD_SEEN_KEY,updatedAt); }
+
 export async function readCloudState(){
   const s=await session();
   if(!s?.user)return {signedIn:false,state:null,updatedAt:null};
@@ -53,6 +57,7 @@ export async function writeCloudState(state){
   const payload={user_id:s.user.id,data:cleanState(state),updated_at:updatedAt};
   const {error}=await supabaseClient().from("calibre_state").upsert(payload,{onConflict:"user_id"});
   if(error)throw error;
+  markCloudSeen(updatedAt);
   return {signedIn:true,user:s.user,updatedAt};
 }
 
