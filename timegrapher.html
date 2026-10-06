@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Time · Calibre & Co.</title><link rel="stylesheet" href="css/app.css?v=10">
+<title>Time · Calibre & Co.</title><link rel="stylesheet" href="css/app.css?v=12">
 <style>
 .tg{display:grid;gap:14px}.scale{position:relative;height:92px;border-radius:14px;background:var(--surface-2);overflow:hidden}.band{position:absolute;left:37.5%;right:37.5%;top:0;bottom:0;background:rgba(62,119,82,.16)}.centre{position:absolute;left:50%;top:0;bottom:0;width:2px;background:var(--brass)}.marker{position:absolute;top:28px;width:18px;height:18px;margin-left:-9px;border-radius:50%;background:var(--nav);border:2px solid var(--brass)}.ticks{display:flex;justify-content:space-between;padding:8px 10px 0;color:var(--muted);font-size:.68rem}.rate{font-size:3rem;margin:0;letter-spacing:-.03em;font-variant-numeric:tabular-nums}.pill{display:inline-block;border-radius:999px;padding:4px 10px;font-weight:800;font-size:.75rem}.good{background:#e5f0e8;color:#245c38}.attention{background:#f6ecd4;color:#8a5a12}.adjust{background:#f6e4e2;color:#8d342e}.poor{background:var(--surface-2);color:var(--muted)}.bar{height:8px;border-radius:99px;background:var(--surface-2);overflow:hidden}.bar span{display:block;height:100%;background:var(--brass)}.trace{width:100%;height:120px;background:#050505;border-radius:12px}.dash{display:grid;gap:12px}.board{display:grid;grid-template-columns:1fr 1fr;gap:8px}.cell{background:var(--surface-2);border-radius:12px;padding:10px}.cell span{display:block;color:var(--muted);font-size:.68rem;letter-spacing:.04em}.cell strong{display:block;margin-top:4px;font-size:1.15rem}@media(max-width:640px){.board{grid-template-columns:1fr 1fr}}
 </style>
@@ -20,7 +20,7 @@
 <canvas class="trace" id="paper" width="900" height="220"></canvas><label>Tag<select id="phase"><option>Before service</option><option>During service</option><option>After service</option><option>Regulation test</option><option>Final test</option></select></label>
 <div class="row"><button id="start" class="btn" type="button">Start</button><button id="stop" class="btn secondary" type="button">Stop</button><button id="save" class="btn secondary" type="button">Save run</button></div><p id="hint" class="muted small"></p>
 </section></div>
-<script src="js/nav.js?v=30"></script>
+<script src="js/nav.js?v=50"></script>
 <script type="module">
 import { loadState, saveState, current } from "./js/store.js?v=26";
 import { analyse, advice } from "./js/timing-engine.js?v=1";
