@@ -154,33 +154,58 @@ Do not let Calibre become a dumping ground for unrelated features.
 
 ## Brand character
 
-**Precision instrument, not antique shop.**
+**Modern precision instrument, not antique shop and not generic SaaS.**
 
-The visual language should feel like a modern precision tool with subtle horological cues. Avoid faux brass, brown leather, gears everywhere, steampunk styling and generic SaaS gradients.
+The visual language should feel like a contemporary watchmaker's instrument: quiet, compact, precise and durable. Use horological cues through proportion, typography, measurement, rhythm and detail rather than literal gears or ornamental watch imagery.
 
-### Working palette — Horological Blue
+Avoid:
+- blue as a core brand colour
+- faux brass/brown leather/steampunk styling
+- generic SaaS gradients
+- excessive glass/translucency effects
+- giant rounded cards
+- heavy shadows and borders everywhere
+- oversized desktop spacing
 
-These are working design tokens, not final brand colours:
+### Working palette — Warm Instrument
 
-- `--bg`: `#0D1013` — near-black graphite
-- `--surface`: `#151A1F`
-- `--surface-2`: `#1D242B`
-- `--ink`: `#F3F1EC` — warm instrument white
-- `--muted`: `#8F99A3`
-- `--line`: `#2B333B`
-- `--accent`: `#4D88A8` — restrained blued-steel blue
-- `--accent-soft`: `#8DB4C8`
-- `--warm`: `#B59A67` — tiny optional warm metal accent only
-- `--ok`: `#6D9B79`
-- `--danger`: `#C06B65`
+The brand direction is **graphite + ivory + restrained bronze**, supported by warm neutral greys.
 
-Rules:
-- Dark mode is the flagship appearance.
-- Blue is an interaction/status accent, not a background colour.
-- Warm metal should be rare enough to feel intentional.
-- Reduce borders, shadows and nested cards.
-- Desktop should be denser than mobile.
-- Numbers should be tabular where timing/finance data is shown.
+#### Dark appearance
+- `--bg`: `#11110F` — deep warm graphite
+- `--surface`: `#191815`
+- `--surface-2`: `#22211D`
+- `--ink`: `#F1EEE7` — soft instrument ivory
+- `--muted`: `#969188`
+- `--line`: `#312F2A`
+- `--accent`: `#B98248` — restrained bronze/amber
+- `--accent-soft`: `#D3AE7B`
+- `--ok`: `#7D9270`
+- `--danger`: `#B96658`
+
+#### Light appearance
+- `--bg`: `#F3F0E9`
+- `--surface`: `#FAF8F3`
+- `--surface-2`: `#E8E3D9`
+- `--ink`: `#1A1916`
+- `--muted`: `#706C64`
+- `--line`: `#D5CEC2`
+- `--accent`: `#95652E`
+- `--accent-soft`: `#B78B58`
+- `--ok`: `#718368`
+- `--danger`: `#AA5F53`
+
+### Visual rules
+
+- Dark mode is the flagship appearance, but light mode must remain first-class.
+- Bronze/amber is an **interaction and emphasis accent**, not a large-area fill.
+- The interface should still work if the accent is removed; hierarchy must come from typography, spacing and surface contrast.
+- Navigation should be visually recessive so the current watch/work area dominates.
+- Reduce borders, shadows and nested cards. Structure should be felt more through spacing and grouping than boxes.
+- Desktop should be approximately **20–30% denser** than the current prototype while mobile remains touch-friendly.
+- Numbers should use tabular figures where timing, dimensions and finance data are shown.
+- Prefer smaller, quieter icons and controls over large decorative elements.
+- Avoid trend effects that compromise readability. Borrow the content-first principle from current interface design, not superficial glass or gradient styling.
 
 ## Logo direction
 
@@ -190,6 +215,11 @@ Explore 3 families:
 1. **Abstract C / concentric calibre geometry**
 2. **Escapement/pallet geometry reduced to a symbol**
 3. **Timing arcs / balance oscillation transformed into a monogram**
+
+Logo rules:
+- The mark must work first in monochrome: ivory on graphite and graphite on ivory.
+- Bronze may be used as an optional accent, never as a requirement for recognition.
+- Avoid obvious gear icons, watch silhouettes and repair-shop clichés.
 
 Deliverables once a mark is chosen:
 - primary SVG mark
@@ -211,8 +241,9 @@ Do not lock the brand until candidates have been tested at 16 px, 32 px, mobile 
 **Goal:** Make the existing app feel like one deliberate product before expanding it.
 
 ### 1A. Design system
-- [ ] Finalise colour direction
-- [ ] Replace legacy `brass` naming with semantic tokens (`accent`, `accent-soft`, etc.)
+- [x] Choose Warm Instrument as the working colour direction
+- [x] Introduce semantic `accent` / `accent-soft` colour tokens with temporary legacy aliases
+- [ ] Test palette across all major pages in dark and light appearances
 - [ ] Define typography scale
 - [ ] Define spacing/radius/button/input/card tokens
 - [ ] Create dense desktop variants
@@ -414,7 +445,7 @@ A framework rewrite is **not** currently a priority. Improve the product archite
 
 This is the active order until Phase 1 and the Timegrapher foundation are complete:
 
-1. **Brand palette and design tokens**
+1. **Warm Instrument palette and design tokens**
 2. **Logo exploration and mark selection**
 3. **Desktop shell/navigation density pass**
 4. **Calibre page simplification**
