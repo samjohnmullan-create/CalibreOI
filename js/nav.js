@@ -17,7 +17,7 @@ document.querySelectorAll("nav.mainnav").forEach(function(nav){
   if (!here || here.indexOf(".") === -1) here = "index.html";
   var items = [
     ["index.html","Home","M4 7h16v12H4zM8 7V5h8v2"],
-    ["workbench.html?v=10","Bench","M4 18h16M6 18V8h4v10M14 18V5h4v13"],
+    ["workbench.html?v=11","Bench","M4 18h16M6 18V8h4v10M14 18V5h4v13"],
     ["timegrapher.html?v=3","Rate","M12 7v6l4 2M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z"],
     ["passport.html","Watch","M8 4h8v3a4 4 0 0 1-8 0zM8 20h8v-3a4 4 0 0 1-8 0z"],
     ["business.html","Cost","M6 6h12v12H6zM9 10h6M9 14h4"],
@@ -48,7 +48,7 @@ document.querySelectorAll("nav.mainnav").forEach(function(nav){
     if (!document.querySelector('script[data-calibre-repair-guidance]')) {
       var g = document.createElement("script");
       g.type = "module";
-      g.src = "js/repair-guidance-ui.js?v=1";
+      g.src = "js/repair-guidance-ui.js?v=2";
       g.dataset.calibreRepairGuidance = "1";
       document.head.appendChild(g);
     }
