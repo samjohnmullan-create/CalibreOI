@@ -1,5 +1,5 @@
 import * as base from "./store-base.js?v=1";
-import { readCloudState, writeCloudState } from "./cloud.js?v=1";
+import { readCloudState, writeCloudState, markCloudSeen } from "./cloud.js?v=2";
 
 export * from "./store-base.js?v=1";
 
@@ -62,6 +62,7 @@ export async function loadState(){
     }
     const merged=mergeStates(local,cloud.state);
     await putLocal("state",merged);
+    markCloudSeen(cloud.updatedAt);
     return merged;
   }catch(err){
     console.warn("Calibre cloud pull failed; using local data",err);
@@ -92,6 +93,7 @@ export async function forceCloudPull(){
   if(!cloud.state)return local;
   const merged=mergeStates(local||{jobs:[],currentId:null},cloud.state);
   await putLocal("state",merged);
+  markCloudSeen(cloud.updatedAt);
   return merged;
 }
 
