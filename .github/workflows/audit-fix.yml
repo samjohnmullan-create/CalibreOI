@@ -20,23 +20,18 @@ jobs:
           def read(path): return Path(path).read_text(encoding='utf-8')
           def write(path, text): Path(path).write_text(text, encoding='utf-8')
 
-          # 1) Sales: validate Sold before mutating status.
           p=Path('sales.html'); s=read(p)
           old='document.querySelectorAll("#statusBtns button").forEach(b=>b.onclick=async()=>{job.status=b.dataset.status;if(job.status==="Listed"){job.sale=job.sale||{};job.sale.listedDate=job.sale.listedDate||today();$("listedDate").value=job.sale.listedDate;}if(job.status==="Sold"){if(!num(job.business?.actualSale)){$("saleMsg").textContent="Enter the actual sale price before marking Sold.";return;}job.business.soldDate=job.business.soldDate||today();$("soldDate").value=job.business.soldDate;}capture();await saveState(state);paint();$("saleMsg").textContent=`Marked ${job.status}.`;});'
           new='document.querySelectorAll("#statusBtns button").forEach(b=>b.onclick=async()=>{const next=b.dataset.status;if(next==="Sold"&&!num(job.business?.actualSale)){$("saleMsg").textContent="Enter the actual sale price before marking Sold.";return;}job.status=next;if(job.status==="Listed"){job.sale=job.sale||{};job.sale.listedDate=job.sale.listedDate||today();$("listedDate").value=job.sale.listedDate;}if(job.status==="Sold"){job.business.soldDate=job.business.soldDate||today();$("soldDate").value=job.business.soldDate;}capture();await saveState(state);paint();$("saleMsg").textContent=`Marked ${job.status}.`;});'
           if old not in s: raise SystemExit('sales status handler pattern not found')
-          s=s.replace(old,new)
-          write(p,s)
+          s=s.replace(old,new); write(p,s)
 
-          # 2) Passport: overall confidence should be conservative, not strongest field wins.
           p=Path('passport.html'); s=read(p)
           old='function overallConfidence(){const vals=Object.values(job.passport.fieldConfidence||{});if(vals.includes("Confirmed"))return "Confirmed";if(vals.includes("Probable"))return "Probable";if(vals.includes("Estimated"))return "Estimated";return "Unknown";}'
           new='function overallConfidence(){const fc=job.passport.fieldConfidence||{},core=["maker","model","year","calibre"].filter(k=>String(job.passport[k]||"").trim()).map(k=>fc[k]||"Unknown");if(!core.length)return "Unknown";if(core.includes("Unknown"))return "Unknown";if(core.includes("Estimated"))return "Estimated";if(core.includes("Probable"))return "Probable";return "Confirmed";}'
           if old not in s: raise SystemExit('passport confidence pattern not found')
-          s=s.replace(old,new)
-          write(p,s)
+          s=s.replace(old,new); write(p,s)
 
-          # 3) Documents: remove stale CSS overrides, use current dossier field names, and calculate confidence from field-level values.
           p=Path('documents.html'); s=read(p)
           s=s.replace('.cert-placeholder{display:grid;place-items:center;color:#787269;font-family:Inter,sans-serif;font-size:11px}.cert-watch h2{font-size:28px;font-weight:400;margin:0 0 4mm;line-height:1.05}.cert-meta{display:grid;grid-template-columns:1fr 1fr;gap:4mm 8mm}', '')
           old='function confidenceText(p){const c=first(p.confidence,p.identityConfidence,"Recorded");return c.charAt(0).toUpperCase()+c.slice(1);}'
@@ -52,26 +47,21 @@ jobs:
           s=s.replace('${spec("Original listing",p.originalListing)}','${spec("Original listing",first(p.listingText,p.originalListing))}')
           write(p,s)
 
-          # 4) Summary: old buyer passport conflicts with the new customer-doc workflow; route to Documents instead.
           p=Path('summary.html'); s=read(p)
           s=s.replace('<button id="buyerSheet" class="btn secondary" type="button">Buyer passport</button>','<button id="buyerSheet" class="btn secondary" type="button">Customer documents</button>')
           old='$("buyerSheet").onclick=()=>{mode=mode==="buyer"?"internal":"buyer";$("buyerSheet").textContent=mode==="buyer"?"Workshop sheet":"Buyer passport";draw();};'
           new='$("buyerSheet").onclick=()=>{location.href="documents.html";};'
           if old not in s: raise SystemExit('summary buyer handler pattern not found')
-          s=s.replace(old,new)
-          write(p,s)
+          s=s.replace(old,new); write(p,s)
 
-          # 5) Base schema: make new Passport/Sale fields first-class and align channel options.
           p=Path('js/store-base.js'); s=read(p)
           s=s.replace('export const CHANNELS = ["Not listed","eBay","Etsy","Instagram","Shop","Auction","Other"];','export const CHANNELS = ["Not listed","eBay","Facebook Marketplace","Instagram","Shopify","Etsy","Auction","Private sale","Other"];')
           s=s.replace('confidence:"Unknown",dialMarkings:', 'confidence:"Unknown",fieldConfidence:{},dialMarkings:')
           old='job.business=Object.assign(blankBusiness(),job.business); if(!job.business.partsCost&&job.business.repairCost)job.business.partsCost=job.business.repairCost;'
           new='job.business=Object.assign(blankBusiness(),job.business); if(!job.business.partsCost&&job.business.repairCost)job.business.partsCost=job.business.repairCost;\n  job.sale=Object.assign({listedDate:"",notes:"",listingTitle:"",listingText:"",shortText:""},job.sale||{});'
           if old not in s: raise SystemExit('store-base business normalise pattern not found')
-          s=s.replace(old,new)
-          write(p,s)
+          s=s.replace(old,new); write(p,s)
 
-          # 6) Cloud sync: explicitly normalise and merge Tool Library and loose Parts Stock record-by-record.
           p=Path('js/store-cloud.js'); s=read(p)
           old='  state.incoming=(Array.isArray(state.incoming)?state.incoming:[]).map(normalisePurchase);\n  if(state.jobs.length&&!state.jobs.some(j=>j.id===state.currentId))state.currentId=state.jobs[0].id;'
           new='  state.incoming=(Array.isArray(state.incoming)?state.incoming:[]).map(normalisePurchase);\n  state.tools=Array.isArray(state.tools)?state.tools:[];\n  state.partsStock=Array.isArray(state.partsStock)?state.partsStock:[];\n  if(state.jobs.length&&!state.jobs.some(j=>j.id===state.currentId))state.currentId=state.jobs[0].id;'
@@ -85,10 +75,9 @@ jobs:
           s=s.replace('    incoming:mergePurchaseLists(cloud.incoming,local.incoming),\n    currentId:', '    incoming:mergePurchaseLists(cloud.incoming,local.incoming),\n    tools:mergeRecordLists(cloud.tools,local.tools),\n    partsStock:mergeRecordLists(cloud.partsStock,local.partsStock),\n    currentId:')
           write(p,s)
 
-          # 7) Bust nav cache consistently across every root HTML page.
           for path in Path('.').glob('*.html'):
               text=read(path)
-              text=re.sub(r'js/nav\\.js\\?v=\\d+', 'js/nav.js?v=53', text)
+              text=re.sub(r'js/nav\.js\?v=\d+', 'js/nav.js?v=53', text)
               write(path,text)
           PY
       - name: Static syntax audit
@@ -96,19 +85,22 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
-          import re, subprocess, tempfile, sys
+          import re, subprocess, tempfile, sys, os
           failures=[]
           for path in Path('js').glob('*.js'):
               r=subprocess.run(['node','--check',str(path)],capture_output=True,text=True)
               if r.returncode: failures.append((str(path),r.stderr))
           for path in Path('.').glob('*.html'):
               text=path.read_text(encoding='utf-8')
-              blocks=re.findall(r'<script\\s+type=["\']module["\'][^>]*>(.*?)</script>',text,re.S|re.I)
+              blocks=re.findall(r'<script\s+type=["\']module["\'][^>]*>(.*?)</script>',text,re.S|re.I)
               for i,code in enumerate(blocks):
                   with tempfile.NamedTemporaryFile('w',suffix='.mjs',delete=False,encoding='utf-8') as f:
                       f.write(code); name=f.name
-                  r=subprocess.run(['node','--check',name],capture_output=True,text=True)
-                  if r.returncode: failures.append((f'{path} inline module {i+1}',r.stderr))
+                  try:
+                      r=subprocess.run(['node','--check',name],capture_output=True,text=True)
+                      if r.returncode: failures.append((f'{path} inline module {i+1}',r.stderr))
+                  finally:
+                      os.unlink(name)
           if failures:
               for name,err in failures: print('\nFAIL',name,'\n',err)
               sys.exit(1)
