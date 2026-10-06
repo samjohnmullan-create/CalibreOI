@@ -1,0 +1,64 @@
+name: Refine Calibre documents
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  refine:
+    if: github.event.head_commit.message != 'Refine customer passport and certificate image layout'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Refine document layouts
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('documents.html')
+          s = p.read_text(encoding='utf-8')
+
+          # Certificate: smaller, contained portrait-style image with more breathing room.
+          s = s.replace(
+            '.cert-watch{display:grid;grid-template-columns:70mm minmax(0,1fr);gap:12mm;align-items:center;margin:10mm 0}.cert-hero{width:70mm;height:70mm;object-fit:cover;border:1px solid #bda77f;background:#ddd5c5}',
+            '.cert-watch{display:grid;grid-template-columns:54mm minmax(0,1fr);gap:12mm;align-items:center;margin:9mm 0}.cert-hero{width:54mm;height:64mm;border:1px solid #bda77f;background:#ebe5d8;padding:4mm;display:grid;place-items:center;overflow:hidden}.cert-hero>img{width:100%;height:100%;object-fit:contain;display:block}'
+          )
+
+          # Customer passport: remove watch-photo presentation entirely and replace with a formal text block.
+          s = s.replace(
+            '.pass-cover-main{position:absolute;left:18mm;right:18mm;top:63mm}.pass-kicker{font-family:Inter,sans-serif;color:#c7aa77;text-transform:uppercase;letter-spacing:.24em;font-size:9px;font-weight:800}.pass-cover-main h1{font-size:42px;font-weight:400;line-height:1.02;margin:5mm 0 3mm;max-width:155mm}.pass-cover-main p{font-family:Inter,sans-serif;font-size:11px;color:#c7c6c0;margin:0}.pass-cover-photo{position:absolute;left:18mm;right:18mm;bottom:28mm;height:92mm;border:1px solid rgba(199,170,119,.65);overflow:hidden;background:#0d1114}.pass-cover-photo img{width:100%;height:100%;object-fit:cover;display:block;filter:saturate(.92) contrast(1.03)}.pass-cover-photo .cert-placeholder{height:100%;color:#8d8e8d}.pass-cover-id{position:absolute;left:18mm;bottom:16mm;font-family:Inter,sans-serif;font-size:8px;letter-spacing:.1em;color:#c7aa77}',
+            '.pass-cover-main{position:absolute;left:18mm;right:18mm;top:66mm}.pass-kicker{font-family:Inter,sans-serif;color:#c7aa77;text-transform:uppercase;letter-spacing:.24em;font-size:9px;font-weight:800}.pass-cover-main h1{font-size:46px;font-weight:400;line-height:1.02;margin:6mm 0 4mm;max-width:155mm}.pass-cover-main p{font-family:Inter,sans-serif;font-size:11px;color:#c7c6c0;margin:0}.pass-cover-details{position:absolute;left:18mm;right:18mm;top:165mm;border-top:1px solid rgba(199,170,119,.7);border-bottom:1px solid rgba(199,170,119,.35);padding:8mm 0;display:grid;grid-template-columns:1fr 1fr;gap:6mm 12mm;font-family:Inter,sans-serif}.pass-cover-detail span{display:block;color:#c7aa77;text-transform:uppercase;letter-spacing:.14em;font-size:7px;font-weight:800;margin-bottom:1.5mm}.pass-cover-detail strong{display:block;color:#f4efe4;font-size:11px;font-weight:600}.pass-cover-id{position:absolute;left:18mm;bottom:16mm;font-family:Inter,sans-serif;font-size:8px;letter-spacing:.1em;color:#c7aa77}'
+          )
+
+          # Remove now-unused customer passport photo gallery styling.
+          s = s.replace('.photo-pair{display:grid;grid-template-columns:1fr 1fr;gap:5mm;margin:5mm 0}.photo-pair figure{margin:0}.photo-pair img{width:100%;height:67mm;object-fit:cover;border:1px solid #c8b792;background:#ddd5c5}.photo-pair figcaption{font-family:Inter,sans-serif;font-size:7px;text-transform:uppercase;letter-spacing:.1em;color:#8e7144;margin-top:1.5mm}', '')
+
+          old_start = 'function passportHTML(){const p=job.passport||{},issue=fmtDate(job.documents?.issuedAt||new Date()),name=job.watchName||[p.maker,p.model].filter(Boolean).join(" ")||"Vintage Watch",pid=first(job.jobId,job.id).toUpperCase();const movement=photoByLabel(["movement"]),back=photoByLabel(["case back","caseback","back"]),dial=photoByLabel(["dial","front"]),caseP=photoByLabel(["case"]);const photos=[movement,back,dial,caseP].filter((x,i,a)=>x&&a.findIndex(y=>y.src===x.src)===i).slice(0,2);const runs='
+          new_start = 'function passportHTML(){const p=job.passport||{},issue=fmtDate(job.documents?.issuedAt||new Date()),name=job.watchName||[p.maker,p.model].filter(Boolean).join(" ")||"Vintage Watch",pid=first(job.jobId,job.id).toUpperCase();const runs='
+          if old_start not in s:
+              raise SystemExit('passportHTML start pattern not found')
+          s = s.replace(old_start, new_start)
+
+          old_cover = '<section class="paper passport-cover"><div class="pass-brand"><img src="assets/mark.png?v=5" alt=""><div class="pass-brand-text">Calibre & Co.<br>Watch Passport</div></div><div class="pass-cover-main"><div class="pass-kicker">Customer Watch Passport</div><h1>${esc(name)}</h1><p>${esc([p.maker,p.model,p.year].filter(Boolean).join(" · ")||"A documented vintage watch")}</p></div><div class="pass-cover-photo">${hero()}</div><div class="pass-cover-id">PASSPORT ${esc(pid)} · ISSUED ${esc(issue.toUpperCase())}</div></section>'
+          new_cover = '<section class="paper passport-cover"><div class="pass-brand"><img src="assets/mark.png?v=5" alt=""><div class="pass-brand-text">Calibre & Co.<br>Watch Passport</div></div><div class="pass-cover-main"><div class="pass-kicker">Customer Watch Passport</div><h1>${esc(name)}</h1><p>${esc([p.maker,p.model,p.year].filter(Boolean).join(" · ")||"A documented vintage watch")}</p></div><div class="pass-cover-details"><div class="pass-cover-detail"><span>Passport</span><strong>${esc(pid)}</strong></div><div class="pass-cover-detail"><span>Issued</span><strong>${esc(issue)}</strong></div><div class="pass-cover-detail"><span>Calibre</span><strong>${val(p.calibre)}</strong></div><div class="pass-cover-detail"><span>Identification</span><strong>${esc(confidenceText(p))}</strong></div>${raw(owner.name)?`<div class="pass-cover-detail" style="grid-column:1/-1"><span>Prepared for</span><strong>${esc(owner.name)}</strong></div>`:""}</div><div class="pass-cover-id">CALIBRE & CO. · VINTAGE WATCH RECORD</div></section>'
+          if old_cover not in s:
+              raise SystemExit('passport cover pattern not found')
+          s = s.replace(old_cover, new_cover)
+
+          old_gallery = '</div></div>${photos.length?`<div class="photo-pair">${photos.map(x=>`<figure><img src="${x.src}" alt=""><figcaption>${esc(x.label)}</figcaption></figure>`).join("")}</div>`:""}<div class="pass-footer">'
+          new_gallery = '</div></div><div class="pass-footer">'
+          if old_gallery not in s:
+              raise SystemExit('passport gallery pattern not found')
+          s = s.replace(old_gallery, new_gallery)
+
+          p.write_text(s, encoding='utf-8')
+          PY
+      - name: Commit refined document layouts
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add documents.html
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'Refine customer passport and certificate image layout'
+          git push
