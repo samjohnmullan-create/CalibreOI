@@ -18,6 +18,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Bust deployed asset caches
+        shell: bash
+        run: |
+          sed -i "s#js/publish-controls.js?v=2#js/publish-controls.js?v=${GITHUB_SHA}#g" sales.html
+          sed -i "s#css/site.css#css/site.css?v=${GITHUB_SHA}#g" public-site/index.html public-site/watch.html
+          sed -i "s#js/catalogue.js#js/catalogue.js?v=${GITHUB_SHA}#g" public-site/index.html public-site/watch.html
       - uses: actions/configure-pages@v5
         with:
           enablement: true
