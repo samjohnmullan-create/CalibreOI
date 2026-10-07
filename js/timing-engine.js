@@ -65,6 +65,16 @@ function robustUsed(intervals, bph){
   const limit = Math.max(floor, deviation * 3.5);
   return rows.filter(r => Math.abs(r.normalised - centre) <= limit);
 }
+function longestDirectRun(rows){
+  const direct = rows.filter(r => r.multiple === 1).sort((a,b) => a.index - b.index);
+  let best = [], current = [];
+  for (const row of direct){
+    if (!current.length || row.index === current[current.length - 1].index + 1) current.push(row);
+    else current = [row];
+    if (current.length > best.length) best = current.slice();
+  }
+  return best;
+}
 
 // Rate is derived from audio-clock intervals, not screen timing.
 // Missing detections are tolerated by recognising 2x–4x multiples of the nominal beat interval.
@@ -108,16 +118,15 @@ export function analyse(beats, lockedBph){
   const continuityScore = clamp01(1 - missedRatio * 0.8);
   const confidence = clamp01(sampleScore * 0.30 + jitterScore * 0.42 + continuityScore * 0.18 + lockQuality * 0.10);
 
-  // Beat error is only surfaced when enough consecutive single-beat intervals exist.
-  // This avoids presenting a plausible-looking number after missed beats or noisy lock-on.
-  const directIntervals = directRows.map(r => ({ value:r.normalised, index:r.index }));
+  // Only calculate beat error across one uninterrupted run of single-beat intervals.
+  // A missed event breaks parity, so alternating intervals either side of that gap must not be mixed.
+  const beatRun = longestDirectRun(usedRows);
   const odd = [], even = [];
-  directIntervals.forEach(r => {
-    if (r.index % 2 === 0) even.push(r.value); else odd.push(r.value);
-  });
+  beatRun.forEach((r, i) => (i % 2 ? odd : even).push(r.normalised));
   const beatError = odd.length >= 3 && even.length >= 3 ? Math.abs(median(odd) - median(even)) : null;
 
   const reliable = usedRows.length >= 10 && confidence >= 0.60;
+  const beatErrorTrusted = reliable && beatRun.length >= 8 && beatError != null;
   let status = "poor";
   if (!reliable) status = "poor";
   else if (Math.abs(rate) <= 15 && jitter < 0.022) status = "good";
@@ -129,8 +138,8 @@ export function analyse(beats, lockedBph){
     stage: usedRows.length < 10 ? "Timing..." : "Timing",
     rateSecondsPerDay: rate,
     bph,
-    beatErrorMs: reliable ? beatError : null,
-    beatErrorTrusted: reliable && beatError != null,
+    beatErrorMs: beatErrorTrusted ? beatError : null,
+    beatErrorTrusted,
     stability: stability.toLowerCase(),
     stabilityLabel: stability,
     confidence,
@@ -139,6 +148,7 @@ export function analyse(beats, lockedBph){
     samples: usedRows.length,
     directSamples: directRows.length,
     missedBeatRatio: missedRatio,
+    beatErrorRunSamples: beatRun.length,
     jitterMs: spread,
     nominalIntervalMs: nominal,
     measuredIntervalMs: measured,
