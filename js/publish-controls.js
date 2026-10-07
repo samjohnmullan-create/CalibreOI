@@ -4,6 +4,8 @@ const raw=v=>v==null?"":String(v).trim();
 const bool=id=>!!$(id)?.checked;
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
 const PUBLIC_BUCKET="calibre-public-media";
+const publicPreviewUrl=slug=>`${location.origin}/public-site/watch.html?slug=${encodeURIComponent(slug)}`;
+const canonicalPublicUrl=slug=>`https://calibreco.com.au/watch/${encodeURIComponent(slug)}`;
 
 function installStyles(){
   if(document.getElementById("publishControlsStyles"))return;
@@ -27,8 +29,14 @@ function installStyles(){
   .pub-photo-controls label{margin:0;display:flex;align-items:center;gap:4px;font-size:.65rem;color:var(--muted)}
   .pub-photo-controls input{width:16px!important;height:16px!important;margin:0!important;accent-color:var(--accent)}
   .pub-photo.unavailable img{opacity:.35}
+  .pub-tools{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+  .pub-tools[hidden]{display:none}
+  .pub-qr-wrap{margin-top:10px;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2);display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+  .pub-qr-wrap[hidden]{display:none}
+  #pubQrCanvas{background:#fff;padding:8px;border-radius:8px;width:180px;height:180px}
+  .pub-qr-copy{min-width:0;flex:1}.pub-qr-copy strong{display:block;margin-bottom:4px}.pub-qr-copy code{display:block;overflow-wrap:anywhere;font-size:.68rem;color:var(--muted)}
   @media(max-width:760px){.pub-fields{grid-template-columns:1fr 1fr}.pub-photo-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
-  @media(max-width:520px){.pub-fields{grid-template-columns:1fr}.pub-photo-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  @media(max-width:520px){.pub-fields{grid-template-columns:1fr}.pub-photo-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.pub-tools .btn{flex:1 1 auto}#pubQrCanvas{width:150px;height:150px}}
   `;
   document.head.appendChild(style);
 }
@@ -57,6 +65,12 @@ function renderCard(){
   <p class="muted small" style="margin:.35rem 0">Choose the photographs that can leave the private archive. Pick one selected photo as the catalogue cover.</p>
   <div id="pubPhotoGrid" class="pub-photo-grid"><p class="muted small">Loading archive photos…</p></div>
   <div class="actionbar"><button class="btn" id="publishWatch" type="button" disabled>Save public record</button></div>
+  <div id="pubTools" class="pub-tools" hidden>
+    <button class="btn secondary" id="openPublicPage" type="button">Open public preview</button>
+    <button class="btn secondary" id="copyPublicLink" type="button">Copy public link</button>
+    <button class="btn secondary" id="showPublicQr" type="button">QR code</button>
+  </div>
+  <div id="pubQrWrap" class="pub-qr-wrap" hidden><canvas id="pubQrCanvas" width="180" height="180"></canvas><div class="pub-qr-copy"><strong>Watch Passport QR</strong><code id="pubQrUrl"></code><p class="muted small" style="margin:.45rem 0 0">This currently opens the live public preview. When calibreco.com.au is connected, we can switch the QR to the permanent catalogue URL.</p></div></div>
   <p id="publishMsg" class="muted small">Loading publishing controls…</p>
   <p class="muted small" id="publicUrlHint"></p>`;
   layout.insertAdjacentElement("beforebegin",card);
@@ -70,6 +84,13 @@ function extensionFor(asset,blob){
   if(type.includes("png"))return "png";
   if(type.includes("webp"))return "webp";
   return "jpg";
+}
+
+async function renderQr(url){
+  const canvas=$("pubQrCanvas");
+  if(!canvas)return;
+  const QR=await import("https://cdn.jsdelivr.net/npm/qrcode@1.5.4/+esm");
+  await QR.toCanvas(canvas,url,{width:180,margin:1,errorCorrectionLevel:"M",color:{dark:"#151815",light:"#ffffff"}});
 }
 
 const card=renderCard();
@@ -128,8 +149,15 @@ if(!card){
       $("pubPrice").value=pub.price??d.price;
       $("pubDescription").value=pub.description??d.description;
       for(const [id,key] of [["pubMaker","maker"],["pubModel","model"],["pubYear","year"],["pubCalibre","calibre"],["pubJewels","jewels"],["pubCase","case"],["pubDimensions","dimensions"],["pubTiming","timing"],["pubService","service"]])$(id).checked=show[key]!==false;
-      const refreshHint=()=>{const slug=slugify($("pubSlug").value);$("publicUrlHint").textContent=slug?`Planned public URL: calibreco.com.au/watch/${slug}`:"Add a slug for the public URL.";};
-      $("pubSlug").addEventListener("input",refreshHint);refreshHint();
+      const refreshHint=()=>{const slug=slugify($("pubSlug").value);$("publicUrlHint").textContent=slug?`Planned permanent URL: ${canonicalPublicUrl(slug)}`:"Add a slug for the public URL.";};
+      const refreshPublicTools=()=>{const status=$("pubStatus").value,slug=slugify($("pubSlug").value),published=status!=="private"&&!!slug;$("pubTools").hidden=!published;if(!published)$("pubQrWrap").hidden=true;return slug;};
+      $("pubSlug").addEventListener("input",()=>{refreshHint();refreshPublicTools();});
+      $("pubStatus").addEventListener("change",refreshPublicTools);
+      refreshHint();refreshPublicTools();
+
+      $("openPublicPage").onclick=()=>{const slug=refreshPublicTools();if(slug)window.open(publicPreviewUrl(slug),"_blank","noopener");};
+      $("copyPublicLink").onclick=async()=>{const slug=refreshPublicTools();if(!slug)return;try{await navigator.clipboard.writeText(publicPreviewUrl(slug));$("publishMsg").textContent="Public preview link copied.";}catch{$("publishMsg").textContent="Could not copy the public link.";}};
+      $("showPublicQr").onclick=async()=>{const slug=refreshPublicTools();if(!slug)return;const wrap=$("pubQrWrap"),url=publicPreviewUrl(slug);wrap.hidden=false;$("pubQrUrl").textContent=url;$("publishMsg").textContent="Generating QR code…";try{await renderQr(url);$("publishMsg").textContent="QR code ready.";}catch(err){console.error("QR generation failed",err);$("publishMsg").textContent="Could not generate the QR code.";}};
 
       const liveAssets=(job.mediaAssets||[]).filter(a=>!a?.deletedAt&&a?.storageKey&&String(a?.mimeType||"").startsWith("image/"));
       const grid=$("pubPhotoGrid");
@@ -137,7 +165,7 @@ if(!card){
         grid.innerHTML='<p class="muted small">No archived photographs are available for this watch yet.</p>';
       }else{
         grid.innerHTML=liveAssets.map(a=>{const old=publishedImages.find(x=>x?.sourceId===a.id),checked=!!old,cover=old?.role==="cover";return `<article class="pub-photo" data-media-id="${esc(a.id)}"><div class="pub-photo-img" data-thumb-for="${esc(a.id)}"></div><div class="pub-photo-meta"><strong>${esc(a.caption||a.originalName||a.category||"Photo")}</strong>${esc(a.category||"")}</div><div class="pub-photo-controls"><label><input class="pub-photo-select" type="checkbox" value="${esc(a.id)}" ${checked?"checked":""}> Public</label><label><input class="pub-photo-cover" type="radio" name="pubCover" value="${esc(a.id)}" ${cover?"checked":""} ${checked?"":"disabled"}> Cover</label></div></article>`;}).join("");
-        grid.querySelectorAll(".pub-photo-select").forEach(cb=>cb.addEventListener("change",()=>{const card=cb.closest(".pub-photo"),radio=card.querySelector(".pub-photo-cover");radio.disabled=!cb.checked;if(!cb.checked&&radio.checked)radio.checked=false;if(cb.checked&&!grid.querySelector(".pub-photo-cover:checked"))radio.checked=true;}));
+        grid.querySelectorAll(".pub-photo-select").forEach(cb=>cb.addEventListener("change",()=>{const photoCard=cb.closest(".pub-photo"),radio=photoCard.querySelector(".pub-photo-cover");radio.disabled=!cb.checked;if(!cb.checked&&radio.checked)radio.checked=false;if(cb.checked&&!grid.querySelector(".pub-photo-cover:checked"))radio.checked=true;}));
         for(const asset of liveAssets){
           const host=grid.querySelector(`[data-thumb-for="${CSS.escape(asset.id)}"]`);
           if(!host)continue;
@@ -179,7 +207,7 @@ if(!card){
           const {error:saveError}=await client.from("calibre_public_watches").upsert(payload,{onConflict:"owner_id,watch_id"});
           if(saveError)throw saveError;
           publishedImages=nextImages;row={...(row||{}),...payload};
-          $("pubSlug").value=slug;refreshHint();
+          $("pubSlug").value=slug;refreshHint();refreshPublicTools();
           $("publishMsg").textContent=status==="private"?"Saved as private. Public photos were removed.":`Public catalogue record saved${nextImages.length?` with ${nextImages.length} photo${nextImages.length===1?"":"s"}`:""}.`;
         }catch(err){
           console.error("Public publish failed",err);
