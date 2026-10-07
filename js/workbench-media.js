@@ -1,4 +1,4 @@
-import { uploadMedia } from "./media.js?v=1";
+import { uploadMedia } from "./media.js?v=2";
 
 const $=s=>document.querySelector(s);
 const inFlight=new Set();
@@ -18,15 +18,15 @@ function countForStage(job,stage){return (job.mediaAssets||[]).filter(a=>a&&a.ca
 function statusNode(){
   const root=$("#stageShots")?.parentElement;
   if(!root)return null;
-  let el=$("#stageMediaArchiveStatus");
-  if(!el){
-    el=document.createElement("p");
-    el.id="stageMediaArchiveStatus";
-    el.className="muted small";
-    el.style.margin="8px 0 0";
-    root.appendChild(el);
+  let wrap=$("#stageMediaArchiveWrap");
+  if(!wrap){
+    wrap=document.createElement("div");
+    wrap.id="stageMediaArchiveWrap";
+    wrap.style.cssText="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px";
+    wrap.innerHTML='<p id="stageMediaArchiveStatus" class="muted small" style="margin:0;flex:1"></p><a class="btn secondary" style="min-height:30px;padding:5px 8px;font-size:.68rem" href="media.html">Private media</a>';
+    root.appendChild(wrap);
   }
-  return el;
+  return wrap.querySelector("#stageMediaArchiveStatus");
 }
 function paint(){
   const ctx=current(),el=statusNode();
