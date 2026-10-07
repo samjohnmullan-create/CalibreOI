@@ -1,130 +1,120 @@
-# Active Build — Phase 1
+# Calibre & Co. — Phase 1: Product Foundation
 
-This file is the working execution plan for the current Calibre development cycle. The wider direction lives in [`ROADMAP.md`](../ROADMAP.md).
+This phase established Calibre as one coherent product before broader platform expansion.
 
-## Objective
+## Status
 
-Make Calibre feel like one deliberate product and prepare the timing system for the incoming USB/contact microphone.
+**Substantially complete.** Remaining work is polish, not a blocker for the next platform phase.
 
-## Workstream A — Brand & design system
+## What Phase 1 established
 
-### Palette — Warm Instrument
-The visual direction is now **graphite + ivory + restrained bronze**, with warm neutral greys. Blue is not part of the core brand palette.
+### Brand and visual system
 
-Working tokens:
-- Dark background: `#11110F`
-- Dark surface: `#191815`
-- Dark raised surface: `#22211D`
-- Dark text: `#F1EEE7`
-- Dark muted text: `#969188`
-- Dark divider: `#312F2A`
-- Dark accent: `#B98248`
-- Light background: `#F3F0E9`
-- Light surface: `#FAF8F3`
-- Light raised surface: `#E8E3D9`
-- Light text: `#1A1916`
-- Light muted text: `#706C64`
-- Light divider: `#D5CEC2`
-- Light accent: `#95652E`
+- Sage + graphite replaced the earlier blue/bronze/brown directions.
+- The approved crescent/C mark with separate upper sweep is now the brand source of truth.
+- Horizontal, stacked and monochrome SVG lockups exist in `assets/brand/`.
+- Header branding now uses the approved horizontal lockup.
+- Desktop density was reduced from the earlier oversized/card-heavy presentation.
+- Light and dark appearances share the same semantic visual system.
 
-Design rules:
-- [x] Drop Horological Blue as the brand direction.
-- [ ] Test Warm Instrument across Home, Workshop, Collection, Business and Calibre.
-- [ ] Keep bronze/amber as a restrained interaction accent, not a background colour.
-- [ ] Check contrast in dark and light appearances.
-- [ ] Replace legacy `--brass` / `--brass-soft` naming with semantic accent tokens while keeping temporary compatibility aliases.
-- [ ] Reduce borders and nested cards; rely more on spacing, hierarchy and subtle surface changes.
-- [ ] Make desktop approximately 20–30% denser while keeping mobile touch targets comfortable.
-- [ ] Use colour sparingly for active state, focus, timing markers, important actions and key data.
+Settled working tokens:
 
-### Logo
-- [ ] Explore abstract C / calibre geometry.
-- [ ] Explore reduced escapement geometry.
-- [ ] Explore timing/balance oscillation geometry.
-- [ ] Design the mark to work first in monochrome (ivory on graphite / graphite on ivory).
-- [ ] Treat bronze as optional accent, never required for recognition.
-- [ ] Test finalists at 16 px, 32 px, app icon, mobile header and desktop header.
-- [ ] Produce SVG-first final assets.
+### Light
+- Background: `#f1f3ee`
+- Surface: `#ffffff`
+- Raised surface: `#e8ece5`
+- Ink: `#151815`
+- Muted: `#687067`
+- Divider: `#d5dad2`
+- Accent: `#607558`
+- Accent soft: `#91a28a`
 
-## Workstream B — Shell & density
+### Dark
+- Background: `#10120f`
+- Surface: `#171a16`
+- Raised surface: `#20241e`
+- Ink: `#f0f1ec`
+- Muted: `#92978f`
+- Divider: `#2b3029`
+- Accent: `#7f9277`
+- Accent soft: `#aab69f`
 
-- [ ] Keep only Home / Workshop / Collection / Business / Calibre as primary navigation.
-- [ ] Reduce desktop header/nav visual weight.
-- [ ] Standardise page-heading height and spacing.
-- [ ] Reduce nested card-on-card layouts.
-- [ ] Build shared compact metric and action components.
-- [ ] Keep mobile controls touch-friendly.
-- [ ] Simplify the Calibre page around intelligence/system actions.
-- [ ] Make navigation visually recessive so the current watch/work area dominates.
+## Shell and navigation
 
-## Workstream C — Timegrapher hardware foundation
+The product now uses five primary destinations:
 
-### First implementation
-- [ ] Request audio permission.
-- [ ] Enumerate audio input devices with `navigator.mediaDevices.enumerateDevices()`.
-- [ ] Add explicit microphone selector.
-- [ ] Persist preferred timing microphone when possible.
-- [ ] Show device label and AudioContext sample rate.
-- [ ] Detect disconnection/device change.
-- [ ] Add a diagnostic panel showing RMS, peak, adaptive noise floor and threshold.
+**Home / Workshop / Collection / Business / Calibre**
 
-### Real-hardware test protocol
-When the contact microphone arrives, capture results for at least:
+Watch-specific work remains contextual inside Workshop rather than becoming top-level navigation:
 
-1. one healthy 18,000 BPH movement
-2. one 21,600 BPH movement if available
-3. one 28,800 BPH movement if available
-4. a weak/low-amplitude vintage movement
-5. deliberate bench/handling noise
+**Repair / Identity / Timing / Parts / Money / Sale / Summary / Documents**
 
-For each test record:
-- device/OS/browser
-- AudioContext sample rate
-- selected gain
-- known/reference BPH
-- Calibre-detected BPH
-- rate from Calibre
-- rate from a known timegrapher if available
-- beat error comparison if available
-- false/missed ticks
-- notes about mic contact and placement
+Established direction:
+- compact desktop shell
+- quieter navigation
+- current watch/work area has visual priority
+- fewer unnecessary nested cards
+- mobile remains touch-friendly
 
-Do not tune the detector solely around one watch.
+## Calibre hub
 
-## Workstream D — Timing engine upgrade
+The Calibre page was rebuilt away from a generic launcher and now acts as a watch-intelligence/system overview.
 
-Only start this after real contact-mic samples are available.
+It surfaces:
+- current watch readiness
+- Identity / Workshop / Timing / Documents signals
+- next useful actions
+- secondary system/settings tools
 
-Target pipeline:
+## Passport / Identity
 
-`audio → filter → transient detector → event classifier → interval series → BPH lock → rate/beat analysis`
+The Passport now centres on three questions:
 
-- [ ] Move from block peak detection to sample/event detection.
-- [ ] Add configurable filtering.
-- [ ] Add handling-noise rejection.
-- [ ] Track false/drop event evidence.
-- [ ] Improve auto BPH lock using multiple interval hypotheses.
-- [ ] Improve beat-error calculation using classified alternating events.
-- [ ] Rebuild trace from timing residuals rather than presentation-only rate dots.
-- [ ] Investigate defensible amplitude calculation; keep hidden until validated.
+1. What do we know?
+2. How sure are we?
+3. What evidence supports it?
 
-## Workstream E — Saved timing workflow
+Established capabilities:
+- identity progress
+- confidence indication
+- source count
+- photo count
+- evidence checks
+- per-field confidence states
+- research/source records
+- provenance
+- evidence photographs
+- existing autosave/data compatibility retained
 
-- [ ] Preserve before/during/after/regulation/final tags.
-- [ ] Add pre-service vs final comparison.
-- [ ] Add six-position guided sequence.
-- [ ] Calculate average rate and maximum positional delta.
-- [ ] Store hardware/device metadata with timing runs.
-- [ ] Surface timing history from the Passport.
+## Cloud foundation
 
-## Definition of done for this phase
+Calibre now has:
+- Supabase authentication
+- persisted sessions
+- cloud state sync
+- local/offline use
+- sign-in/account UI
+- password-reset UI
 
-Phase 1 is complete when:
+The custom email delivery layer is being completed in the next phase.
 
-- Calibre has a settled visual direction and usable logo system.
-- Desktop looks compact and intentional without harming mobile usability.
-- The Calibre hub is simplified.
-- Android and Windows can explicitly select the external timing microphone.
-- Diagnostic audio information is visible enough to tune the detector intelligently.
-- Real-hardware test data has been captured.
-- The next timing-engine work is based on evidence rather than guesses.
+## Timegrapher foundation
+
+Phase 1 also laid the browser-audio and UX foundation for the Timegrapher. Signal processing continued in Phase 2.
+
+## Remaining polish
+
+These are worth improving when encountered but should not block higher-value platform work:
+
+- consolidate residual one-off page CSS
+- continue removing unnecessary borders/nested cards
+- standardise loading/empty/error states
+- finish PWA icon sizes/maskable assets
+- review all pages after major workflow changes
+- accessibility/keyboard/focus audit
+
+## Phase 1 exit condition
+
+Met in practical terms: Calibre now looks and behaves like a coherent application, has a settled brand direction and has a usable identity/workshop/cloud foundation.
+
+See [`../ROADMAP.md`](../ROADMAP.md) for the revised build order. The active infrastructure plan is in [`PHASE-3-WEB-PLATFORM.md`](PHASE-3-WEB-PLATFORM.md).
