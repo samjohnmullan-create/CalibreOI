@@ -49,21 +49,7 @@ document.querySelectorAll(".brandbar").forEach(function(bar){
   ];
 
   var pageGroup={
-    "index.html":"home",
-    "workbench.html":"workshop",
-    "passport.html":"workshop",
-    "timegrapher.html":"workshop",
-    "business.html":"workshop",
-    "sales.html":"workshop",
-    "summary.html":"workshop",
-    "suppliers.html":"workshop",
-    "documents.html":"workshop",
-    "inventory.html":"collection",
-    "finance.html":"business",
-    "calibre.html":"calibre",
-    "assistant.html":"calibre",
-    "news.html":"calibre",
-    "settings.html":"calibre"
+    "index.html":"home","workbench.html":"workshop","passport.html":"workshop","timegrapher.html":"workshop","business.html":"workshop","sales.html":"workshop","summary.html":"workshop","suppliers.html":"workshop","documents.html":"workshop","inventory.html":"collection","finance.html":"business","calibre.html":"calibre","assistant.html":"calibre","news.html":"calibre","settings.html":"calibre"
   };
 
   var activeGroup=pageGroup[here]||"home";
@@ -85,23 +71,11 @@ document.querySelectorAll(".brandbar").forEach(function(bar){
     strip.innerHTML='<div class="watch-strip-photo" data-watch-photo></div><div class="watch-strip-main"><div class="watch-strip-name" data-watch-name>Loading watch…</div><div class="watch-strip-meta" data-watch-meta></div></div><div class="watch-strip-state"><span class="badge" data-watch-status>—</span><span class="watch-strip-job" data-watch-job></span></div>';
     if(main)main.insertAdjacentElement("afterend",strip);
 
-    var watchTabs=[
-      ["workbench.html?v=22","Repair"],
-      ["passport.html","Identity"],
-      ["timegrapher.html?v=5","Timing"],
-      ["suppliers.html","Parts"],
-      ["business.html","Money"],
-      ["sales.html","Sale"],
-      ["summary.html","Summary"],
-      ["documents.html","Documents"]
-    ];
+    var watchTabs=[["workbench.html?v=22","Repair"],["passport.html","Identity"],["timegrapher.html?v=5","Timing"],["suppliers.html","Parts"],["business.html","Money"],["sales.html","Sale"],["summary.html","Summary"],["documents.html","Documents"]];
     var sub=document.createElement("nav");
     sub.className="contextnav watch-contextnav";
     sub.setAttribute("aria-label","Current watch sections");
-    sub.innerHTML=watchTabs.map(function(item){
-      var on=here===item[0].split("?")[0];
-      return "<a class=\"contextnav-btn"+(on?" active":"")+"\" href=\""+item[0]+"\""+(on?" aria-current=\"page\"":"")+">"+item[1]+"</a>";
-    }).join("");
+    sub.innerHTML=watchTabs.map(function(item){var on=here===item[0].split("?")[0];return "<a class=\"contextnav-btn"+(on?" active":"")+"\" href=\""+item[0]+"\""+(on?" aria-current=\"page\"":"")+">"+item[1]+"</a>";}).join("");
     strip.insertAdjacentElement("afterend",sub);
 
     (async function(){
@@ -109,64 +83,35 @@ document.querySelectorAll(".brandbar").forEach(function(bar){
         var mod=await import("./store.js?v=26");
         var state=await mod.loadState();
         var job=mod.current(state);
-        if(!job){
-          strip.querySelector("[data-watch-name]").textContent="No watch open";
-          strip.querySelector("[data-watch-meta]").textContent="Choose a watch from Collection or Home.";
-          strip.querySelector("[data-watch-status]").textContent="—";
-          return;
-        }
-        var p=job.passport||{};
-        var meta=[];
-        if(p.maker)meta.push(p.maker);
-        if(p.model)meta.push(p.model);
-        if(p.calibre)meta.push("Cal. "+p.calibre);
-        if(p.jewels)meta.push(p.jewels+" jewels");
-        if(p.year)meta.push(p.year);
+        if(!job){strip.querySelector("[data-watch-name]").textContent="No watch open";strip.querySelector("[data-watch-meta]").textContent="Choose a watch from Collection or Home.";strip.querySelector("[data-watch-status]").textContent="—";return;}
+        var p=job.passport||{},meta=[];
+        if(p.maker)meta.push(p.maker);if(p.model)meta.push(p.model);if(p.calibre)meta.push("Cal. "+p.calibre);if(p.jewels)meta.push(p.jewels+" jewels");if(p.year)meta.push(p.year);
         strip.querySelector("[data-watch-name]").textContent=job.watchName||[p.maker,p.model].filter(Boolean).join(" ")||"Untitled watch";
         strip.querySelector("[data-watch-meta]").textContent=meta.join(" · ")||"Identity not completed yet";
         strip.querySelector("[data-watch-status]").textContent=job.status||"On bench";
-        var stageTotal=Array.isArray(job.stages)?job.stages.length:0;
-        var stageNow=stageTotal?Math.min(stageTotal,Math.max(1,(Number(job.stage)||0)+1)):0;
-        var jobBits=[];
-        if(job.jobId)jobBits.push(job.jobId);
-        if(stageTotal)jobBits.push("Stage "+stageNow+"/"+stageTotal);
-        strip.querySelector("[data-watch-job]").textContent=jobBits.join(" · ");
-        var src=typeof mod.coverPhoto==="function"?mod.coverPhoto(job):"";
-        var photo=strip.querySelector("[data-watch-photo]");
+        var stageTotal=Array.isArray(job.stages)?job.stages.length:0,stageNow=stageTotal?Math.min(stageTotal,Math.max(1,(Number(job.stage)||0)+1)):0,jobBits=[];
+        if(job.jobId)jobBits.push(job.jobId);if(stageTotal)jobBits.push("Stage "+stageNow+"/"+stageTotal);strip.querySelector("[data-watch-job]").textContent=jobBits.join(" · ");
+        var src=typeof mod.coverPhoto==="function"?mod.coverPhoto(job):"",photo=strip.querySelector("[data-watch-photo]");
         if(src){var img=document.createElement("img");img.src=src;img.alt="";photo.appendChild(img);}else{photo.textContent=(job.watchName||p.maker||"W").trim().charAt(0).toUpperCase();}
-      }catch(e){
-        console.warn("Watch header unavailable",e);
-        strip.querySelector("[data-watch-name]").textContent="Current watch";
-      }
+      }catch(e){console.warn("Watch header unavailable",e);strip.querySelector("[data-watch-name]").textContent="Current watch";}
     })();
   }
 
   if(["calibre.html","assistant.html","news.html","settings.html"].indexOf(here)>=0){
-    var calibreTabs=[["calibre.html","Overview"],["assistant.html","Job brief"],["news.html","Updates"],["settings.html","Settings"]];
-    var csub=document.createElement("nav");
-    csub.className="contextnav calibre-contextnav";
-    csub.setAttribute("aria-label","Calibre");
-    csub.innerHTML=calibreTabs.map(function(item){
-      var on=here===item[0];
-      return "<a class=\"contextnav-btn"+(on?" active":"")+"\" href=\""+item[0]+"\""+(on?" aria-current=\"page\"":"")+">"+item[1]+"</a>";
-    }).join("");
-    var main2=document.querySelector("nav.mainnav");
-    if(main2)main2.insertAdjacentElement("afterend",csub);
+    var calibreTabs=[["calibre.html","Overview"],["assistant.html","Job brief"],["news.html","Updates"],["settings.html","Settings"]],csub=document.createElement("nav");
+    csub.className="contextnav calibre-contextnav";csub.setAttribute("aria-label","Calibre");
+    csub.innerHTML=calibreTabs.map(function(item){var on=here===item[0];return "<a class=\"contextnav-btn"+(on?" active":"")+"\" href=\""+item[0]+"\""+(on?" aria-current=\"page\"":"")+">"+item[1]+"</a>";}).join("");
+    var main2=document.querySelector("nav.mainnav");if(main2)main2.insertAdjacentElement("afterend",csub);
   }
 
-  if(here==="workbench.html"&&!document.querySelector('script[data-calibre-workbench-runtime]')){
-    var r=document.createElement("script");
-    r.type="module";
-    r.src="js/workbench-runtime.js?v=3";
-    r.dataset.calibreWorkbenchRuntime="1";
-    document.head.appendChild(r);
-  }
+  if(here==="workbench.html"&&!document.querySelector('script[data-calibre-workbench-runtime]')){var r=document.createElement("script");r.type="module";r.src="js/workbench-runtime.js?v=3";r.dataset.calibreWorkbenchRuntime="1";document.head.appendChild(r);}
 })();
 
 var markStyle=document.createElement("style");
 markStyle.textContent=`
-.brandmark{padding:0;overflow:hidden;background:transparent}
-.brandmark img{width:34px;height:34px;object-fit:cover;display:block;border-radius:50%}
+.brandmark{padding:0;overflow:hidden;background:transparent;width:40px;height:40px;display:block}
+.brandmark img{width:40px;height:40px;object-fit:contain;display:block;border-radius:0}
+html[data-theme="dark"] .brandmark img{content:url("assets/brand/calibre-mark-white.svg?v=1")}
 .navbtn{position:relative}
 .newsdot{position:absolute;top:6px;right:5px;width:6px;height:6px;border-radius:50%;background:#ef4444;box-shadow:0 0 0 2px var(--bg,#111)}
 .newsdot[hidden]{display:none}
@@ -182,38 +127,17 @@ markStyle.textContent=`
 .watch-strip-meta{margin-top:2px;color:var(--muted);font-size:.68rem;line-height:1.3}
 .watch-strip-state{display:flex;align-items:flex-end;flex-direction:column;gap:3px;text-align:right}
 .watch-strip-job{font-size:.62rem;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
-@media(max-width:640px){
-  .brandmark img{width:38px;height:38px}
-  .watch-strip{grid-template-columns:44px minmax(0,1fr);padding:8px 0;gap:9px}
-  .watch-strip-photo{width:44px;height:44px}
-  .watch-strip-state{grid-column:2;align-items:flex-start;flex-direction:row;flex-wrap:wrap;text-align:left;margin-top:-2px}
-  .contextnav{margin:6px 0 10px;border-bottom:0;gap:5px}
-  .contextnav-btn{min-height:32px;padding:5px 10px;border:1px solid var(--line);border-radius:999px;margin:0}
-  .contextnav-btn.active{background:var(--surface-2);border-color:var(--accent,var(--brass))}
-}
+@media(max-width:640px){.brandmark,.brandmark img{width:38px;height:38px}.watch-strip{grid-template-columns:44px minmax(0,1fr);padding:8px 0;gap:9px}.watch-strip-photo{width:44px;height:44px}.watch-strip-state{grid-column:2;align-items:flex-start;flex-direction:row;flex-wrap:wrap;text-align:left;margin-top:-2px}.contextnav{margin:6px 0 10px;border-bottom:0;gap:5px}.contextnav-btn{min-height:32px;padding:5px 10px;border:1px solid var(--line);border-radius:999px;margin:0}.contextnav-btn.active{background:var(--surface-2);border-color:var(--accent,var(--brass))}}
 `;
 document.head.appendChild(markStyle);
 
-document.querySelectorAll(".brandmark").forEach(function(el){
-  el.innerHTML="<img src=\"assets/mark.png?v=5\" alt=\"\">";
-});
-if(!document.querySelector("link[rel=icon]")){
-  var icon=document.createElement("link");
-  icon.rel="icon";
-  icon.href="assets/mark.png?v=5";
-  document.head.appendChild(icon);
-}
+document.querySelectorAll(".brandmark").forEach(function(el){el.innerHTML="<img src=\"assets/brand/calibre-mark-black.svg?v=1\" alt=\"Calibre & Co.\">";});
+var oldIcon=document.querySelector("link[rel=icon]");if(oldIcon)oldIcon.remove();var icon=document.createElement("link");icon.rel="icon";icon.type="image/svg+xml";icon.href="assets/brand/calibre-mark-black.svg?v=1";document.head.appendChild(icon);
 
 (async function(){
   try{
-    var mod=await import("./cloud.js?v=3");
-    var s=await mod.session();
-    if(!s?.user)return;
-    var q=await mod.supabaseClient().from("calibre_news").select("id",{count:"exact",head:true}).eq("user_id",s.user.id).is("read_at",null);
-    var unread=q.count||0;
-    document.querySelectorAll("[data-news-dot]").forEach(function(dot){
-      dot.hidden=!unread;
-      dot.title=unread?unread+" unread Calibre update"+(unread===1?"":"s"):"";
-    });
+    var mod=await import("./cloud.js?v=3"),s=await mod.session();if(!s?.user)return;
+    var q=await mod.supabaseClient().from("calibre_news").select("id",{count:"exact",head:true}).eq("user_id",s.user.id).is("read_at",null),unread=q.count||0;
+    document.querySelectorAll("[data-news-dot]").forEach(function(dot){dot.hidden=!unread;dot.title=unread?unread+" unread Calibre update"+(unread===1?"":"s"):"";});
   }catch(e){console.warn("News badge unavailable",e);}
 })();
