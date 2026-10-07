@@ -12,6 +12,7 @@ const here=(location.pathname.split("/").pop()||"index.html").split("?")[0];
 if(here==="workbench.html")import("./workbench-media.js?v=2").catch(err=>console.warn("Calibre media archive unavailable",err));
 if(here==="passport.html")import("./passport-media.js?v=1").catch(err=>console.warn("Calibre Passport media archive unavailable",err));
 if(here==="backup.html")import("./backup-audit.js?v=2").catch(err=>console.warn("Calibre media migration audit unavailable",err));
+import("./archive-cover-runtime.js?v=1").catch(err=>console.warn("Calibre archive covers unavailable",err));
 
 function isEditing(){
   const el=document.activeElement;
