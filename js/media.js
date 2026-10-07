@@ -26,11 +26,16 @@ export function blankMediaAsset(partial={}){
   };
 }
 
+async function authHeaders(){
+  const s=await session();
+  if(!s?.access_token)throw new Error('Sign in to Calibre to access private media.');
+  return {Authorization:`Bearer ${s.access_token}`};
+}
+
 export async function uploadMedia(file,{watchId='',jobId='',stageId='',category='workshop'}={}){
   if(!(file instanceof File))throw new Error('Choose a file to upload.');
   if(!MEDIA_CATEGORIES.includes(category))throw new Error('Invalid media category.');
-  const s=await session();
-  if(!s?.access_token)throw new Error('Sign in to Calibre before uploading media.');
+  const headers=await authHeaders();
   const form=new FormData();
   form.append('file',file,file.name);
   form.append('watchId',watchId||'unassigned');
@@ -39,11 +44,36 @@ export async function uploadMedia(file,{watchId='',jobId='',stageId='',category=
   form.append('category',category);
   const response=await fetch(`${MEDIA_API_BASE}/upload.php`,{
     method:'POST',
-    headers:{Authorization:`Bearer ${s.access_token}`},
+    headers,
     body:form
   });
   let body=null;
   try{body=await response.json();}catch{}
   if(!response.ok||!body?.ok)throw new Error(body?.error||`Media upload failed (${response.status}).`);
   return blankMediaAsset(body.asset||{});
+}
+
+export async function fetchPrivateMedia(asset){
+  const a=blankMediaAsset(asset||{});
+  if(!a.storageKey)throw new Error('This media record has no storage key.');
+  const headers=await authHeaders();
+  const response=await fetch(`${MEDIA_API_BASE}/file.php?key=${encodeURIComponent(a.storageKey)}`,{headers,cache:'no-store'});
+  if(!response.ok){
+    let body=null;
+    try{body=await response.json();}catch{}
+    throw new Error(body?.error||`Could not load media (${response.status}).`);
+  }
+  return response.blob();
+}
+
+export async function privateMediaObjectUrl(asset){
+  const blob=await fetchPrivateMedia(asset);
+  return URL.createObjectURL(blob);
+}
+
+export function formatMediaSize(bytes){
+  const n=Number(bytes)||0;
+  if(n<1024)return `${n} B`;
+  if(n<1048576)return `${(n/1024).toFixed(n<10240?1:0)} KB`;
+  return `${(n/1048576).toFixed(n<10485760?1:0)} MB`;
 }
