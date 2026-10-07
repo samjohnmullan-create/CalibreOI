@@ -8,6 +8,9 @@ let checking=false;
 let pending=false;
 let timer=null;
 
+const here=(location.pathname.split("/").pop()||"index.html").split("?")[0];
+if(here==="workbench.html")import("./workbench-media.js?v=1").catch(err=>console.warn("Calibre media archive unavailable",err));
+
 function isEditing(){
   const el=document.activeElement;
   if(!el)return false;
