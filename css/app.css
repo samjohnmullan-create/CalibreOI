@@ -174,11 +174,45 @@ html:not([data-theme="dark"]) .brandmark img{box-shadow:0 0 0 1px color-mix(in s
 .incoming-item,.mini-item{padding:10px 0!important}
 .attention{background:color-mix(in srgb,var(--accent) 4%,var(--surface));border-radius:7px;padding:9px 10px!important;border-bottom:0!important}
 .attention-dot{background:var(--accent)!important}
+/* Calibre crescent brand system */
+.brandmark{width:40px!important;height:40px!important;min-width:40px!important;border-radius:0!important;background:url('../assets/brand/calibre-mark-black.svg?v=1') center/contain no-repeat!important;box-shadow:none!important}
+.brandmark img{display:none!important}
+html[data-theme="dark"] .brandmark{background-image:url('../assets/brand/calibre-mark-white.svg?v=1')!important}
+html:not([data-theme="dark"]) .brandmark{background-image:url('../assets/brand/calibre-mark-black.svg?v=1')!important}
+.brand{gap:10px}
+/* New document identity: graphite + sage, with vector lockups */
+body .paper{background:#fbfcf9!important;color:#171a16!important}
+body .paper .rule{background:#cfd6cc!important}
+body .paper .gold,body .paper .caps,body .cert-field span,body .cert-work h3,body .pass-section h3,body .service-box h4,body .timing-table th,body .pass-page-no{color:#607558!important}
+body .paper .doc-logo img{display:none!important}
+body .paper .doc-logo>div{display:none!important}
+body .paper .doc-logo::before{content:"";display:block;width:180px;height:46px;background:url('../assets/brand/calibre-horizontal-black.svg?v=1') left center/contain no-repeat}
+body .certificate:before{border-color:#607558!important}
+body .certificate:after{border-color:#d8ded5!important}
+body .cert-field strong{border-bottom-color:#d5ddd2!important}
+body .cert-work{border-top-color:#d8ded5!important}
+body .sign-line{border-top-color:#607558!important}
+body .passport-cover{background:linear-gradient(145deg,#0f120f 0%,#192019 56%,#263126 100%)!important;color:#f5f7f3!important}
+body .passport-cover:after{border-color:rgba(145,162,138,.58)!important}
+body .passport-cover:before{content:"";position:absolute;right:12mm;bottom:18mm;width:92mm;height:92mm;background:url('../assets/brand/calibre-mark-white.svg?v=1') center/contain no-repeat;opacity:.045;pointer-events:none}
+body .pass-brand img{display:none!important}
+body .pass-brand::before{content:"";display:block;width:176px;height:48px;background:url('../assets/brand/calibre-horizontal-white.svg?v=1') left center/contain no-repeat}
+body .pass-brand-text,body .pass-kicker,body .pass-cover-detail span,body .pass-cover-id{color:#b8c7b3!important}
+body .pass-cover-main p{color:#cdd4cc!important}
+body .pass-cover-details{border-top-color:rgba(184,199,179,.72)!important;border-bottom-color:rgba(184,199,179,.35)!important}
+body .pass-cover-detail strong{color:#f5f7f3!important}
+body .pass-page-head{border-bottom-color:#91a28a!important}
+body .spec-row{border-bottom-color:#dce2d9!important}
+body .service-box{border-color:#91a28a!important;background:#f4f7f1!important}
+body .timing-table th{border-bottom-color:#91a28a!important}
+body .timing-table td{border-bottom-color:#dce2d9!important}
+body .passport-legal{border-top-color:#aebca9!important}
 @media(max-width:640px){
   html:not([data-theme="dark"]) .brandbar{min-height:52px;padding-top:4px;padding-bottom:4px}
   html:not([data-theme="dark"]) .mainnav{background:var(--surface);border:1px solid var(--line);padding:6px}
   html:not([data-theme="dark"]) .navbtn.active{background:var(--surface-2)}
   .current-body{padding:11px 10px}.current-actions{padding:0 10px 10px}.quick{min-height:62px}
+  .brandmark{width:38px!important;height:38px!important;min-width:38px!important}
 }
 @media(max-width:900px){
   .layout,.timing-layout,.split{grid-template-columns:1fr}
