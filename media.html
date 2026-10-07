@@ -3,7 +3,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Media · Calibre & Co.</title><link rel="stylesheet" href="css/app.css?v=13">
 <style>
-.media-head{display:flex;justify-content:space-between;gap:12px;align-items:end;margin-bottom:10px}.media-head h2{margin:2px 0}.media-summary{display:flex;gap:8px;flex-wrap:wrap}.media-summary .badge{background:var(--surface)}.media-section{margin-top:12px}.media-section h3{margin:0 0 8px;text-transform:capitalize}.media-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:9px}.asset{border:1px solid var(--line);border-radius:8px;background:var(--surface);overflow:hidden;min-width:0}.asset-preview{aspect-ratio:1.2;background:var(--surface-2);display:grid;place-items:center;position:relative;overflow:hidden}.asset-preview img{width:100%;height:100%;object-fit:cover;display:block}.asset-preview .filetype{font-weight:800;color:var(--muted);letter-spacing:.08em}.asset-body{padding:9px}.asset-body strong{display:block;font-size:.78rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.asset-meta{font-size:.66rem;color:var(--muted);margin-top:4px;line-height:1.4}.asset-actions{display:flex;gap:6px;margin-top:8px}.asset-actions .btn{flex:1;min-height:32px;padding:5px 7px;font-size:.69rem}.empty{padding:20px;text-align:center;color:var(--muted)}.loading{font-size:.68rem;color:var(--muted)}@media(max-width:640px){.media-head{display:block}.media-summary{margin-top:8px}.media-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.media-head{display:flex;justify-content:space-between;gap:12px;align-items:end;margin-bottom:10px}.media-head h2{margin:2px 0}.media-summary{display:flex;gap:8px;flex-wrap:wrap}.media-summary .badge{background:var(--surface)}.media-section{margin-top:12px}.media-section h3{margin:0 0 8px;text-transform:capitalize}.media-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:9px}.asset{border:1px solid var(--line);border-radius:8px;background:var(--surface);overflow:hidden;min-width:0}.asset.cover{box-shadow:inset 0 0 0 2px var(--accent)}.asset-preview{aspect-ratio:1.2;background:var(--surface-2);display:grid;place-items:center;position:relative;overflow:hidden}.asset-preview img{width:100%;height:100%;object-fit:cover;display:block}.asset-preview .filetype{font-weight:800;color:var(--muted);letter-spacing:.08em}.cover-tag{position:absolute;top:7px;left:7px;background:var(--nav);color:#fff;border-radius:999px;padding:4px 7px;font-size:.58rem;font-weight:800}.asset-body{padding:9px}.asset-body strong{display:block;font-size:.78rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.asset-meta{font-size:.66rem;color:var(--muted);margin-top:4px;line-height:1.4}.asset-fields{display:grid;gap:6px;margin-top:8px}.asset-fields input,.asset-fields textarea{font-size:.7rem;padding:7px 8px}.asset-fields textarea{min-height:58px;resize:vertical}.asset-actions{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}.asset-actions .btn{flex:1;min-width:82px;min-height:32px;padding:5px 7px;font-size:.69rem}.empty{padding:20px;text-align:center;color:var(--muted)}.loading{font-size:.68rem;color:var(--muted)}@media(max-width:640px){.media-head{display:block}.media-summary{margin-top:8px}.media-grid{grid-template-columns:1fr}}
 </style></head><body>
 <div class="shell">
 <header class="brandbar"><a class="brand" href="index.html"><div class="brandmark">C&C</div><div><div class="kicker">CALIBRE & CO.</div><h1>Watchmaker's Workbench</h1></div></a></header>
@@ -14,7 +14,7 @@
 </div>
 <script src="js/nav.js?v=55"></script>
 <script type="module">
-import { loadState,current,escapeHtml } from "./js/store.js?v=26";
+import { loadState,saveState,current,escapeHtml } from "./js/store.js?v=26";
 import { privateMediaObjectUrl,formatMediaSize } from "./js/media.js?v=2";
 const $=id=>document.getElementById(id),urls=[];
 const labels={original:"Original",identity:"Identity",movement:"Movement",workshop:"Workshop",documents:"Documents",sale:"Sale"};
@@ -24,7 +24,7 @@ function revoke(){while(urls.length)URL.revokeObjectURL(urls.pop());}
 async function loadPreview(asset,node){
   if(!asset?.mimeType?.startsWith("image/")){node.innerHTML=`<span class="filetype">${asset?.mimeType==="application/pdf"?"PDF":"FILE"}</span>`;return;}
   node.innerHTML='<span class="loading">Loading…</span>';
-  try{const url=await privateMediaObjectUrl(asset);urls.push(url);node.innerHTML="";const img=new Image();img.alt="";img.src=url;node.appendChild(img);}catch(e){node.innerHTML='<span class="loading">Unavailable</span>';node.title=e.message||String(e);}
+  try{const url=await privateMediaObjectUrl(asset);urls.push(url);node.innerHTML="";const img=new Image();img.alt=asset.caption||"";img.src=url;node.appendChild(img);if(asset.isCover){const tag=document.createElement("span");tag.className="cover-tag";tag.textContent="Cover";node.appendChild(tag);}}catch(e){node.innerHTML='<span class="loading">Unavailable</span>';node.title=e.message||String(e);}
 }
 async function openAsset(asset){
   $("statusText").textContent="Opening private media…";
@@ -32,25 +32,38 @@ async function openAsset(asset){
 }
 let state,job;
 try{state=await loadState();job=current(state);}catch(e){$("statusText").textContent=e.message||"Could not load watch.";}
-if(!job){$("gallery").innerHTML='<div class="card empty">No watch is open.</div>';$("intro").textContent="Choose a watch from Home or Collection.";}else{
-  const assets=Array.isArray(job.mediaAssets)?job.mediaAssets.filter(a=>a&&a.storageKey):[];
-  $("intro").textContent=`${job.watchName||"Current watch"} · ${job.jobId||""}`;
-  const groups={};assets.forEach(a=>(groups[a.category]||(groups[a.category]=[])).push(a));
-  $("summary").innerHTML=`<span class="badge">${assets.length} archived</span><span class="badge">${formatMediaSize(assets.reduce((n,a)=>n+(Number(a.bytes)||0),0))}</span>`;
-  if(!assets.length){$("gallery").innerHTML='<div class="card empty">No private media has been archived for this watch yet.</div>';}
-  else{
-    for(const category of ["original","identity","movement","workshop","documents","sale"]){
-      const list=groups[category]||[];if(!list.length)continue;
-      const section=document.createElement("section");section.className="media-section card";section.innerHTML=`<h3>${labels[category]||category} · ${list.length}</h3><div class="media-grid"></div>`;
-      const grid=section.querySelector(".media-grid");
-      list.sort((a,b)=>String(b.createdAt||"").localeCompare(String(a.createdAt||""))).forEach(asset=>{
-        const card=document.createElement("article");card.className="asset";card.innerHTML=`<div class="asset-preview"></div><div class="asset-body"><strong title="${esc(asset.originalName)}">${esc(asset.originalName||"Archived file")}</strong><div class="asset-meta">${esc(asset.stageId||"")}${asset.stageId?" · ":""}${formatMediaSize(asset.bytes)}<br>${esc(dateText(asset.createdAt))}</div><div class="asset-actions"><button class="btn secondary open" type="button">Open</button></div></div>`;
-        card.querySelector(".open").onclick=()=>openAsset(asset);grid.appendChild(card);loadPreview(asset,card.querySelector(".asset-preview"));
-      });
-      $("gallery").appendChild(section);
-    }
+function assets(){return Array.isArray(job?.mediaAssets)?job.mediaAssets.filter(a=>a&&a.storageKey):[];}
+async function saveMeta(asset,card){
+  asset.caption=card.querySelector(".caption").value.trim();
+  asset.evidenceNote=card.querySelector(".evidence").value.trim();
+  asset.updatedAt=new Date().toISOString();
+  $("statusText").textContent="Saving media notes…";
+  await saveState(state);$("statusText").textContent="Saved";
+}
+async function setCover(asset){
+  assets().forEach(a=>a.isCover=false);asset.isCover=true;asset.updatedAt=new Date().toISOString();
+  await saveState(state);render();$("statusText").textContent="Cover image updated.";
+}
+function render(){
+  revoke();$("gallery").innerHTML="";
+  if(!job){$("gallery").innerHTML='<div class="card empty">No watch is open.</div>';$("intro").textContent="Choose a watch from Home or Collection.";return;}
+  const listAll=assets();$("intro").textContent=`${job.watchName||"Current watch"} · ${job.jobId||""}`;
+  const groups={};listAll.forEach(a=>(groups[a.category]||(groups[a.category]=[])).push(a));
+  const cover=listAll.find(a=>a.isCover);
+  $("summary").innerHTML=`<span class="badge">${listAll.length} archived</span><span class="badge">${formatMediaSize(listAll.reduce((n,a)=>n+(Number(a.bytes)||0),0))}</span>${cover?'<span class="badge">Cover selected</span>':''}`;
+  if(!listAll.length){$("gallery").innerHTML='<div class="card empty">No private media has been archived for this watch yet.</div>';return;}
+  for(const category of ["original","identity","movement","workshop","documents","sale"]){
+    const list=groups[category]||[];if(!list.length)continue;
+    const section=document.createElement("section");section.className="media-section card";section.innerHTML=`<h3>${labels[category]||category} · ${list.length}</h3><div class="media-grid"></div>`;
+    const grid=section.querySelector(".media-grid");
+    list.sort((a,b)=>String(b.createdAt||"").localeCompare(String(a.createdAt||""))).forEach(asset=>{
+      const card=document.createElement("article");card.className="asset"+(asset.isCover?" cover":"");card.innerHTML=`<div class="asset-preview"></div><div class="asset-body"><strong title="${esc(asset.originalName)}">${esc(asset.originalName||"Archived file")}</strong><div class="asset-meta">${esc(asset.stageId||"")}${asset.stageId?" · ":""}${formatMediaSize(asset.bytes)}<br>${esc(dateText(asset.createdAt))}</div><div class="asset-fields"><input class="caption" value="${esc(asset.caption||"")}" placeholder="Caption — what this image shows"><textarea class="evidence" placeholder="Evidence note — why this image matters">${esc(asset.evidenceNote||"")}</textarea></div><div class="asset-actions"><button class="btn secondary open" type="button">Open</button><button class="btn secondary save" type="button">Save notes</button>${asset.mimeType?.startsWith("image/")?`<button class="btn secondary coverbtn" type="button">${asset.isCover?"Cover image":"Set cover"}</button>`:""}</div></div>`;
+      card.querySelector(".open").onclick=()=>openAsset(asset);card.querySelector(".save").onclick=()=>saveMeta(asset,card);const cb=card.querySelector(".coverbtn");if(cb)cb.onclick=()=>setCover(asset);grid.appendChild(card);loadPreview(asset,card.querySelector(".asset-preview"));
+    });
+    $("gallery").appendChild(section);
   }
 }
+render();
 window.addEventListener("beforeunload",revoke);
 </script>
 </body></html>
