@@ -22,7 +22,9 @@ export function blankMediaAsset(partial={}){
     caption:partial.caption||'',
     evidenceNote:partial.evidenceNote||'',
     checksum:partial.checksum||'',
-    visibility:partial.visibility==='public'?'public':'private'
+    visibility:partial.visibility==='public'?'public':'private',
+    isCover:!!partial.isCover,
+    updatedAt:partial.updatedAt||''
   };
 }
 
@@ -42,22 +44,18 @@ export async function uploadMedia(file,{watchId='',jobId='',stageId='',category=
   form.append('jobId',jobId||'');
   form.append('stageId',stageId||'');
   form.append('category',category);
-  const response=await fetch(`${MEDIA_API_BASE}/upload.php`,{
-    method:'POST',
-    headers,
-    body:form
-  });
+  const response=await fetch(`${MEDIA_API_BASE}/upload.php`,{method:'POST',headers,body:form});
   let body=null;
   try{body=await response.json();}catch{}
   if(!response.ok||!body?.ok)throw new Error(body?.error||`Media upload failed (${response.status}).`);
   return blankMediaAsset(body.asset||{});
 }
 
-export async function fetchPrivateMedia(asset){
+async function fetchBlobEndpoint(endpoint,asset,{cache='no-store'}={}){
   const a=blankMediaAsset(asset||{});
   if(!a.storageKey)throw new Error('This media record has no storage key.');
   const headers=await authHeaders();
-  const response=await fetch(`${MEDIA_API_BASE}/file.php?key=${encodeURIComponent(a.storageKey)}`,{headers,cache:'no-store'});
+  const response=await fetch(`${MEDIA_API_BASE}/${endpoint}?key=${encodeURIComponent(a.storageKey)}`,{headers,cache});
   if(!response.ok){
     let body=null;
     try{body=await response.json();}catch{}
@@ -66,9 +64,36 @@ export async function fetchPrivateMedia(asset){
   return response.blob();
 }
 
+export async function fetchPrivateMedia(asset){
+  return fetchBlobEndpoint('file.php',asset,{cache:'no-store'});
+}
+
+export async function fetchPrivateThumbnail(asset){
+  return fetchBlobEndpoint('thumb.php',asset,{cache:'force-cache'});
+}
+
 export async function privateMediaObjectUrl(asset){
   const blob=await fetchPrivateMedia(asset);
   return URL.createObjectURL(blob);
+}
+
+export async function privateMediaThumbnailObjectUrl(asset){
+  const blob=await fetchPrivateThumbnail(asset);
+  return URL.createObjectURL(blob);
+}
+
+export async function deletePrivateMedia(asset){
+  const a=blankMediaAsset(asset||{});
+  if(!a.storageKey)throw new Error('This media record has no storage key.');
+  const headers=await authHeaders();
+  headers['Content-Type']='application/json';
+  const response=await fetch(`${MEDIA_API_BASE}/delete.php`,{
+    method:'DELETE',headers,body:JSON.stringify({key:a.storageKey})
+  });
+  let body=null;
+  try{body=await response.json();}catch{}
+  if(!response.ok||!body?.ok)throw new Error(body?.error||`Could not delete media (${response.status}).`);
+  return body;
 }
 
 export function formatMediaSize(bytes){
