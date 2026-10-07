@@ -36,7 +36,7 @@
   if(!document.querySelector('script[data-calibre-cloud-auto]')){
     var sync=document.createElement("script");
     sync.type="module";
-    sync.src="js/cloud-auto.js?v=4";
+    sync.src="js/cloud-auto.js?v=5";
     sync.dataset.calibreCloudAuto="1";
     document.head.appendChild(sync);
   }
