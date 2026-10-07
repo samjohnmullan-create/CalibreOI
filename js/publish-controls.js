@@ -4,7 +4,6 @@ const raw=v=>v==null?"":String(v).trim();
 const bool=id=>!!$(id)?.checked;
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
 const PUBLIC_BUCKET="calibre-public-media";
-const publicPreviewUrl=slug=>`${location.origin}/public-site/watch.html?slug=${encodeURIComponent(slug)}`;
 const canonicalPublicUrl=slug=>`https://calibreco.com.au/watch/${encodeURIComponent(slug)}`;
 
 function installStyles(){
@@ -66,11 +65,11 @@ function renderCard(){
   <div id="pubPhotoGrid" class="pub-photo-grid"><p class="muted small">Loading archive photos…</p></div>
   <div class="actionbar"><button class="btn" id="publishWatch" type="button" disabled>Save public record</button></div>
   <div id="pubTools" class="pub-tools" hidden>
-    <button class="btn secondary" id="openPublicPage" type="button">Open public preview</button>
+    <button class="btn secondary" id="openPublicPage" type="button">Open public page</button>
     <button class="btn secondary" id="copyPublicLink" type="button">Copy public link</button>
     <button class="btn secondary" id="showPublicQr" type="button">QR code</button>
   </div>
-  <div id="pubQrWrap" class="pub-qr-wrap" hidden><canvas id="pubQrCanvas" width="180" height="180"></canvas><div class="pub-qr-copy"><strong>Watch Passport QR</strong><code id="pubQrUrl"></code><p class="muted small" style="margin:.45rem 0 0">This currently opens the live public preview. When calibreco.com.au is connected, we can switch the QR to the permanent catalogue URL.</p></div></div>
+  <div id="pubQrWrap" class="pub-qr-wrap" hidden><canvas id="pubQrCanvas" width="180" height="180"></canvas><div class="pub-qr-copy"><strong>Watch Passport QR</strong><code id="pubQrUrl"></code><p class="muted small" style="margin:.45rem 0 0">Permanent Calibre & Co. public Watch Passport.</p></div></div>
   <p id="publishMsg" class="muted small">Loading publishing controls…</p>
   <p class="muted small" id="publicUrlHint"></p>`;
   layout.insertAdjacentElement("beforebegin",card);
@@ -149,15 +148,15 @@ if(!card){
       $("pubPrice").value=pub.price??d.price;
       $("pubDescription").value=pub.description??d.description;
       for(const [id,key] of [["pubMaker","maker"],["pubModel","model"],["pubYear","year"],["pubCalibre","calibre"],["pubJewels","jewels"],["pubCase","case"],["pubDimensions","dimensions"],["pubTiming","timing"],["pubService","service"]])$(id).checked=show[key]!==false;
-      const refreshHint=()=>{const slug=slugify($("pubSlug").value);$("publicUrlHint").textContent=slug?`Planned permanent URL: ${canonicalPublicUrl(slug)}`:"Add a slug for the public URL.";};
+      const refreshHint=()=>{const slug=slugify($("pubSlug").value);$("publicUrlHint").textContent=slug?`Permanent public URL: ${canonicalPublicUrl(slug)}`:"Add a slug for the public URL.";};
       const refreshPublicTools=()=>{const status=$("pubStatus").value,slug=slugify($("pubSlug").value),published=status!=="private"&&!!slug;$("pubTools").hidden=!published;if(!published)$("pubQrWrap").hidden=true;return slug;};
       $("pubSlug").addEventListener("input",()=>{refreshHint();refreshPublicTools();});
       $("pubStatus").addEventListener("change",refreshPublicTools);
       refreshHint();refreshPublicTools();
 
-      $("openPublicPage").onclick=()=>{const slug=refreshPublicTools();if(slug)window.open(publicPreviewUrl(slug),"_blank","noopener");};
-      $("copyPublicLink").onclick=async()=>{const slug=refreshPublicTools();if(!slug)return;try{await navigator.clipboard.writeText(publicPreviewUrl(slug));$("publishMsg").textContent="Public preview link copied.";}catch{$("publishMsg").textContent="Could not copy the public link.";}};
-      $("showPublicQr").onclick=async()=>{const slug=refreshPublicTools();if(!slug)return;const wrap=$("pubQrWrap"),url=publicPreviewUrl(slug);wrap.hidden=false;$("pubQrUrl").textContent=url;$("publishMsg").textContent="Generating QR code…";try{await renderQr(url);$("publishMsg").textContent="QR code ready.";}catch(err){console.error("QR generation failed",err);$("publishMsg").textContent="Could not generate the QR code.";}};
+      $("openPublicPage").onclick=()=>{const slug=refreshPublicTools();if(slug)window.open(canonicalPublicUrl(slug),"_blank","noopener");};
+      $("copyPublicLink").onclick=async()=>{const slug=refreshPublicTools();if(!slug)return;try{await navigator.clipboard.writeText(canonicalPublicUrl(slug));$("publishMsg").textContent="Permanent public link copied.";}catch{$("publishMsg").textContent="Could not copy the public link.";}};
+      $("showPublicQr").onclick=async()=>{const slug=refreshPublicTools();if(!slug)return;const wrap=$("pubQrWrap"),url=canonicalPublicUrl(slug);wrap.hidden=false;$("pubQrUrl").textContent=url;$("publishMsg").textContent="Generating QR code…";try{await renderQr(url);$("publishMsg").textContent="QR code ready.";}catch(err){console.error("QR generation failed",err);$("publishMsg").textContent="Could not generate the QR code.";}};
 
       const liveAssets=(job.mediaAssets||[]).filter(a=>!a?.deletedAt&&a?.storageKey&&String(a?.mimeType||"").startsWith("image/"));
       const grid=$("pubPhotoGrid");
