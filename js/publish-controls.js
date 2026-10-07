@@ -4,13 +4,14 @@ const raw=v=>v==null?"":String(v).trim();
 const bool=id=>!!$(id)?.checked;
 
 function renderCard(){
-  const aside=document.querySelector(".sales-layout aside");
-  if(!aside)return null;
+  const layout=document.querySelector(".sales-layout");
+  if(!layout)return null;
   let card=document.getElementById("publicPublishCard");
   if(card)return card;
   card=document.createElement("section");
   card.className="card";
   card.id="publicPublishCard";
+  card.style.marginBottom="12px";
   card.innerHTML=`<h3>Public catalogue</h3><p class="muted small">Publish only the details you choose. Private workshop notes, costs and supplier data are never copied into the public record.</p>
   <label>Visibility<select id="pubStatus"><option value="private">Private</option><option value="catalogue">Catalogue</option><option value="for_sale">For sale</option><option value="sold">Sold archive</option></select></label>
   <label>Public title<input id="pubTitle"></label>
@@ -28,13 +29,13 @@ function renderCard(){
   <div class="actionbar"><button class="btn" id="publishWatch" type="button" disabled>Save public record</button></div>
   <p id="publishMsg" class="muted small">Loading publishing controls…</p>
   <p class="muted small" id="publicUrlHint"></p>`;
-  aside.prepend(card);
+  layout.insertAdjacentElement("beforebegin",card);
   return card;
 }
 
 const card=renderCard();
 if(!card){
-  console.warn("Calibre public catalogue controls: Sale sidebar not found.");
+  console.warn("Calibre public catalogue controls: Sale layout not found.");
 }else{
   try{
     const [{loadState,current},{session,supabaseClient}]=await Promise.all([
