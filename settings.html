@@ -1,9 +1,9 @@
 <!doctype html>
 <html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Cloud · Calibre & Co.</title><link rel="stylesheet" href="css/app.css?v=12">
+<title>Cloud · Calibre & Co.</title><link rel="stylesheet" href="css/app.css?v=13">
 <style>
-.cloud-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.cloud-state{padding:12px;border:1px solid var(--line);border-radius:8px;background:var(--surface-2)}.cloud-state strong{display:block;margin-top:4px}.sqlbox{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:.72rem;min-height:260px}.ok{color:var(--ok)}.warn{color:var(--warning)}@media(max-width:700px){.cloud-grid{grid-template-columns:1fr}}
+.cloud-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.cloud-state{padding:12px;border:1px solid var(--line);border-radius:8px;background:var(--surface-2)}.cloud-state strong{display:block;margin-top:4px}.sqlbox{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:.72rem;min-height:260px}.ok{color:var(--ok)}.warn{color:var(--danger)}.auth-note{margin-top:8px;padding:9px 10px;border-left:3px solid var(--accent);background:var(--surface-2);border-radius:0 7px 7px 0}.reset-box{margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}@media(max-width:700px){.cloud-grid{grid-template-columns:1fr}}
 </style>
 </head><body>
 <div class="shell">
@@ -18,11 +18,19 @@
 <div id="authForm">
 <label>Email<input id="email" type="email" autocomplete="email" placeholder="you@example.com"></label>
 <label>Password<input id="password" type="password" autocomplete="current-password" minlength="8" placeholder="8+ characters"></label>
-<div class="row"><button id="signIn" class="btn" type="button">Sign in</button><button id="signUp" class="btn secondary" type="button">Create account</button></div>
+<div class="row"><button id="signIn" class="btn" type="button">Sign in</button><button id="signUp" class="btn secondary" type="button">Create account</button><button id="forgotPassword" class="btn secondary" type="button">Forgot password</button></div>
+<p class="muted small">Forgotten passwords cannot be viewed. Calibre can email you a secure reset link instead.</p>
 </div>
 <div id="signedInActions" hidden>
 <div class="row"><button id="pull" class="btn secondary" type="button">Pull & merge now</button><button id="push" class="btn secondary" type="button">Push now</button><button id="signOut" class="btn secondary" type="button">Sign out</button></div>
 <p class="muted small">Calibre saves to the cloud automatically. It also checks for changes from your other devices about every 15 seconds and whenever you return to the app. These buttons are only manual overrides.</p>
+</div>
+<div id="resetBox" class="reset-box" hidden>
+<h4 style="margin:0 0 8px">Set a new password</h4>
+<p class="muted small">You opened Calibre from a password-reset email. Choose a new password below.</p>
+<label>New password<input id="newPassword" type="password" autocomplete="new-password" minlength="8" placeholder="8+ characters"></label>
+<label>Confirm new password<input id="confirmPassword" type="password" autocomplete="new-password" minlength="8" placeholder="Repeat password"></label>
+<div class="row"><button id="savePassword" class="btn" type="button">Save new password</button></div>
 </div>
 <p id="statusText" class="muted small"></p>
 </section>
@@ -74,11 +82,12 @@ using ((select auth.uid()) = user_id);</textarea>
 
 <section class="card"><h3>How automatic sync works</h3><p class="small">Calibre saves locally first and pushes changes to Supabase when you are signed in. While the app is open it checks the cloud roughly every 15 seconds, and checks again when you return to the tab or app. If another device has newer data, Calibre merges it and refreshes the page automatically.</p><p class="small">The same background check also looks for unimported jobcards in your private Calibre inbox. If one is found, it is imported, marked as used, and synced into the main workshop state.</p><p class="small">If you are typing or editing a field, the refresh waits until you stop so it does not interrupt your work.</p><p class="muted small">Photos are still stored inside the synced job data for now. Moving them into Supabase Storage remains the next cloud optimisation.</p></section>
 </div>
-<script src="js/nav.js?v=53"></script>
+<script src="js/nav.js?v=54"></script>
 <script type="module">
-import { cloudStatus, signUp, signIn, signOut, readInbox, markInboxImported } from "./js/cloud.js?v=3";
+import { cloudStatus, signUp, signIn, signOut, requestPasswordReset, updatePassword, readInbox, markInboxImported } from "./js/cloud.js?v=4";
 import { forceCloudPull, forceCloudPush, importInboxItems } from "./js/store-cloud.js?v=3";
 const $=id=>document.getElementById(id);
+const resetMode=new URLSearchParams(location.search).get("reset")==="1";
 function say(t,kind=""){$("statusText").textContent=t;$("statusText").className="muted small "+kind;}
 async function paint(){
   const s=await cloudStatus();
@@ -86,7 +95,9 @@ async function paint(){
   $("cloudStatus").className=s.signedIn?"ok":"warn";
   $("cloudEmail").textContent=s.email||"";
   $("authForm").hidden=s.signedIn;
-  $("signedInActions").hidden=!s.signedIn;
+  $("signedInActions").hidden=!s.signedIn||resetMode;
+  $("resetBox").hidden=!(resetMode&&s.signedIn);
+  if(resetMode&&!s.signedIn)say("Open this page from the password-reset email so Calibre can verify the reset request.");
 }
 async function checkInbox(){
   try{
@@ -116,6 +127,25 @@ $("signIn").onclick=async()=>{
   const {error}=await signIn($("email").value.trim(),$("password").value);
   if(error){say(error.message);return;}
   say("Signed in. Automatic cloud sync is active.","ok");await paint();await checkInbox();
+};
+$("forgotPassword").onclick=async()=>{
+  const email=$("email").value.trim();
+  if(!email){say("Enter your account email first, then press Forgot password.");return;}
+  say("Sending password reset email…");
+  const {error}=await requestPasswordReset(email);
+  if(error){say(error.message||"Could not send reset email.");return;}
+  say("Reset email sent. Open the link in that email, then choose a new password.","ok");
+};
+$("savePassword").onclick=async()=>{
+  const a=$("newPassword").value,b=$("confirmPassword").value;
+  if(a.length<8){say("Use a password of at least 8 characters.");return;}
+  if(a!==b){say("The two passwords do not match.");return;}
+  say("Updating password…");
+  const {error}=await updatePassword(a);
+  if(error){say(error.message||"Could not update password.");return;}
+  history.replaceState({},"","settings.html");
+  say("Password changed. You can now use it on your other devices.","ok");
+  await paint();
 };
 $("signOut").onclick=async()=>{await signOut();say("Signed out. Local data remains on this device.");await paint();};
 $("pull").onclick=async()=>{try{say("Pulling cloud data…");await forceCloudPull();say("Cloud data merged. Reloading…","ok");location.reload();}catch(e){say(e.message||"Cloud pull failed.");}};
