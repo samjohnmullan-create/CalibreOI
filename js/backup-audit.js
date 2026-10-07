@@ -8,22 +8,34 @@ function collect(job){
   const out=[];
   for(const [slot,label] of PHOTO_SLOTS){
     const arr=Array.isArray(job?.photos?.[slot])?job.photos[slot]:[];
-    arr.forEach((src,i)=>{if(typeof src==="string"&&src.startsWith("data:"))out.push({kind:"slot",slot,label,index:i,key:sourceKey(job,"slot",slot,i),src,name:`${job.jobId||job.id}-${slot}-${i+1}`,category:slot==="intake"?"original":slot==="movement"?"movement":["caseback","dial","damage"].includes(slot)?"identity":["finished","hero"].includes(slot)?"sale":"workshop"});});
+    arr.forEach((src,i)=>{if(typeof src==="string"&&src.startsWith("data:"))out.push({kind:"slot",slot,label,index:i,key:sourceKey(job,"slot",slot,i),src,name:`${job.jobId||job.id}-${slot}-${i+1}`,category:slot==="intake"?"original":slot==="movement"?"movement":["caseback","dial","damage"].includes(slot)?"identity":["finished","hero"].includes(slot)?"sale":"workshop",caption:label});});
   }
-  (job?.passport?.photos||[]).forEach((src,i)=>{if(typeof src==="string"&&src.startsWith("data:"))out.push({kind:"passport",slot:"photo",label:"Passport",index:i,key:sourceKey(job,"passport","photo",i),src,name:`${job.jobId||job.id}-passport-${i+1}`,category:"identity"});});
-  if(typeof job?.passport?.invoicePhoto==="string"&&job.passport.invoicePhoto.startsWith("data:"))out.push({kind:"invoice",slot:"invoice",label:"Invoice",index:0,key:sourceKey(job,"passport","invoice",0),src:job.passport.invoicePhoto,name:`${job.jobId||job.id}-invoice`,category:"documents"});
-  (job?.stages||[]).forEach((stage,si)=>(stage?.photos||[]).forEach((src,i)=>{if(typeof src==="string"&&src.startsWith("data:"))out.push({kind:"stage",slot:stage.name||"stage",label:stage.name||"Workshop",index:i,stageIndex:si,key:sourceKey(job,"stage",stage.name||"stage",i,si),src,name:`${job.jobId||job.id}-stage-${si+1}-${i+1}`,category:"workshop"});}));
+  (job?.passport?.photos||[]).forEach((src,i)=>{if(typeof src==="string"&&src.startsWith("data:"))out.push({kind:"passport",slot:"photo",label:"Passport",index:i,key:sourceKey(job,"passport","photo",i),src,name:`${job.jobId||job.id}-passport-${i+1}`,category:"identity",caption:"Passport evidence"});});
+  if(typeof job?.passport?.invoicePhoto==="string"&&job.passport.invoicePhoto.startsWith("data:"))out.push({kind:"invoice",slot:"invoice",label:"Invoice",index:0,key:sourceKey(job,"passport","invoice",0),src:job.passport.invoicePhoto,name:`${job.jobId||job.id}-invoice`,category:"documents",caption:"Invoice"});
+  (job?.stages||[]).forEach((stage,si)=>(stage?.photos||[]).forEach((src,i)=>{if(typeof src==="string"&&src.startsWith("data:"))out.push({kind:"stage",slot:stage.name||"stage",label:stage.name||"Workshop",index:i,stageIndex:si,key:sourceKey(job,"stage",stage.name||"stage",i,si),src,name:`${job.jobId||job.id}-stage-${si+1}-${i+1}`,category:"workshop",caption:stage.name||"Workshop photo"});}));
   return out;
 }
 function stem(name){return String(name||"").replace(/\.[a-z0-9]+$/i,"");}
+function migrationHint(asset,job){
+  const note=String(asset?.evidenceNote||"").toLowerCase(),name=stem(asset?.originalName),prefix=String(job.jobId||job.id||"")+"-";
+  return !!asset?.legacySourceKey||note.includes("legacy embedded calibre photo")||name.startsWith(prefix);
+}
+function scoreAsset(asset,item,job){
+  let score=0;
+  if(asset?.legacySourceKey===item.key)score+=1000;
+  if(stem(asset?.originalName)===item.name)score+=400;
+  if(migrationHint(asset,job))score+=120;
+  if(asset?.category===item.category)score+=55;
+  if(String(asset?.stageId||"").trim().toLowerCase()===String(item.label||"").trim().toLowerCase())score+=35;
+  if(String(asset?.caption||"").trim().toLowerCase()===String(item.caption||"").trim().toLowerCase())score+=30;
+  return score;
+}
 function assetFor(job,item,used=new Set()){
   const assets=(job.mediaAssets||[]).filter(a=>a?.storageKey&&!a?.deletedAt&&!used.has(a.storageKey));
-  let asset=assets.find(a=>a?.legacySourceKey===item.key);
-  if(asset)return asset;
-  asset=assets.find(a=>stem(a.originalName)===item.name&&a.category===item.category);
-  if(asset)return asset;
-  asset=assets.find(a=>a.evidenceNote==="Migrated from legacy embedded Calibre photo."&&a.category===item.category&&String(a.stageId||"")===String(item.label||""));
-  return asset||null;
+  let best=null,bestScore=-1;
+  for(const asset of assets){const score=scoreAsset(asset,item,job);if(score>bestScore){best=asset;bestScore=score;}}
+  // Exact filename/key matches are conclusive. Otherwise require multiple migration clues.
+  return bestScore>=110?best:null;
 }
 function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));}
 
@@ -31,7 +43,7 @@ const host=$("migrateBtn")?.closest(".panel");
 if(host){
   const panel=document.createElement("section");
   panel.className="panel";
-  panel.innerHTML=`<h3>Migration audit & clean-up</h3><p>Checks that every remaining embedded legacy photo has a matching private archive record. Verification also loads each archived thumbnail from private storage before clean-up is allowed.</p><div class="facts"><div class="fact"><span>Legacy remaining</span><strong id="auditLegacy">—</strong></div><div class="fact"><span>Matched archive</span><strong id="auditMatched">—</strong></div><div class="fact"><span>Needs attention</span><strong id="auditMissing">—</strong></div><div class="fact"><span>Verified files</span><strong id="auditVerified">—</strong></div></div><div class="actions"><button class="btn secondary" id="auditBtn" type="button">Verify private archive</button><button class="btn secondary" id="cleanLegacyBtn" type="button" disabled>Clean migrated legacy photos</button></div><div class="progress" aria-hidden="true"><i id="auditBar"></i></div><div id="auditStatus" class="status"></div><div id="auditList" class="migration-list"></div><p class="note"><strong>Safe clean-up only:</strong> Calibre removes an embedded photo only when it has a live matching archive file that has just been verified. Anything unmatched is left untouched.</p>`;
+  panel.innerHTML=`<h3>Migration audit & clean-up</h3><p>Checks that every remaining embedded legacy photo has a matching private archive record. Verification also loads each archived thumbnail from private storage before clean-up is allowed.</p><div class="facts"><div class="fact"><span>Legacy remaining</span><strong id="auditLegacy">—</strong></div><div class="fact"><span>Matched archive</span><strong id="auditMatched">—</strong></div><div class="fact"><span>Needs attention</span><strong id="auditMissing">—</strong></div><div class="fact"><span>Verified files</span><strong id="auditVerified">—</strong></div><div class="fact"><span>Archive records found</span><strong id="auditAssets">—</strong></div></div><div class="actions"><button class="btn secondary" id="auditBtn" type="button">Verify private archive</button><button class="btn secondary" id="cleanLegacyBtn" type="button" disabled>Clean migrated legacy photos</button></div><div class="progress" aria-hidden="true"><i id="auditBar"></i></div><div id="auditStatus" class="status"></div><div id="auditList" class="migration-list"></div><p class="note"><strong>Safe clean-up only:</strong> Calibre removes an embedded photo only when it has a live matching archive file that has just been verified. Anything unmatched is left untouched.</p>`;
   host.insertAdjacentElement("afterend",panel);
 
   let state=await loadState(),verification=null;
@@ -47,12 +59,14 @@ if(host){
     }
     return rows;
   }
+  function archiveCount(){return (state.jobs||[]).reduce((n,j)=>n+(j.mediaAssets||[]).filter(a=>a?.storageKey&&!a?.deletedAt).length,0);}
   function renderBase(){
     const rows=snapshot(),matched=rows.filter(r=>r.asset).length,missing=rows.length-matched;
-    $("auditLegacy").textContent=rows.length;$("auditMatched").textContent=matched;$("auditMissing").textContent=missing;$("auditVerified").textContent=verification?verification.ok:"—";
+    $("auditLegacy").textContent=rows.length;$("auditMatched").textContent=matched;$("auditMissing").textContent=missing;$("auditVerified").textContent=verification?verification.ok:"—";$("auditAssets").textContent=archiveCount();
     $("cleanLegacyBtn").disabled=!(verification&&verification.failed===0&&verification.unmatched===0&&verification.ok===rows.length&&rows.length>0);
     if(!rows.length)$("auditStatus").textContent="No embedded legacy photos remain. The database is already clean.";
-    else if(missing)$("auditStatus").textContent=`${missing} legacy photo${missing===1?"":"s"} still need a matching private archive record.`;
+    else if(!archiveCount())$("auditStatus").textContent="No private archive records are attached to these watch records yet. Nothing will be removed.";
+    else if(missing)$("auditStatus").textContent=`${missing} legacy photo${missing===1?"":"s"} still need a reliable archive match. Nothing will be removed.`;
     else if(!verification)$("auditStatus").textContent=`All ${rows.length} legacy photo${rows.length===1?" has":"s have"} matching archive metadata. Run verification before clean-up.`;
   }
   $("auditBtn").onclick=async()=>{
