@@ -4,50 +4,153 @@ _Last updated: 7 October 2026_
 
 ## Product direction
 
-Calibre is not just job-management software. It is an intelligent digital watchmaker's bench that follows a watch through its full lifecycle:
+Calibre is an intelligent digital watchmaker's bench that follows a watch through its full lifecycle:
 
 **Acquire → Identify → Inspect → Diagnose → Service → Time → Document → Value → Sell → Preserve history**
 
-The aim is to make Calibre useful at the bench first, while creating a structured record that can later power research, listings, certificates, valuations, profitability and AI assistance.
+The watch remains the centre of the system. The Passport is its permanent identity and history. Jobs describe work performed on it. Timing, parts, costs, documents, photographs, provenance and eventual sale all connect back to the same watch.
 
-## Product rules
+The custom `calibreco.com.au` domain changes the scope of the product. Calibre is no longer only a local/PWA workshop tool. It can now become a small platform with a private workshop app, durable media/document storage, public digital watch passports, branded authentication email and a public-facing Calibre & Co. site.
+
+---
+
+# Product rules
 
 1. **The watch is the centre of the system.** Every repair, timing run, photo, part, cost, document and sale belongs to a watch record.
 2. **The Passport is the permanent record.** Jobs can finish; the Passport remains.
 3. **A Job records work, not identity.** Service notes, stages, faults, labour and parts belong to the job.
 4. **Business data stays structured.** Purchase cost, parts, fees, tools, labour, target sale and actual sale should not be buried in notes.
-5. **No new top-level page unless it earns its place.** Prefer contextual tools and sections over adding navigation.
-6. **One source of truth.** Avoid duplicate fields living on different pages.
-7. **Bench-first UX.** Large enough to use with dirty hands and on mobile, but dense and efficient on desktop.
-8. **Do not fake measurements.** Especially timing/amplitude/diagnostic data. Show confidence and limitations.
-9. **Offline should remain useful.** Cloud sync is enhancement and backup, not a requirement for bench work.
-10. **AI should enrich structured data, not replace it.** Research suggestions should be reviewable before becoming facts in the Passport.
+5. **One source of truth.** Avoid duplicate fields living on different pages.
+6. **Bench-first UX.** Mobile remains touch-friendly; desktop remains compact and information-dense.
+7. **Do not fake measurements.** Especially timing, amplitude and diagnostic data. Show confidence and limitations.
+8. **Offline should remain useful.** Cloud sync enhances the bench workflow; it must not make the app unusable without a connection.
+9. **AI should enrich structured data, not replace it.** Research suggestions should be reviewable before becoming Passport facts.
+10. **Public data is explicit.** A watch is never made public merely because it exists in Calibre.
+11. **Files are files, data is data.** Photos/PDFs should live in file storage; structured watch/job records should remain in the database.
+12. **Security before convenience.** Private workshop notes, customer details and credentials must never leak into public passport pages or frontend secrets.
 
 ---
 
-# Product architecture
+# Current state
 
-## Core objects
+## Product foundation — largely complete
 
-### 1. Watch
-The physical item. Stable identity across purchase, repair, listing and sale.
+- Five-destination shell: Home / Workshop / Collection / Business / Calibre.
+- Sage + graphite visual system replacing the earlier bronze/brown direction.
+- Approved Calibre crescent mark and horizontal/stacked SVG lockups.
+- Compact desktop shell and lighter visual density.
+- Simplified Calibre intelligence hub.
+- Passport/Identity workflow with confidence, evidence and source awareness.
+- Structured jobs, stages, business records, parts, photos and timing runs.
+- Local/offline-first state with Supabase cloud sync.
+- Account sign-in plus password reset UI.
+- Timegrapher 2.0 signal engine implemented but hardware validation paused pending real-world testing.
 
-### 2. Passport
+## New infrastructure now available
+
+- `calibreco.com.au` registered with web hosting/storage.
+- Resend sending domain configured and awaiting/undergoing DNS verification.
+- Supabase remains the structured-data/authentication layer.
+- GitHub remains the application source/deployment pipeline for now.
+
+---
+
+# Platform architecture
+
+Calibre should now be treated as four cooperating layers.
+
+## 1. Workshop application
+
+**Target:** `app.calibreco.com.au`
+
+Responsibilities:
+- repair workflow
+- Passport editing
+- timing
+- parts
+- money/sale workflow
+- job handoff
+- AI/research assistance
+- offline operation
+
+The app should continue as a lightweight PWA. A framework rewrite is not a current priority.
+
+## 2. Structured data and authentication
+
+**Platform:** Supabase
+
+Responsibilities:
+- user accounts
+- watch/passport/job records
+- business records
+- relationships and IDs
+- sync
+- permissions
+- public/private state
+
+Supabase remains the system of record for structured data.
+
+## 3. Media and document storage
+
+**Initial target:** Calibre web-hosting storage where technically suitable, with a clean storage abstraction so this can move later if required.
+
+Responsibilities:
+- original watch photography
+- workshop/evidence photos
+- movement images
+- invoices and purchase records
+- generated certificates/passports
+- listing images
+- exports/backups
+- technical reference files where licensing permits
+
+The database should store URLs, metadata, hashes and relationships — not large image payloads inside synced records.
+
+Suggested watch media structure:
+
+```text
+/watches/<watch-id>/
+  /original/
+  /identity/
+  /workshop/
+  /movement/
+  /documents/
+  /sale/
+```
+
+## 4. Public web layer
+
+**Targets:**
+- `calibreco.com.au` — public Calibre & Co. site
+- `passport.calibreco.com.au` — public watch passports/history
+- future optional `docs.calibreco.com.au` — product/reference documentation
+
+Public content must be deliberately published from private structured data, never exposed directly from workshop records.
+
+---
+
+# Core objects
+
+## Watch
+Stable physical item across acquisition, repair, sale and future service.
+
+## Passport
 Permanent identity/history:
 - maker, model, reference, serial
 - calibre and movement details
-- dimensions and materials
+- dimensions/materials
 - dial/case markings and hallmarks
 - historical research and sources
-- photos
 - provenance
 - known service history
 - timing history
+- evidence photographs
+- public/private publication state
 
-### 3. Job
+## Job
 Work performed on a watch:
 - intake condition
-- diagnostic faults
+- faults/diagnosis
 - repair path and stages
 - notes/photos
 - parts fitted
@@ -55,13 +158,10 @@ Work performed on a watch:
 - before/after timing
 - final QC
 
-A watch may eventually have multiple jobs.
-
-### 4. Business record
-Commercial lifecycle:
+## Commercial record
 - acquisition cost
 - premium/postage
-- parts and consumables
+- parts/consumables
 - labour value
 - marketplace fees
 - target/minimum/actual sale
@@ -70,16 +170,27 @@ Commercial lifecycle:
 - profit after labour
 - ROI
 
-### 5. Parts & tools
-Separate operational assets:
-- incoming orders
-- stock/spares
-- donor movements
-- consumables
-- tools/equipment
-- supplier
-- cost
-- compatibility
+## Media asset
+New first-class concept:
+- asset ID
+- watch/job relationship
+- original filename
+- storage URL/key
+- category
+- MIME/type
+- dimensions/file size
+- capture/upload date
+- checksum/hash where practical
+- public/private flag
+- caption/evidence note
+
+## Document
+- certificate
+- service report
+- customer passport PDF
+- invoice/receipt
+- research document
+- export/backup
 
 ---
 
@@ -88,324 +199,282 @@ Separate operational assets:
 Keep five primary destinations.
 
 ## Home
-**Purpose:** What needs attention today?
+What needs attention today?
 
 - current watch
 - jobs needing action
 - incoming purchases/parts/tools
 - awaiting parts
 - ready to list
-- recent Calibre updates
+- recent Calibre activity
 - quick actions
 
 ## Workshop
-**Purpose:** Work on the current watch.
+Work on the current watch through contextual sections:
 
-Context sections:
-- Repair
-- Identity
-- Timing
-- Parts
-- Money
-- Sale
-- Summary
-- Documents
-
-The existing watch strip and contextual navigation are the correct direction. Do not add these as top-level navigation items.
+**Repair / Identity / Timing / Parts / Money / Sale / Summary / Documents**
 
 ## Collection
-**Purpose:** Everything owned, sold, on the bench or retained as spares.
-
-Eventually support filters/views for:
-- Watches
-- Clocks
-- Movements/donors
-- Parts
-- Tools
-- Sold archive
+Everything owned, sold, on the bench or retained as spares.
 
 ## Business
-**Purpose:** Understand the business rather than simply storing costs.
-
-- profitability
-- stock value
-- capital tied up
-- watch-by-watch profit
-- sales performance
-- fees/shipping
-- tool/equipment investment
-- parts/consumables spend
-- ageing inventory
+Profitability, stock value, capital tied up, fees, tool investment and sales performance.
 
 ## Calibre
-**Purpose:** Intelligence and system tools.
-
-This should remain compact:
+Intelligence/system hub:
 - Research/Assistant
 - Job handoff
 - Updates
-- Settings/account/sync
+- Account/sync/settings
 
 Do not let Calibre become a dumping ground for unrelated features.
 
 ---
 
-# Visual direction
+# Visual and brand direction
 
-## Brand character
+## Character
 
-**Modern precision instrument, not antique shop and not generic SaaS.**
+**Modern precision instrument. Quiet, compact, sophisticated and durable.**
 
-The visual language should feel like a contemporary watchmaker's instrument: quiet, compact, precise and durable. Use horological cues through proportion, typography, measurement, rhythm and detail rather than literal gears or ornamental watch imagery.
+Avoid antique-shop styling, faux leather/brass, blue-as-brand, giant SaaS cards, literal gears and decorative watch clichés.
 
-Avoid:
-- blue as a core brand colour
-- faux brass/brown leather/steampunk styling
-- generic SaaS gradients
-- excessive glass/translucency effects
-- giant rounded cards
-- heavy shadows and borders everywhere
-- oversized desktop spacing
+## Settled palette
 
-### Working palette — Warm Instrument
+### Light
+- `--bg: #f1f3ee`
+- `--surface: #ffffff`
+- `--surface-2: #e8ece5`
+- `--ink: #151815`
+- `--muted: #687067`
+- `--line: #d5dad2`
+- `--nav: #151815`
+- `--accent: #607558`
+- `--accent-soft: #91a28a`
 
-The brand direction is **graphite + ivory + restrained bronze**, supported by warm neutral greys.
+### Dark
+- `--bg: #10120f`
+- `--surface: #171a16`
+- `--surface-2: #20241e`
+- `--ink: #f0f1ec`
+- `--muted: #92978f`
+- `--line: #2b3029`
+- `--nav: #0e100d`
+- `--accent: #7f9277`
+- `--accent-soft: #aab69f`
 
-#### Dark appearance
-- `--bg`: `#11110F` — deep warm graphite
-- `--surface`: `#191815`
-- `--surface-2`: `#22211D`
-- `--ink`: `#F1EEE7` — soft instrument ivory
-- `--muted`: `#969188`
-- `--line`: `#312F2A`
-- `--accent`: `#B98248` — restrained bronze/amber
-- `--accent-soft`: `#D3AE7B`
-- `--ok`: `#7D9270`
-- `--danger`: `#B96658`
+## Brand mark
 
-#### Light appearance
-- `--bg`: `#F3F0E9`
-- `--surface`: `#FAF8F3`
-- `--surface-2`: `#E8E3D9`
-- `--ink`: `#1A1916`
-- `--muted`: `#706C64`
-- `--line`: `#D5CEC2`
-- `--accent`: `#95652E`
-- `--accent-soft`: `#B78B58`
-- `--ok`: `#718368`
-- `--danger`: `#AA5F53`
-
-### Visual rules
-
-- Dark mode is the flagship appearance, but light mode must remain first-class.
-- Bronze/amber is an **interaction and emphasis accent**, not a large-area fill.
-- The interface should still work if the accent is removed; hierarchy must come from typography, spacing and surface contrast.
-- Navigation should be visually recessive so the current watch/work area dominates.
-- Reduce borders, shadows and nested cards. Structure should be felt more through spacing and grouping than boxes.
-- Desktop should be approximately **20–30% denser** than the current prototype while mobile remains touch-friendly.
-- Numbers should use tabular figures where timing, dimensions and finance data are shown.
-- Prefer smaller, quieter icons and controls over large decorative elements.
-- Avoid trend effects that compromise readability. Borrow the content-first principle from current interface design, not superficial glass or gradient styling.
-
-## Logo direction
-
-The mark must work at favicon size and must not literally illustrate a watch.
-
-Explore 3 families:
-1. **Abstract C / concentric calibre geometry**
-2. **Escapement/pallet geometry reduced to a symbol**
-3. **Timing arcs / balance oscillation transformed into a monogram**
-
-Logo rules:
-- The mark must work first in monochrome: ivory on graphite and graphite on ivory.
-- Bronze may be used as an optional accent, never as a requirement for recognition.
-- Avoid obvious gear icons, watch silhouettes and repair-shop clichés.
-
-Deliverables once a mark is chosen:
-- primary SVG mark
-- wordmark
-- horizontal lockup
-- square app icon
-- monochrome black/white
-- transparent PNG exports
-- favicon/maskable PWA icon
-
-Do not lock the brand until candidates have been tested at 16 px, 32 px, mobile header and desktop header sizes.
+The approved mark is the rounded crescent/C silhouette with the separate upper sweep. Use the existing SVG brand assets as the source of truth. Do not restart logo exploration unless the brand direction itself changes.
 
 ---
 
-# Build phases
+# Revised build phases
 
-## Phase 1 — Foundation and identity
+## Phase 1 — Product foundation — substantially complete
 
-**Goal:** Make the existing app feel like one deliberate product before expanding it.
+Completed or established:
+- settled sage/graphite direction
+- approved logo system
+- compact desktop shell
+- five-destination navigation
+- simplified Calibre hub
+- Passport evidence/confidence workflow
+- cloud account/sync foundation
 
-### 1A. Design system
-- [x] Choose Warm Instrument as the working colour direction
-- [x] Introduce semantic `accent` / `accent-soft` colour tokens with temporary legacy aliases
-- [ ] Test palette across all major pages in dark and light appearances
-- [ ] Define typography scale
-- [ ] Define spacing/radius/button/input/card tokens
-- [ ] Create dense desktop variants
-- [ ] Audit dark/light contrast
-
-### 1B. Brand mark
-- [ ] Produce broad logo exploration
-- [ ] Shortlist 2–3 marks
-- [ ] Test at favicon/app/header sizes
-- [ ] Choose primary mark and wordmark
-- [ ] Replace temporary raster-heavy brand assets with optimised SVG/PNG assets
-
-### 1C. App shell
-- [ ] Keep five primary destinations
-- [ ] Refine desktop navigation proportions and density
-- [ ] Standardise page headers
-- [ ] Remove unnecessary hero blocks/cards
-- [ ] Standardise watch context strip
-- [ ] Standardise empty/loading/error states
-- [ ] Reduce one-off page CSS where possible
-
-### 1D. Calibre page
-- [ ] Keep it an intelligence/system hub rather than another dashboard
-- [ ] Remove duplicated current-watch information if already visible in the shell
-- [ ] Make Research/Assistant the main action
-- [ ] Keep Updates and Settings secondary
-
-**Exit condition:** The major pages look and behave like the same application on desktop and mobile.
+Remaining polish should be handled opportunistically rather than blocking platform work.
 
 ---
 
-## Phase 2 — Timegrapher 2.0
+## Phase 2 — Trustworthy timing — implemented, hardware validation paused
 
-**Goal:** Build the first genuinely specialist Calibre feature around the incoming USB/contact microphone.
+The Timegrapher engine now has improved transient detection, robust interval analysis, confidence logic and a beginner-facing workflow.
 
-### 2A. Audio input layer
-- [ ] Enumerate available audio-input devices after permission is granted
-- [ ] Allow explicit microphone selection
-- [ ] Show selected device and reconnect state
-- [ ] Detect/disclose sample rate
-- [ ] Test Android USB audio behaviour
-- [ ] Test Windows USB audio behaviour
-- [ ] Add input-level/noise-floor diagnostic view
+Next timing work resumes when real contact-microphone hardware/data is available:
+- validate supported BPH rates
+- tune noise rejection
+- test beat-error reliability
+- confirm saved timing metadata
+- only investigate amplitude once defensible
 
-### 2B. Signal processing
-The current peak-threshold detector is a prototype. Replace it with a staged pipeline:
-
-`input → conditioning → band-pass/filtering → transient detection → refractory/debounce → tick/tock classification → interval analysis`
-
-Tasks:
-- [ ] Record raw diagnostic samples from real watches/mic
-- [ ] Analyse contact-mic frequency content
-- [ ] Add high/low-pass or band-pass filtering appropriate to the hardware
-- [ ] Replace block-level peak detection with sample/transient detection
-- [ ] Separate mechanical events from handling noise
-- [ ] Improve automatic BPH locking
-- [ ] Track dropped/false events
-- [ ] Produce a signal-quality/confidence score grounded in actual detection quality
-
-### 2C. Measurements
-- [ ] Rate (s/day)
-- [ ] BPH
-- [ ] Beat error
-- [ ] Jitter/stability
-- [ ] Trace/paper view
-- [ ] Measurement duration
-- [ ] Position
-- [ ] Lift angle metadata
-- [ ] Investigate amplitude calculation and calibration
-
-**Important:** Do not display amplitude until it can be defensibly calculated from the captured signal and lift-angle assumptions.
-
-### 2D. Bench workflow
-- [ ] Before-service run
-- [ ] During-service run
-- [ ] Regulation run
-- [ ] Final run
-- [ ] Six-position guided test: DU, DD, CU, CD, CL, CR
-- [ ] Show positional delta and average rate
-- [ ] Compare pre/post-service measurements
-- [ ] Save timing report to Passport/Job
-
-### 2E. Timing history
-- [ ] Plot timing runs over the watch's history
-- [ ] Compare runs by service stage and position
-- [ ] Include timing summary in final QC and sale documentation
-
-**Exit condition:** A real USB contact microphone can be selected on Android/Windows and produces repeatable rate/BPH/beat-error measurements on known watches.
+Timegrapher work should not block the new web-platform sprint.
 
 ---
 
-## Phase 3 — Passport as the knowledge core
+## Phase 3 — Domain, authentication and media platform — ACTIVE
 
-**Goal:** Turn research into reusable structured knowledge.
+### 3A. Email/authentication
+- [x] Add password-reset flow to Calibre.
+- [x] Register/configure `calibreco.com.au` in Resend.
+- [ ] Complete Resend DNS verification.
+- [ ] Create a least-privilege sending credential.
+- [ ] Configure Supabase custom SMTP.
+- [ ] Use a branded sender such as `Calibre & Co. <no-reply@calibreco.com.au>`.
+- [ ] Configure permitted reset redirect URLs.
+- [ ] Test reset flow end-to-end on a second device.
 
-- [ ] Separate observed facts from inferred/researched values
-- [ ] Per-field confidence and source support
-- [ ] Research sources with title/URL/date/notes
-- [ ] Calibre identification history
-- [ ] Movement-family relationships
-- [ ] Provenance timeline
-- [ ] Service/timing history
-- [ ] Parts compatibility notes
-- [ ] AI research suggestions that require confirmation before writing core identity fields
-- [ ] Generate listing/certificate/valuation material from the same Passport data
+### 3B. App domain
+- [ ] Create `app.calibreco.com.au`.
+- [ ] Point it to the production Calibre app.
+- [ ] Make it the canonical application URL.
+- [ ] Update auth redirect URLs and share/job-card links.
+- [ ] Update PWA metadata/install behaviour for the canonical domain.
+- [ ] Preserve redirects/compatibility for existing GitHub Pages links during transition.
 
-**Exit condition:** We do not need to research the same watch twice to recreate its identity/history.
+### 3C. Media storage
+- [ ] Confirm the hosting account's file/SFTP/API capabilities before coupling Calibre to it.
+- [ ] Define a storage adapter/interface rather than hard-coding one provider.
+- [ ] Create a `mediaAsset` record shape.
+- [ ] Upload originals once; derive thumbnails/previews separately.
+- [ ] Move new job/passport photos to file storage and save URLs/metadata in Calibre.
+- [ ] Keep existing embedded photos readable during migration.
+- [ ] Add upload progress, failure/retry and offline queueing.
+- [ ] Add orphan-file detection/cleanup strategy.
+- [ ] Define retention and backup rules.
 
----
+### 3D. Backup/export
+- [ ] One-click full watch export.
+- [ ] Periodic structured JSON backup.
+- [ ] Media manifest with checksums/paths.
+- [ ] Restore/import validation.
+- [ ] Keep backups separate from live storage where possible.
 
-## Phase 4 — Workshop intelligence
-
-**Goal:** Make Calibre useful while the watch is physically on the bench.
-
-- [ ] Diagnostic fault tree tied to observed checks
-- [ ] Fault → probable causes → confirmation tests
-- [ ] Lubrication/reference guidance by calibre/family where supported
-- [ ] Parts-needed workflow
-- [ ] Donor/stock compatibility matching
-- [ ] Stage-specific photo prompts
-- [ ] Before/after observations
-- [ ] Final QC gate before status can become Ready to list
-- [ ] Bench notes that can be dictated quickly on mobile
-
----
-
-## Phase 5 — Commercial intelligence
-
-**Goal:** Tell us what actually makes money.
-
-- [ ] Separate inventory acquisition, repair parts, consumables and tool/equipment costs
-- [ ] Watch-level profit and ROI
-- [ ] Profit after labour
-- [ ] Stock ageing and capital tied up
-- [ ] Most profitable brands/types/sources
-- [ ] Average repair cost by movement/watch type
-- [ ] Sales-channel performance
-- [ ] Tool investment ledger and optional depreciation/use tracking
-- [ ] Monthly/yearly business dashboard
-- [ ] Incoming purchases from connected sources where appropriate
+**Exit condition:** Sign-in/reset works reliably on any device, the app has a stable Calibre domain, and new watch media is no longer bloating synced app state.
 
 ---
 
-## Phase 6 — Automation and outputs
+## Phase 4 — Digital Passport and customer-facing records
 
-- [ ] Incoming watch/tool/part intake from receipts/purchase emails
-- [ ] Jobcard handoff into Calibre
-- [ ] Passport research enrichment
-- [ ] Parts arrival matching
-- [ ] Ready-to-list workflow
-- [ ] Listing generation
-- [ ] Sales certificate / service report
-- [ ] Sold-watch archive
-- [ ] Backup/export/import
+### 4A. Publish model
+- [ ] Add explicit private/public Passport state.
+- [ ] Generate stable public Passport IDs/slugs separate from internal database IDs.
+- [ ] Define which fields can be published.
+- [ ] Never expose private notes, acquisition price, customer details or internal diagnosis by default.
+- [ ] Add preview-before-publish.
+
+### 4B. Public Passport
+
+Target URL:
+
+`passport.calibreco.com.au/<public-id>`
+
+Possible content:
+- watch identity
+- movement/calibre
+- approximate date with confidence/source language
+- provenance summary
+- selected photographs
+- service summary
+- timing summary
+- certificate/service-document links
+- QR code
+
+### 4C. Transfer/history
+- [ ] Preserve permanent history when a watch is sold.
+- [ ] Add owner-neutral public history rather than exposing customer identity.
+- [ ] Future ownership-transfer workflow if the product grows beyond internal use.
+
+### 4D. Documents
+- [ ] Generate clean archival certificate PDFs.
+- [ ] Generate service reports from the same data.
+- [ ] QR-link documents back to the public Passport when published.
+- [ ] Version generated documents so later edits do not silently alter historical paperwork.
+
+**Exit condition:** A completed watch can move from private bench record to a deliberate, attractive public history page and matching document set without re-entering data.
 
 ---
 
-# Technical priorities
+## Phase 5 — Workshop intelligence
 
-## Data model
+- diagnostic fault tree tied to observed checks
+- fault → probable causes → confirmation tests
+- lubrication/reference guidance by calibre/family where supported
+- stage-specific photo prompts
+- parts-needed workflow
+- donor/stock compatibility matching
+- before/after observations
+- final QC gate before Ready to list
+- fast voice/dictated bench notes
+- movement-family and compatibility knowledge
 
-The current single job record has been useful for prototyping, but the long-term model should evolve toward stable IDs and relationships:
+---
+
+## Phase 6 — Commercial intelligence and intake automation
+
+- separate watch, parts, consumables and tool costs
+- watch-level profit/ROI
+- profit after labour
+- stock ageing/capital tied up
+- profitable brands/types/sources
+- sales-channel performance
+- tool/equipment ledger
+- incoming purchase/parts/tool extraction from receipts/emails
+- parts-arrival matching
+- listing generation from Passport + sale data
+- sold-watch archive
+
+---
+
+## Phase 7 — Public Calibre & Co. presence
+
+Use the root domain for a restrained public site rather than a duplicate of the app.
+
+Potential sections:
+- what Calibre & Co. is
+- selected completed watches
+- watch Passport lookup
+- educational/reference content
+- contact/about
+- privacy/terms
+- future service or sales offering if desired
+
+Technical additions:
+- metadata/Open Graph cards
+- sitemap/robots
+- favicon/PWA brand assets
+- analytics only if useful and privacy-conscious
+- structured data for public watch/article pages where appropriate
+
+The public site should remain small until there is content worth publishing.
+
+---
+
+# Further opportunities unlocked by the domain
+
+These are not immediate blockers, but the domain makes them realistic:
+
+## Secure customer handoff
+A service completion page can provide a customer with the final report, selected images and Passport link without exposing the private workshop.
+
+## QR identity
+Each certificate/job card can carry a stable Calibre URL rather than a GitHub Pages URL.
+
+## Watch search and internal reference library
+Over time, confirmed Passport data can become a private calibre/maker/reference knowledge base, reducing repeated research.
+
+## Public provenance archive
+Selected sold watches can remain discoverable as documented examples even after inventory status changes.
+
+## Media-derived automation
+Future AI can classify movement/dial/case photos, suggest crop/rotation, detect duplicate uploads and prepare listing image sets while preserving originals.
+
+## Hosting health/admin view
+A small system-status panel in Settings can show:
+- cloud sync state
+- last backup
+- media-storage usage
+- email-domain status
+- current app version
+- queued offline uploads
+
+## Versioned data migrations
+As the model grows from one job record toward stable Watch → Jobs relationships, migrations should be explicit, versioned and recoverable.
+
+---
+
+# Data model direction
+
+Long term:
 
 ```text
 watch
@@ -417,46 +486,35 @@ watch
   │     └── timingRuns[]
   ├── commercialRecord
   ├── provenance[]
+  ├── mediaAssets[]
   └── documents[]
+
+mediaAsset
+  ├── storageKey/url
+  ├── watchId/jobId
+  ├── category
+  ├── metadata
+  └── visibility
 
 tool / part / supplier are separate records
 ```
 
-Do not perform a large migration until the schema and compatibility plan are defined.
-
-## Front-end
-
-Short term: keep the current lightweight web/PWA architecture.
-
-Priorities:
-- shared components/styles
-- fewer inline page styles
-- clearer modules
-- robust offline state
-- reliable cloud sync
-- export/backup
-- progressive enhancement for hardware/audio APIs
-
-A framework rewrite is **not** currently a priority. Improve the product architecture before changing technology for its own sake.
+Do not perform a large destructive migration until the compatibility and rollback plan is defined.
 
 ---
 
 # Immediate build order
 
-This is the active order until Phase 1 and the Timegrapher foundation are complete:
-
-1. **Warm Instrument palette and design tokens**
-2. **Logo exploration and mark selection**
-3. **Desktop shell/navigation density pass**
-4. **Calibre page simplification**
-5. **Timegrapher microphone/device selector**
-6. **Timegrapher diagnostic audio view**
-7. **Capture/test real contact-mic data**
-8. **Timegrapher detection-engine upgrade**
-9. **Pre/post timing comparison**
-10. **Six-position test workflow**
-
-Anything not supporting these ten items goes into the backlog unless it fixes a bug or protects existing data.
+1. **Finish Resend domain verification and Supabase custom SMTP.**
+2. **Test password reset end-to-end.**
+3. **Set up `app.calibreco.com.au` as the canonical application address.**
+4. **Define media storage capabilities and the `mediaAsset` contract.**
+5. **Implement new photo/file uploads outside the synced JSON state.**
+6. **Add backup/export foundations before migrating old media.**
+7. **Build explicit Passport publish/privacy controls.**
+8. **Build the first public digital Passport page + QR link.**
+9. **Create a minimal root `calibreco.com.au` landing page.**
+10. **Resume Timegrapher hardware validation when the contact mic/testing data is available.**
 
 ---
 
@@ -464,11 +522,14 @@ Anything not supporting these ten items goes into the backlog unless it fixes a 
 
 Calibre is moving in the right direction when:
 
-- A new watch can be entered once and its information reused everywhere.
-- The desktop UI feels compact while mobile remains bench-friendly.
-- A watch can be timed repeatably with the external mic and the result saved without manual transcription.
-- We can see what changed between incoming and final timing.
-- Research and evidence remain attached to the watch.
-- Costs and profit can be understood without a spreadsheet.
-- A completed watch can move from bench to listing/certificate using the data already captured.
-- New features extend the core objects rather than creating isolated pages.
+- A new watch is entered once and reused everywhere.
+- Sign-in and password reset work reliably from any device.
+- The app has a stable branded URL that is not tied to a repository username.
+- Photos and PDFs no longer inflate the structured sync payload.
+- Original media is retained at useful quality with clear ownership/relationships.
+- Private workshop data can be selectively published without accidental leakage.
+- A finished watch can produce a public Passport, QR code, certificate and listing from the same source data.
+- Costs/profit can be understood without a separate spreadsheet.
+- Offline work remains safe and syncable.
+- Backups can be restored, not merely downloaded.
+- New features extend core objects instead of creating isolated pages.
