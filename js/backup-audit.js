@@ -8,27 +8,43 @@ function collect(job){
   const out=[];
   for(const [slot,label] of PHOTO_SLOTS){
     const arr=Array.isArray(job?.photos?.[slot])?job.photos[slot]:[];
-    arr.forEach((src,i)=>{if(typeof src==="string"&&src.startsWith("data:"))out.push({kind:"slot",slot,label,index:i,key:sourceKey(job,"slot",slot,i),src});});
+    arr.forEach((src,i)=>{if(typeof src==="string"&&src.startsWith("data:"))out.push({kind:"slot",slot,label,index:i,key:sourceKey(job,"slot",slot,i),src,name:`${job.jobId||job.id}-${slot}-${i+1}`,category:slot==="intake"?"original":slot==="movement"?"movement":["caseback","dial","damage"].includes(slot)?"identity":["finished","hero"].includes(slot)?"sale":"workshop"});});
   }
-  (job?.passport?.photos||[]).forEach((src,i)=>{if(typeof src==="string"&&src.startsWith("data:"))out.push({kind:"passport",slot:"photo",label:"Passport",index:i,key:sourceKey(job,"passport","photo",i),src});});
-  if(typeof job?.passport?.invoicePhoto==="string"&&job.passport.invoicePhoto.startsWith("data:"))out.push({kind:"invoice",slot:"invoice",label:"Invoice",index:0,key:sourceKey(job,"passport","invoice",0),src:job.passport.invoicePhoto});
-  (job?.stages||[]).forEach((stage,si)=>(stage?.photos||[]).forEach((src,i)=>{if(typeof src==="string"&&src.startsWith("data:"))out.push({kind:"stage",slot:stage.name||"stage",label:stage.name||"Workshop",index:i,stageIndex:si,key:sourceKey(job,"stage",stage.name||"stage",i,si),src});}));
+  (job?.passport?.photos||[]).forEach((src,i)=>{if(typeof src==="string"&&src.startsWith("data:"))out.push({kind:"passport",slot:"photo",label:"Passport",index:i,key:sourceKey(job,"passport","photo",i),src,name:`${job.jobId||job.id}-passport-${i+1}`,category:"identity"});});
+  if(typeof job?.passport?.invoicePhoto==="string"&&job.passport.invoicePhoto.startsWith("data:"))out.push({kind:"invoice",slot:"invoice",label:"Invoice",index:0,key:sourceKey(job,"passport","invoice",0),src:job.passport.invoicePhoto,name:`${job.jobId||job.id}-invoice`,category:"documents"});
+  (job?.stages||[]).forEach((stage,si)=>(stage?.photos||[]).forEach((src,i)=>{if(typeof src==="string"&&src.startsWith("data:"))out.push({kind:"stage",slot:stage.name||"stage",label:stage.name||"Workshop",index:i,stageIndex:si,key:sourceKey(job,"stage",stage.name||"stage",i,si),src,name:`${job.jobId||job.id}-stage-${si+1}-${i+1}`,category:"workshop"});}));
   return out;
 }
-function assetFor(job,key){return (job.mediaAssets||[]).find(a=>a?.legacySourceKey===key&&a?.storageKey&&!a?.deletedAt)||null;}
+function stem(name){return String(name||"").replace(/\.[a-z0-9]+$/i,"");}
+function assetFor(job,item,used=new Set()){
+  const assets=(job.mediaAssets||[]).filter(a=>a?.storageKey&&!a?.deletedAt&&!used.has(a.storageKey));
+  let asset=assets.find(a=>a?.legacySourceKey===item.key);
+  if(asset)return asset;
+  asset=assets.find(a=>stem(a.originalName)===item.name&&a.category===item.category);
+  if(asset)return asset;
+  asset=assets.find(a=>a.evidenceNote==="Migrated from legacy embedded Calibre photo."&&a.category===item.category&&String(a.stageId||"")===String(item.label||""));
+  return asset||null;
+}
 function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));}
 
 const host=$("migrateBtn")?.closest(".panel");
 if(host){
   const panel=document.createElement("section");
   panel.className="panel";
-  panel.innerHTML=`<h3>Migration audit & clean-up</h3><p>Checks that every remaining embedded legacy photo has a matching private archive record. Verification also loads each archived thumbnail from private storage before clean-up is allowed.</p><div class="facts"><div class="fact"><span>Legacy remaining</span><strong id="auditLegacy">—</strong></div><div class="fact"><span>Matched archive</span><strong id="auditMatched">—</strong></div><div class="fact"><span>Needs attention</span><strong id="auditMissing">—</strong></div><div class="fact"><span>Verified files</span><strong id="auditVerified">—</strong></div></div><div class="actions"><button class="btn secondary" id="auditBtn" type="button">Verify private archive</button><button class="btn secondary" id="cleanLegacyBtn" type="button" disabled>Clean migrated legacy photos</button></div><div class="progress" aria-hidden="true"><i id="auditBar"></i></div><div id="auditStatus" class="status"></div><div id="auditList" class="migration-list"></div><p class="note"><strong>Safe clean-up only:</strong> Calibre removes an embedded photo only when its exact migration key has a live archive record and that private file has just been verified. Anything unmatched is left untouched.</p>`;
+  panel.innerHTML=`<h3>Migration audit & clean-up</h3><p>Checks that every remaining embedded legacy photo has a matching private archive record. Verification also loads each archived thumbnail from private storage before clean-up is allowed.</p><div class="facts"><div class="fact"><span>Legacy remaining</span><strong id="auditLegacy">—</strong></div><div class="fact"><span>Matched archive</span><strong id="auditMatched">—</strong></div><div class="fact"><span>Needs attention</span><strong id="auditMissing">—</strong></div><div class="fact"><span>Verified files</span><strong id="auditVerified">—</strong></div></div><div class="actions"><button class="btn secondary" id="auditBtn" type="button">Verify private archive</button><button class="btn secondary" id="cleanLegacyBtn" type="button" disabled>Clean migrated legacy photos</button></div><div class="progress" aria-hidden="true"><i id="auditBar"></i></div><div id="auditStatus" class="status"></div><div id="auditList" class="migration-list"></div><p class="note"><strong>Safe clean-up only:</strong> Calibre removes an embedded photo only when it has a live matching archive file that has just been verified. Anything unmatched is left untouched.</p>`;
   host.insertAdjacentElement("afterend",panel);
 
   let state=await loadState(),verification=null;
   function snapshot(){
     const rows=[];
-    for(const job of (state.jobs||[]))for(const item of collect(job)){const asset=assetFor(job,item.key);rows.push({job,item,asset});}
+    for(const job of (state.jobs||[])){
+      const used=new Set();
+      for(const item of collect(job)){
+        const asset=assetFor(job,item,used);
+        if(asset)used.add(asset.storageKey);
+        rows.push({job,item,asset});
+      }
+    }
     return rows;
   }
   function renderBase(){
