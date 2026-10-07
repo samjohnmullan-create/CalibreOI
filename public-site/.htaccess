@@ -1,0 +1,15 @@
+RewriteEngine On
+
+# Serve the public catalogue from the domain root.
+DirectoryIndex index.html
+
+# Pretty Watch Passport URLs: /watch/oris-715 -> /watch.html?slug=oris-715
+RewriteRule ^watch/([A-Za-z0-9-]+)/?$ watch.html?slug=$1 [L,QSA]
+
+# Keep real files and directories untouched.
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Catalogue home fallback.
+RewriteRule ^$ index.html [L]
