@@ -1,5 +1,5 @@
 import { readCloudState, seenCloudAt, markCloudSeen, readInbox, markInboxImported } from "./cloud.js?v=3";
-import { forceCloudPull, importInboxItems } from "./store-cloud.js?v=4";
+import { forceCloudPull, importInboxItems } from "./store-cloud.js?v=5";
 
 const POLL_MS=15000;
 const EDIT_GRACE_MS=1800;
@@ -9,8 +9,9 @@ let pending=false;
 let timer=null;
 
 const here=(location.pathname.split("/").pop()||"index.html").split("?")[0];
-if(here==="workbench.html")import("./workbench-media.js?v=1").catch(err=>console.warn("Calibre media archive unavailable",err));
+if(here==="workbench.html")import("./workbench-media.js?v=2").catch(err=>console.warn("Calibre media archive unavailable",err));
 if(here==="passport.html")import("./passport-media.js?v=1").catch(err=>console.warn("Calibre Passport media archive unavailable",err));
+if(here==="backup.html")import("./backup-audit.js?v=1").catch(err=>console.warn("Calibre media migration audit unavailable",err));
 
 function isEditing(){
   const el=document.activeElement;
