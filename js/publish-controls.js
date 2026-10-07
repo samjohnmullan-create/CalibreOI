@@ -38,7 +38,7 @@ function defaults(job){
 }
 
 const aside=document.querySelector(".sales-layout aside");
-if(aside){
+if(aside&&!document.getElementById("publicPublishCard")){
   const card=document.createElement("section");
   card.className="card";
   card.id="publicPublishCard";
