@@ -31,6 +31,15 @@ export async function signIn(email,password){
   return supabaseClient().auth.signInWithPassword({email,password});
 }
 
+export async function requestPasswordReset(email){
+  const redirect=new URL("settings.html?reset=1",location.href).href;
+  return supabaseClient().auth.resetPasswordForEmail(email,{redirectTo:redirect});
+}
+
+export async function updatePassword(password){
+  return supabaseClient().auth.updateUser({password});
+}
+
 export async function signOut(){ return supabaseClient().auth.signOut(); }
 
 function cleanState(state){
