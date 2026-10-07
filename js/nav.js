@@ -1,4 +1,28 @@
 (function(){
+  var here=(location.pathname.split("/").pop()||"index.html").split("?")[0];
+  if(!here||here.indexOf(".")===-1)here="index.html";
+  if(here!=="settings.html"){
+    document.documentElement.classList.add("calibre-auth-pending");
+    var gateStyle=document.createElement("style");
+    gateStyle.id="calibre-auth-gate-style";
+    gateStyle.textContent="html.calibre-auth-pending body{visibility:hidden!important;pointer-events:none!important}html.calibre-auth-pending:before{content:'Calibre & Co.';position:fixed;inset:0;display:grid;place-items:center;background:#10120f;color:#f0f1ec;font:700 14px/1.2 system-ui,sans-serif;letter-spacing:.08em;z-index:2147483647}";
+    document.head.appendChild(gateStyle);
+    import("./cloud.js?v=4").then(function(mod){return mod.session();}).then(function(s){
+      if(!s?.user){
+        var next=encodeURIComponent(here+location.search+location.hash);
+        location.replace("settings.html?auth=required&next="+next);
+        return;
+      }
+      document.documentElement.classList.remove("calibre-auth-pending");
+      gateStyle.remove();
+    }).catch(function(){
+      var next=encodeURIComponent(here+location.search+location.hash);
+      location.replace("settings.html?auth=required&next="+next);
+    });
+  }
+})();
+
+(function(){
   if(!document.querySelector('script[data-calibre-store-map]')){
     var cloud=new URL("js/store-cloud.js?v=4",document.baseURI).href;
     var imports={};
@@ -136,7 +160,7 @@ var oldIcon=document.querySelector("link[rel=icon]");if(oldIcon)oldIcon.remove()
 
 (async function(){
   try{
-    var mod=await import("./cloud.js?v=3"),s=await mod.session();if(!s?.user)return;
+    var mod=await import("./cloud.js?v=4"),s=await mod.session();if(!s?.user)return;
     var q=await mod.supabaseClient().from("calibre_news").select("id",{count:"exact",head:true}).eq("user_id",s.user.id).is("read_at",null),unread=q.count||0;
     document.querySelectorAll("[data-news-dot]").forEach(function(dot){dot.hidden=!unread;dot.title=unread?unread+" unread Calibre update"+(unread===1?"":"s"):"";});
   }catch(e){console.warn("News badge unavailable",e);}
