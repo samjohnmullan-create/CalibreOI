@@ -1,0 +1,43 @@
+name: Deploy Public Catalogue
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'public-site/**'
+      - '.github/workflows/public-site.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: public-catalogue
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Prepare public site
+        shell: bash
+        run: |
+          cp -R public-site public-deploy
+          sed -i "s#css/site.css#css/site.css?v=${GITHUB_SHA}#g" public-deploy/index.html public-deploy/watch.html
+          sed -i "s#js/catalogue.js#js/catalogue.js?v=${GITHUB_SHA}#g" public-deploy/index.html public-deploy/watch.html
+
+      - name: Deploy to cPanel over FTPS
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.6
+        with:
+          server: ${{ secrets.CPANEL_FTP_SERVER }}
+          username: ${{ secrets.CPANEL_FTP_USERNAME }}
+          password: ${{ secrets.CPANEL_FTP_PASSWORD }}
+          protocol: ftps
+          port: 21
+          local-dir: ./public-deploy/
+          server-dir: ./
+          state-name: .calibre-public-deploy-state.json
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
