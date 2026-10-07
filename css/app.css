@@ -175,11 +175,14 @@ html:not([data-theme="dark"]) .brandmark img{box-shadow:0 0 0 1px color-mix(in s
 .attention{background:color-mix(in srgb,var(--accent) 4%,var(--surface));border-radius:7px;padding:9px 10px!important;border-bottom:0!important}
 .attention-dot{background:var(--accent)!important}
 /* Calibre crescent brand system */
-.brandmark{width:40px!important;height:40px!important;min-width:40px!important;border-radius:0!important;background:url('../assets/brand/calibre-mark-black.svg?v=1') center/contain no-repeat!important;box-shadow:none!important}
+.brandmark{width:216px!important;height:50px!important;min-width:216px!important;border-radius:0!important;background:url('../assets/brand/calibre-horizontal-black.svg?v=2') left center/contain no-repeat!important;box-shadow:none!important}
 .brandmark img{display:none!important}
-html[data-theme="dark"] .brandmark{background-image:url('../assets/brand/calibre-mark-white.svg?v=1')!important}
-html:not([data-theme="dark"]) .brandmark{background-image:url('../assets/brand/calibre-mark-black.svg?v=1')!important}
-.brand{gap:10px}
+.brand>div:not(.brandmark){display:none!important}
+html[data-theme="dark"] .brandmark{background-image:url('../assets/brand/calibre-horizontal-white.svg?v=2')!important}
+html:not([data-theme="dark"]) .brandmark{background-image:url('../assets/brand/calibre-horizontal-black.svg?v=2')!important}
+.brand{gap:0}
+.brandbar{min-height:56px}
+html:not([data-theme="dark"]) .brandbar{min-height:56px;padding-top:3px;padding-bottom:3px}
 /* New document identity: graphite + sage, with vector lockups */
 body .paper{background:#fbfcf9!important;color:#171a16!important}
 body .paper .rule{background:#cfd6cc!important}
@@ -208,11 +211,11 @@ body .timing-table th{border-bottom-color:#91a28a!important}
 body .timing-table td{border-bottom-color:#dce2d9!important}
 body .passport-legal{border-top-color:#aebca9!important}
 @media(max-width:640px){
-  html:not([data-theme="dark"]) .brandbar{min-height:52px;padding-top:4px;padding-bottom:4px}
+  html:not([data-theme="dark"]) .brandbar{min-height:48px;padding-top:2px;padding-bottom:2px}
   html:not([data-theme="dark"]) .mainnav{background:var(--surface);border:1px solid var(--line);padding:6px}
   html:not([data-theme="dark"]) .navbtn.active{background:var(--surface-2)}
   .current-body{padding:11px 10px}.current-actions{padding:0 10px 10px}.quick{min-height:62px}
-  .brandmark{width:38px!important;height:38px!important;min-width:38px!important}
+  .brandmark{width:184px!important;height:44px!important;min-width:184px!important}
 }
 @media(max-width:900px){
   .layout,.timing-layout,.split{grid-template-columns:1fr}
@@ -224,7 +227,7 @@ body .passport-legal{border-top-color:#aebca9!important}
 @media(max-width:640px){
   body{padding-bottom:92px}
   .shell{padding-left:12px;padding-right:12px}
-  .brandbar{margin-left:-12px;margin-right:-12px;padding-left:12px;padding-right:12px;min-height:52px}
+  .brandbar{margin-left:-12px;margin-right:-12px;padding-left:12px;padding-right:12px;min-height:48px}
   .mainnav{position:fixed;left:8px;right:8px;bottom:8px;margin:0;z-index:20;overflow:auto;border-radius:12px;padding:6px;background:var(--nav);border:1px solid var(--line)}
   .navbtn{min-width:64px;min-height:48px;flex:1 1 0;flex-direction:column;gap:2px;font-size:.67rem;border-bottom:0;border-radius:8px;margin:0;padding:6px 8px}
   .navbtn.active{background:var(--surface-2)}
