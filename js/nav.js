@@ -131,12 +131,12 @@ document.querySelectorAll(".brandbar").forEach(function(bar){
   function injectWorkbenchRuntime(src,marker){
     var r=document.createElement("script");r.type="module";r.src=src;r.dataset.calibreWorkbenchRuntime=marker||"1";document.head.appendChild(r);
   }
-  if(here==="workbench.html"&&!document.querySelector('script[data-calibre-workbench-runtime]'))injectWorkbenchRuntime("js/workbench-runtime.js?v=6","primary");
+  if(here==="workbench.html"&&!document.querySelector('script[data-calibre-workbench-runtime]'))injectWorkbenchRuntime("js/workbench-runtime.js?v=7","primary");
   if(here==="workbench.html")setTimeout(function(){
     var faults=document.getElementById("faults");
     if(!faults||!faults.textContent.includes("Reading diagnostic state"))return;
     if(document.querySelector('script[data-calibre-workbench-runtime="fallback"]'))return;
-    injectWorkbenchRuntime("js/workbench-runtime.js?v=6-fallback","fallback");
+    injectWorkbenchRuntime("js/workbench-runtime.js?v=7-fallback","fallback");
   },1800);
 })();
 
