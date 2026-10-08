@@ -33,7 +33,7 @@ function finalTiming(job){
   const final=runs.filter(r=>/^(after service|regulation test|final test)$/i.test(raw(r?.phase)));
   return final.length?final[final.length-1]:(runs.length?runs[runs.length-1]:null);
 }
-function snapshot(job){
+export function makeListingPackSnapshot(job){
   const p=job?.passport||{},b=job?.business||{},pack=ensurePack(job),timing=finalTiming(job);
   return {
     at:new Date().toISOString(),
@@ -78,7 +78,7 @@ export function mountListingPack({job,save}){
     host.querySelectorAll("[data-lp-select]").forEach(btn=>btn.onclick=async()=>{const key=btn.dataset.lpSelect,pack=ensurePack(job),i=pack.selected.indexOf(key);if(i>=0)pack.selected.splice(i,1);else pack.selected.push(key);if(pack.hero===key&&!pack.selected.includes(key))pack.hero="";await persist("Photo selection saved");paint();});
     host.querySelectorAll("[data-lp-hero]").forEach(btn=>btn.onclick=async()=>{const key=btn.dataset.lpHero,pack=ensurePack(job);pack.hero=key;if(!pack.selected.includes(key))pack.selected.unshift(key);await persist("Hero photo saved");paint();});
     host.querySelectorAll("[data-lp-role]").forEach(sel=>sel.onchange=async()=>{const pack=ensurePack(job),role=sel.dataset.lpRole;if(sel.value){pack.roles[role]=sel.value;if(!pack.selected.includes(sel.value))pack.selected.push(sel.value);}else delete pack.roles[role];await persist("Photo role saved");paint();});
-    host.querySelector("#saveListingPack")?.addEventListener("click",async()=>{job.sale=job.sale||{};job.sale.listingPackSnapshot=snapshot(job);await persist("Listing snapshot saved");paint();});
+    host.querySelector("#saveListingPack")?.addEventListener("click",async()=>{job.sale=job.sale||{};job.sale.listingPackSnapshot=makeListingPackSnapshot(job);await persist("Listing snapshot saved");paint();});
   }
   paint();
 }
