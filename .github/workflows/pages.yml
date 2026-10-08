@@ -18,12 +18,40 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Bust deployed asset caches
+      - name: Bust deployed app caches
         shell: bash
         run: |
-          sed -i "s#js/publish-controls.js?v=2#js/publish-controls.js?v=${GITHUB_SHA}#g" sales.html
-          sed -i "s#css/site.css#css/site.css?v=${GITHUB_SHA}#g" public-site/index.html public-site/watch.html
-          sed -i "s#js/catalogue.js#js/catalogue.js?v=${GITHUB_SHA}#g" public-site/index.html public-site/watch.html
+          python - <<'PY'
+          from pathlib import Path
+          import os, re
+
+          sha = os.environ['GITHUB_SHA']
+
+          # Root workbench pages: make every deployment use fresh HTML navigation,
+          # CSS and JS URLs so mobile browsers/PWAs cannot remain on stale pages.
+          for p in Path('.').glob('*.html'):
+              text = p.read_text(encoding='utf-8')
+              if 'http-equiv="Cache-Control"' not in text:
+                  text = text.replace(
+                      '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">',
+                      '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">'
+                  )
+              text = re.sub(r'css/app\.css\?v=[^"\']+', f'css/app.css?v={sha}', text)
+              text = re.sub(r'js/nav\.js\?v=[^"\']+', f'js/nav.js?v={sha}', text)
+              text = re.sub(r'\./js/store\.js\?v=[^"\']+', f'./js/store.js?v={sha}', text)
+              text = re.sub(r'href="([A-Za-z0-9_-]+\.html)"', rf'href="\1?v={sha}"', text)
+              p.write_text(text, encoding='utf-8')
+
+          # Existing public catalogue cache busting.
+          for name in ('public-site/index.html', 'public-site/watch.html'):
+              p = Path(name)
+              if not p.exists():
+                  continue
+              text = p.read_text(encoding='utf-8')
+              text = re.sub(r'css/site\.css(?:\?v=[^"\']+)?', f'css/site.css?v={sha}', text)
+              text = re.sub(r'js/catalogue\.js(?:\?v=[^"\']+)?', f'js/catalogue.js?v={sha}', text)
+              p.write_text(text, encoding='utf-8')
+          PY
       - uses: actions/configure-pages@v5
         with:
           enablement: true
