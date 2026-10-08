@@ -36,6 +36,17 @@ function enrich(job,raw={}){
 
 export function importCard(raw){return enrich(base.importCard(raw),raw);}
 
+export function exportCard(job){
+  const out=base.exportCard(job);
+  out.version=5;
+  out.researchBrief=normaliseResearchBrief({researchBrief:job.researchBrief||{}});
+  if(job.service!=null)out.service=job.service;
+  if(job.serviceNotes!=null)out.serviceNotes=job.serviceNotes;
+  if(job.research!=null)out.research=job.research;
+  if(Array.isArray(job.references))out.references=job.references;
+  return out;
+}
+
 export async function importInboxItems(items){
   const result=await cloud.importInboxItems(items);
   const cards=list(items).filter(item=>item?.job_data?.type==="calibrejob"&&item.job_data);
