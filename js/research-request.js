@@ -58,6 +58,32 @@ export function researchRequestSnapshot(job){
   };
 }
 
+async function syncResearchStatus(job,state){
+  const s=await session();
+  if(!s?.user||s.localOnly||!job?.id)return job?.researchRequest||{};
+  const {data,error}=await supabaseClient().from("calibre_research_requests")
+    .select("id,status,created_at,updated_at")
+    .eq("owner_id",s.user.id).eq("watch_id",String(job.id))
+    .order("created_at",{ascending:false}).limit(1);
+  if(error)throw error;
+  const latest=data?.[0];
+  if(!latest)return job?.researchRequest||{};
+  const current=job.researchRequest||{};
+  const next={
+    ...current,
+    id:latest.id,
+    status:latest.status||current.status||"",
+    requestedAt:current.requestedAt||latest.created_at||"",
+    updatedAt:latest.updated_at||""
+  };
+  if(next.status==="completed")next.completedAt=latest.updated_at||now();
+  if(current.id!==next.id||current.status!==next.status||current.completedAt!==next.completedAt||current.updatedAt!==next.updatedAt){
+    job.researchRequest=next;
+    await saveState(state);
+  }
+  return next;
+}
+
 export async function submitResearchRequest(job,state){
   if(!job)throw new Error("No watch is open.");
   const s=await session();
@@ -87,11 +113,15 @@ export async function mountResearchRequestCard(){
   const sheet=document.getElementById("sheet"),actions=document.querySelector(".footer-actions");
   if(!sheet||!actions)return;
   const state=await loadState(),job=current(state);if(!job)return;
+  try{await syncResearchStatus(job,state);}catch(err){console.warn("Could not reconcile research status",err);}
   const card=document.createElement("section");card.id="researchRequestCard";card.className="card no-print";
   sheet.insertAdjacentElement("beforebegin",card);
   function paint(message=""){
-    const r=job.researchRequest||{},photos=mediaRefs(job).length,legacy=legacyPhotoSummary(job).reduce((n,x)=>n+x.count,0),pending=r.status==="pending";
-    card.innerHTML=`<div class="row" style="justify-content:space-between;align-items:start"><div><div class="kicker">RESEARCH HANDOFF</div><h3 style="margin:.2rem 0">Send this watch for research</h3><p class="muted small" style="margin:.2rem 0">Packages the current job, purchase details, Passport, faults and photo references so the same watch can be researched and returned to Calibre.</p></div><span class="badge">${pending?"Pending":"Ready"}</span></div><div class="grid2" style="margin-top:9px"><div><span class="muted small">Archived media</span><strong style="display:block">${photos} file${photos===1?"":"s"}</strong></div><div><span class="muted small">Legacy photos</span><strong style="display:block">${legacy}</strong></div></div><div class="row" style="margin-top:10px"><button id="sendResearchRequest" class="btn" type="button">${pending?"Refresh research request":"Request research"}</button><span id="researchRequestMsg" class="muted small">${esc(message|| (pending?`Pending · ${r.requestedAt?new Date(r.requestedAt).toLocaleString():"sent"}`:""))}</span></div>`;
+    const r=job.researchRequest||{},photos=mediaRefs(job).length,legacy=legacyPhotoSummary(job).reduce((n,x)=>n+x.count,0),pending=r.status==="pending",completed=r.status==="completed";
+    const badge=completed?"Completed":pending?"Pending":"Ready";
+    const action=completed?"Request new research":pending?"Refresh research request":"Request research";
+    const statusText=completed?`Completed${r.completedAt?` · ${new Date(r.completedAt).toLocaleString()}`:""}`:pending?`Pending · ${r.requestedAt?new Date(r.requestedAt).toLocaleString():"sent"}`:"";
+    card.innerHTML=`<div class="row" style="justify-content:space-between;align-items:start"><div><div class="kicker">RESEARCH HANDOFF</div><h3 style="margin:.2rem 0">Send this watch for research</h3><p class="muted small" style="margin:.2rem 0">Packages the current job, purchase details, Passport, faults and photo references so the same watch can be researched and returned to Calibre.</p></div><span class="badge">${badge}</span></div><div class="grid2" style="margin-top:9px"><div><span class="muted small">Archived media</span><strong style="display:block">${photos} file${photos===1?"":"s"}</strong></div><div><span class="muted small">Legacy photos</span><strong style="display:block">${legacy}</strong></div></div><div class="row" style="margin-top:10px"><button id="sendResearchRequest" class="btn" type="button">${action}</button><span id="researchRequestMsg" class="muted small">${esc(message||statusText)}</span></div>`;
     card.querySelector("#sendResearchRequest").onclick=async()=>{
       const btn=card.querySelector("#sendResearchRequest"),msg=card.querySelector("#researchRequestMsg");btn.disabled=true;msg.textContent="Sending…";
       try{const result=await submitResearchRequest(job,state);paint(`Request ${result.id.slice(0,8)} sent. In ChatGPT, say “research the latest Calibre request”.`);}catch(err){btn.disabled=false;msg.textContent=err?.message||"Could not send request.";}
