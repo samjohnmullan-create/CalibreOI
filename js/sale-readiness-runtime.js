@@ -1,5 +1,5 @@
 import { loadState, saveState, current, escapeHtml } from "./store.js?v=26";
-import { saleReadiness } from "./sale-readiness.js?v=1";
+import { saleReadiness } from "./sale-readiness.js?v=2";
 
 const esc=escapeHtml;
 let state=await loadState(),job=current(state);
@@ -9,5 +9,5 @@ function paint(){if(!job)return;const p=ensurePanel();if(!p)return;const r=saleR
 const style=document.createElement("style");style.textContent=`.sale-ready-list{display:grid;gap:6px;margin-top:9px}.sale-ready-row{display:grid;grid-template-columns:18px 1fr;gap:7px;padding:7px;border:1px solid var(--line);border-radius:7px;background:var(--surface-2)}.sale-ready-row strong,.sale-ready-row small{display:block}.sale-ready-row small{font-size:.62rem;color:var(--muted);margin-top:2px}.sale-ready-row.ok>span{color:var(--ok);font-weight:900}.sale-ready-row.miss>span{color:var(--muted)}`;document.head.appendChild(style);
 paint();
 const params=new URLSearchParams(location.search);if(params.get("prepare")==="1"&&job){
-  const r=saleReadiness(job);job.sale=job.sale||{};job.sale.preparedAt=new Date().toISOString();job.sale.readinessSnapshot={at:job.sale.preparedAt,ready:r.ready,requiredDone:r.requiredDone,requiredTotal:r.requiredTotal,missing:r.items.filter(x=>x.required&&!x.ok).map(x=>x.id)};await saveState(state);setTimeout(()=>{const generate=document.getElementById("generate"),listing=document.getElementById("listingText");if(generate&&listing&&!listing.value.trim())generate.click();},250);
+  const r=saleReadiness(job);job.sale=job.sale||{};job.sale.preparedAt=new Date().toISOString();job.sale.readinessSnapshot={at:job.sale.preparedAt,ready:r.ready,requiredDone:r.requiredDone,requiredTotal:r.requiredTotal,missing:r.items.filter(x=>x.required&&!x.ok).map(x=>x.id),qc:r.qc?.label||""};await saveState(state);setTimeout(()=>{const generate=document.getElementById("generate"),listing=document.getElementById("listingText");if(generate&&listing&&!listing.value.trim()&&r.ready)generate.click();},250);
 }
