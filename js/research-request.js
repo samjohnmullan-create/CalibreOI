@@ -21,6 +21,12 @@ function legacyPhotoSummary(job){
   if(passportCount)out.push({slot:"passport",count:passportCount});
   return out;
 }
+function passportForResearch(passport={}){
+  const copy=structuredClone(passport||{});
+  delete copy.photos;
+  delete copy.invoicePhoto;
+  return copy;
+}
 export function researchRequestSnapshot(job){
   const p=job?.passport||{},b=job?.business||{};
   return {
@@ -28,7 +34,7 @@ export function researchRequestSnapshot(job){
     requestedAt:now(),
     watch:{id:job?.id||"",jobId:job?.jobId||"",pushId:job?.pushId||"",watchName:job?.watchName||"",status:job?.status||"",jobType:job?.jobType||"",stage:Number(job?.stage)||0},
     purchase:{source:job?.purchaseSource?.source||p.seller||"",orderId:job?.purchaseSource?.orderId||p.invoiceNumber||"",sourceRef:job?.purchaseSource?.sourceRef||"",purchasePrice:b.purchasePrice||"",postage:b.postage||"",acquiredAt:job?.acquiredAt||""},
-    passport:structuredClone(p),
+    passport:passportForResearch(p),
     business:{purchasePrice:b.purchasePrice||"",postage:b.postage||"",partsCost:b.partsCost||"",targetSale:b.targetSale||"",minSale:b.minSale||""},
     diagnosis:job?.diagnosis||"",
     repairPerformed:job?.repairPerformed||"",
