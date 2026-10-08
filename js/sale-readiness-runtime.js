@@ -1,6 +1,7 @@
 import { loadState, saveState, current, escapeHtml } from "./store.js?v=26";
 import { saleReadiness } from "./sale-readiness.js?v=3";
 import { mountListingPack, makeListingPackSnapshot } from "./listing-pack.js?v=2";
+import { mountChannelStrategy } from "./channel-strategy.js?v=1";
 
 const esc=escapeHtml;
 let state=await loadState(),job=current(state);
@@ -9,7 +10,11 @@ function ensurePanel(){let p=document.getElementById("saleReadinessPanel");if(p)
 function paint(){if(!job)return;const p=ensurePanel();if(!p)return;const r=saleReadiness(job);p.innerHTML=`<div class="row" style="justify-content:space-between;align-items:start"><div><h3 style="margin:0">Sale readiness</h3><p class="muted small" style="margin:3px 0 0">${r.requiredDone}/${r.requiredTotal} required · ${r.allDone}/${r.allTotal} total</p></div><span class="badge">${r.ready?"Ready":"Check first"}</span></div><div class="sale-ready-list">${r.items.map(row).join("")}</div>`;}
 const style=document.createElement("style");style.textContent=`.sale-ready-list{display:grid;gap:6px;margin-top:9px}.sale-ready-row{display:grid;grid-template-columns:18px 1fr;gap:7px;padding:7px;border:1px solid var(--line);border-radius:7px;background:var(--surface-2)}.sale-ready-row strong,.sale-ready-row small{display:block}.sale-ready-row small{font-size:.62rem;color:var(--muted);margin-top:2px}.sale-ready-row.ok>span{color:var(--ok);font-weight:900}.sale-ready-row.miss>span{color:var(--muted)}`;document.head.appendChild(style);
 paint();
-if(job)mountListingPack({job,save:async()=>{await saveState(state);paint();}});
+if(job){
+  const save=async()=>{await saveState(state);paint();};
+  mountChannelStrategy({job,save});
+  mountListingPack({job,save});
+}
 if(job){
   document.getElementById("generate")?.addEventListener("click",async()=>{
     job.sale=job.sale||{};
