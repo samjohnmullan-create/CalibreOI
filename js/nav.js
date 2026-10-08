@@ -28,7 +28,7 @@
     document.documentElement.classList.add("calibre-auth-pending");
     gateStyle=document.createElement("style");
     gateStyle.id="calibre-auth-gate-style";
-    gateStyle.textContent="html.calibre-auth-pending body{visibility:hidden!important;pointer-events:none!important}html.calibre-auth-pending:before{content:'Calibre & Co.';position:fixed;inset:0;display:grid;place-items:center;background:#10120f;color:#f0f1ec;font:700 14px/1.2 system-ui,sans-serif;letter-spacing:.08em;z-index:2147483647}";
+    gateStyle.textContent="html.calibre-auth-pending body{visibility:hidden!important;pointer-events:none!important}html.calibre-auth-pending:before{content:'Calibre & Co.';position:fixed;inset:0;display:grid;place-items:center;background:#111111;color:#f7f7f5;font:600 15px/1.2 Georgia,'Times New Roman',serif;letter-spacing:.16em;z-index:2147483647}";
     document.head.appendChild(gateStyle);
   }
 
@@ -57,7 +57,8 @@
 })();
 
 var savedTheme=localStorage.getItem("calibre-theme");
-if(savedTheme!=="light")document.documentElement.dataset.theme="dark";
+if(savedTheme==="dark")document.documentElement.dataset.theme="dark";
+else document.documentElement.removeAttribute("data-theme");
 
 document.querySelectorAll(".brandbar").forEach(function(bar){
   if(bar.querySelector(".themebtn"))return;
@@ -114,10 +115,47 @@ document.querySelectorAll(".brandbar").forEach(function(bar){
 
 var markStyle=document.createElement("style");
 markStyle.textContent=`
-.brandmark{padding:0;overflow:hidden;background:transparent;width:40px;height:40px;display:block}
-.brandmark img{width:40px;height:40px;object-fit:contain;display:block;border-radius:0}
-html[data-theme="dark"] .brandmark img{content:url("assets/brand/calibre-mark-white.svg?v=1")}
+:root{
+  --bg:#f7f7f5;
+  --surface:#ffffff;
+  --surface-2:#f1f1ee;
+  --ink:#111111;
+  --muted:#6d6d68;
+  --line:#ddddda;
+  --nav:#111111;
+  --accent:#b08a4a;
+  --accent-soft:#c5a66e;
+  --brass:#b08a4a;
+  --brass-soft:#c5a66e;
+  --ok:#687b66;
+}
+html[data-theme="dark"]{
+  --bg:#111111;
+  --surface:#1b1b1a;
+  --surface-2:#262624;
+  --ink:#f7f7f5;
+  --muted:#a2a29d;
+  --line:#3a3a36;
+  --nav:#0d0d0c;
+  --accent:#c19b56;
+  --accent-soft:#d0b47d;
+  --brass:#c19b56;
+  --brass-soft:#d0b47d;
+  --ok:#82917f;
+}
+.brandmark{display:none!important}
+.brand{gap:0!important}
+.brand>div:last-child{display:flex;align-items:center;min-height:44px}
+.brand .kicker{font-family:Georgia,"Times New Roman",serif!important;font-size:.98rem!important;font-weight:600!important;letter-spacing:.16em!important;color:var(--ink)!important;line-height:1;white-space:nowrap}
+.brand h1{display:none!important}
+html[data-theme="dark"] .brand .kicker{color:#f7f7f5!important}
+.brandbar{border-bottom:1px solid color-mix(in srgb,var(--line) 72%,transparent)!important}
+html:not([data-theme="dark"]) .brandbar{background:#ffffff!important}
 .navbtn{position:relative}
+.navbtn.active{border-bottom-color:var(--accent)!important}
+html:not([data-theme="dark"]) .navbtn.active{background:color-mix(in srgb,var(--accent) 8%,var(--surface))!important}
+.btn:not(.secondary){background:var(--accent);border-color:var(--accent);color:#fff}
+.textbtn,.kicker,.stage-num,.timeline-item span,.star{color:var(--accent)}
 .newsdot{position:absolute;top:6px;right:5px;width:6px;height:6px;border-radius:50%;background:#ef4444;box-shadow:0 0 0 2px var(--bg,#111)}
 .contextnav{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;margin:0 0 8px;padding:0;border-bottom:1px solid var(--line)}
 .contextnav::-webkit-scrollbar{display:none}
@@ -131,11 +169,11 @@ html[data-theme="dark"] .brandmark img{content:url("assets/brand/calibre-mark-wh
 .watch-strip-meta{margin-top:2px;color:var(--muted);font-size:.68rem;line-height:1.3}
 .watch-strip-state{display:flex;align-items:flex-end;flex-direction:column;gap:3px;text-align:right}
 .watch-strip-job{font-size:.62rem;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
-@media(max-width:640px){.brandmark,.brandmark img{width:38px;height:38px}.watch-strip{grid-template-columns:44px minmax(0,1fr);padding:8px 0;gap:9px}.watch-strip-photo{width:44px;height:44px}.watch-strip-state{grid-column:2;align-items:flex-start;flex-direction:row;flex-wrap:wrap;text-align:left;margin-top:-2px}.contextnav{margin:6px 0 10px;border-bottom:0;gap:5px}.contextnav-btn{min-height:32px;padding:5px 10px;border:1px solid var(--line);border-radius:999px;margin:0}.contextnav-btn.active{background:var(--surface-2);border-color:var(--accent,var(--brass))}}
+@media(max-width:640px){.brand .kicker{font-size:.88rem!important;letter-spacing:.13em!important}.watch-strip{grid-template-columns:44px minmax(0,1fr);padding:8px 0;gap:9px}.watch-strip-photo{width:44px;height:44px}.watch-strip-state{grid-column:2;align-items:flex-start;flex-direction:row;flex-wrap:wrap;text-align:left;margin-top:-2px}.contextnav{margin:6px 0 10px;border-bottom:0;gap:5px}.contextnav-btn{min-height:32px;padding:5px 10px;border:1px solid var(--line);border-radius:999px;margin:0}.contextnav-btn.active{background:var(--surface-2);border-color:var(--accent,var(--brass))}}
 `;
 document.head.appendChild(markStyle);
 
-document.querySelectorAll(".brandmark").forEach(function(el){el.innerHTML="<img src=\"assets/brand/calibre-mark-black.svg?v=1\" alt=\"Calibre & Co.\">";});
+document.querySelectorAll(".brandmark").forEach(function(el){el.setAttribute("aria-hidden","true");});
 var oldIcon=document.querySelector("link[rel=icon]");if(oldIcon)oldIcon.remove();var icon=document.createElement("link");icon.rel="icon";icon.type="image/svg+xml";icon.href="assets/brand/calibre-mark-black.svg?v=1";document.head.appendChild(icon);
 
 (async function(){
