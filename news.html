@@ -16,9 +16,9 @@
 </section>
 <section class="newslist" id="newsList"><div class="card empty muted">Loading Calibre News…</div></section>
 </div>
-<script src="js/nav.js?v=53"></script>
+<script src="js/nav.js?v=54"></script>
 <script type="module">
-import { session, supabaseClient } from "./js/cloud.js?v=3";
+import { session, supabaseClient } from "./js/cloud.js?v=4";
 const $=id=>document.getElementById(id);let rows=[],filter="all";
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
 function age(iso){const d=new Date(iso),ms=Date.now()-d.getTime(),mins=Math.floor(ms/60000);if(mins<60)return mins+"m ago";const h=Math.floor(mins/60);if(h<24)return h+"h ago";const days=Math.floor(h/24);if(days<7)return days+"d ago";return d.toLocaleDateString("en-AU",{day:"numeric",month:"short"});}
@@ -29,14 +29,16 @@ function paint(){
  $("newsList").innerHTML=list.map(x=>`<article class="newsitem ${x.read_at?"":"unread"}" data-id="${x.id}"><div class="newsmeta"><span class="pill">${esc(x.category||"news")}</span><span class="muted small">${age(x.created_at)}</span>${x.source?`<span class="muted small">· ${esc(x.source)}</span>`:""}</div><h3>${esc(x.title)}</h3><p class="small">${esc(x.body)}</p>${x.source_ref?`<a class="newslink small" href="${esc(x.source_ref)}" target="_blank" rel="noopener">Open source</a>`:""}${x.read_at?"":`<div><button class="btn secondary small" data-read="${x.id}" type="button">Mark read</button></div>`}</article>`).join("");
  document.querySelectorAll("[data-read]").forEach(b=>b.onclick=()=>markRead(b.dataset.read));
 }
+function cloudUser(s){return !!(s?.user?.id&&!s.localOnly&&s.user.id!=="__calibre_local__");}
 async function load(){
- const s=await session();if(!s?.user){$("status").textContent="Sign in to Calibre Cloud to see News.";rows=[];paint();return;}
+ const s=await session();
+ if(!cloudUser(s)){$("status").textContent="Calibre Cloud is not signed in on this device. Open Calibre → Settings and sign in to load Updates.";rows=[];paint();return;}
  $("status").textContent="Checking for updates…";
  const {data,error}=await supabaseClient().from("calibre_news").select("id,title,body,category,severity,source,source_ref,created_at,read_at").eq("user_id",s.user.id).order("created_at",{ascending:false}).limit(200);
- if(error){$("status").textContent=error.message;return;}rows=Array.isArray(data)?data:[];$("status").textContent=rows.length?"Latest Calibre updates":"No news yet.";paint();
+ if(error){rows=[];$("status").textContent="Could not load Calibre News: "+error.message;paint();return;}rows=Array.isArray(data)?data:[];$("status").textContent=rows.length?"Latest Calibre updates":"No news yet.";paint();
 }
-async function markRead(id){const {error}=await supabaseClient().from("calibre_news").update({read_at:new Date().toISOString()}).eq("id",id);if(!error){const x=rows.find(r=>r.id===id);if(x)x.read_at=new Date().toISOString();paint();}}
-$("markAll").onclick=async()=>{const s=await session();if(!s?.user)return;const {error}=await supabaseClient().from("calibre_news").update({read_at:new Date().toISOString()}).eq("user_id",s.user.id).is("read_at",null);if(!error){rows.forEach(x=>x.read_at=x.read_at||new Date().toISOString());paint();}};
+async function markRead(id){const s=await session();if(!cloudUser(s))return;const {error}=await supabaseClient().from("calibre_news").update({read_at:new Date().toISOString()}).eq("id",id).eq("user_id",s.user.id);if(!error){const x=rows.find(r=>r.id===id);if(x)x.read_at=new Date().toISOString();paint();}}
+$("markAll").onclick=async()=>{const s=await session();if(!cloudUser(s)){$("status").textContent="Sign in to Calibre Cloud first.";return;}const {error}=await supabaseClient().from("calibre_news").update({read_at:new Date().toISOString()}).eq("user_id",s.user.id).is("read_at",null);if(!error){rows.forEach(x=>x.read_at=x.read_at||new Date().toISOString());paint();}};
 $("refresh").onclick=load;document.querySelectorAll("[data-filter]").forEach(b=>b.onclick=()=>{filter=b.dataset.filter;document.querySelectorAll("[data-filter]").forEach(x=>x.classList.toggle("active",x===b));paint();});
 await load();
 </script>
