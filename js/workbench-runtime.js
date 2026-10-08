@@ -16,4 +16,5 @@ import("./research-brief.js?v=4").catch(err=>report("research brief",err));
 import("./part-tree-runtime.js?v=3").catch(err=>report("parts tree",err));
 import("./repair-timeline-runtime.js?v=1").catch(err=>report("repair timeline",err));
 import("./final-sale-handoff.js?v=1").catch(err=>report("sale handoff",err));
+import("./stage-strip.js?v=1").catch(err=>report("stage navigation",err));
 import("./workbench-health.js?v=2").catch(err=>report("Workbench health check",err));
