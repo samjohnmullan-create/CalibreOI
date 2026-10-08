@@ -8,8 +8,30 @@ function addReason(arr,text,points){if(text)arr.push(text);return points;}
 function partText(p){return [p.name,p.category,p.calibre,p.reference,p.condition,p.donor,p.notes].filter(Boolean).join(" ");}
 function leadText(l){return [l.part,l.reference,l.compatibility,l.notes].filter(Boolean).join(" ");}
 function neededText(job){const p=job?.passport||{},r=job?.researchBrief||{};return [job?.watchName,p.maker,p.model,p.calibre,p.calibreFamily,p.reference,...(r.partsLeads||[]).map(leadText),...(job?.parts||[]).map(x=>[x.part,x.partNumber].filter(Boolean).join(" "))].filter(Boolean).join(" ");}
+function targetKey(job){return compact(job?.passport?.calibre)||String(job?.id||"");}
+function evidenceList(state){return Array.isArray(state?.partFitEvidence)?state.partFitEvidence:[];}
+function sourceKey(type,id,partId=""){return `${type}:${id}:${partId||""}`;}
+function latestEvidence(state,job,type,id,partId=""){
+  const key=sourceKey(type,id,partId),target=targetKey(job);
+  return evidenceList(state).filter(e=>e&&e.sourceKey===key&&(e.targetJobId===job?.id||e.targetKey===target)).sort((a,b)=>String(b.at||"").localeCompare(String(a.at||"")))[0]||null;
+}
+function applyEvidence(score,why,e){
+  if(!e)return score;
+  if(e.result==="used"){why.unshift("Bench history: this exact source was used successfully for this watch/calibre.");return Math.max(score,100);}
+  if(e.result==="verified"){why.unshift("Bench history: you verified this source fits this watch/calibre.");return Math.max(score,95);}
+  if(e.result==="ruledout"){why.unshift("Bench history: you ruled this source out for this watch/calibre."+(e.note?" "+e.note:""));return 0;}
+  return score;
+}
+export function recordFitEvidence(state,job,{sourceType,sourceId,partId="",partName="",result,note=""}){
+  if(!state||!job||!sourceType||!sourceId||!["verified","ruledout","used"].includes(result))throw new Error("Invalid parts-fit evidence");
+  state.partFitEvidence=Array.isArray(state.partFitEvidence)?state.partFitEvidence:[];
+  const entry={id:"fit-"+Date.now().toString(36)+Math.random().toString(36).slice(2,7),sourceType,sourceId:String(sourceId),sourceKey:sourceKey(sourceType,String(sourceId),partId),partId:String(partId||""),partName:String(partName||""),targetJobId:String(job.id||""),targetKey:targetKey(job),targetWatch:String(job.watchName||""),targetCalibre:String(job.passport?.calibre||""),result,note:String(note||""),at:new Date().toISOString()};
+  state.partFitEvidence.unshift(entry);
+  return entry;
+}
+export function fitHistory(state,job){const target=targetKey(job);return evidenceList(state).filter(e=>e&&(e.targetJobId===job?.id||e.targetKey===target)).sort((a,b)=>String(b.at||"").localeCompare(String(a.at||"")));}
 
-export function inventoryMatches(job,partsStock=[]){
+export function inventoryMatches(job,partsStock=[],state={}){
   if(!job)return [];
   const p=job.passport||{},r=job.researchBrief||{},needCal=compact(p.calibre),family=fold(p.calibreFamily),maker=fold(p.movementMaker||p.maker),plate=num(p.movementMm),needAll=neededText(job);
   const leads=Array.isArray(r.partsLeads)?r.partsLeads:[];
@@ -22,11 +44,12 @@ export function inventoryMatches(job,partsStock=[]){
     const ov=overlap(needAll,txt);if(ov>=.35)score+=addReason(why,"Strong wording overlap with this watch's recorded parts/research.",22);else if(ov>=.18)score+=addReason(why,"Some wording overlap with the required part/research notes.",10);
     for(const lead of leads){const l=leadText(lead);if(!l)continue;const lev=overlap(l,txt);if(lev>=.45){score+=addReason(why,"Matches a researched parts lead: "+(lead.part||lead.reference||"candidate")+".",28);break;}if(lead.reference&&fold(txt).includes(fold(lead.reference))){score+=addReason(why,"Reference matches researched lead "+lead.reference+".",36);break;}}
     const refNums=[...String(part.reference||"").matchAll(/\d+(?:\.\d+)?/g)].map(m=>Number(m[0])).filter(Number.isFinite);if(plate&&refNums.some(n=>Math.abs(n-plate)<=.5))score+=addReason(why,"Recorded dimension is within 0.5 mm of the movement size; measure the actual part before use.",12);
-    const level=classify(score);return {part,score:Math.min(100,score),level,why:why.length?why:["No strong compatibility evidence recorded yet. Add calibre, reference or dimensions before relying on this part."]};
+    const evidence=latestEvidence(state,job,"stock",part.id);score=applyEvidence(score,why,evidence);
+    const level=classify(score);return {part,score:Math.min(100,score),level,why:why.length?why:["No strong compatibility evidence recorded yet. Add calibre, reference or dimensions before relying on this part."],evidence};
   }).sort((a,b)=>b.score-a.score);
 }
 
-export function donorMatches(job,jobs=[]){
+export function donorMatches(job,jobs=[],state={}){
   if(!job)return [];
   const needCal=compact(job.passport?.calibre),needPlate=num(job.passport?.movementMm),needMaker=fold(job.passport?.movementMaker||job.passport?.maker),needText=neededText(job);
   return (jobs||[]).filter(d=>d&&d.id!==job.id&&d.status==="Spares").map(donor=>{let score=0;const why=[],cal=compact(donor.passport?.calibre),plate=num(donor.passport?.movementMm),maker=fold(donor.passport?.movementMaker||donor.passport?.maker),txt=[donor.watchName,donor.passport?.model,donor.passport?.calibre,donor.passport?.calibreFamily,donor.fitsNote].filter(Boolean).join(" ");
@@ -36,8 +59,9 @@ export function donorMatches(job,jobs=[]){
     if(fold(donor.fitsNote).includes(fold(job.watchName))||fold(donor.fitsNote).includes(fold(job.passport?.calibre)))score+=addReason(why,"You previously recorded that this donor fits this watch/calibre.",30);
     const ov=overlap(needText,txt);if(ov>=.3)score+=addReason(why,"Identity/parts wording overlaps with the open watch.",12);
     const kept=(donor.sparesParts||[]).filter(x=>x.keep);if(!kept.length){score-=20;why.push("No donor parts are currently marked as available.");}
-    return {donor,score:Math.max(0,Math.min(100,score)),level:classify(score),why,kept};
+    const partEvidence=kept.map(k=>latestEvidence(state,job,"donor",donor.id,k.id)).filter(Boolean).sort((a,b)=>String(b.at||"").localeCompare(String(a.at||"")))[0]||latestEvidence(state,job,"donor",donor.id,"");score=applyEvidence(score,why,partEvidence);
+    return {donor,score:Math.max(0,Math.min(100,score)),level:classify(score),why,kept,evidence:partEvidence};
   }).sort((a,b)=>b.score-a.score);
 }
 
-export function compatibilitySummary(job,state){return {inventory:inventoryMatches(job,state?.partsStock||[]),donors:donorMatches(job,state?.jobs||[])};}
+export function compatibilitySummary(job,state){return {inventory:inventoryMatches(job,state?.partsStock||[],state),donors:donorMatches(job,state?.jobs||[],state),history:fitHistory(state,job)};}
