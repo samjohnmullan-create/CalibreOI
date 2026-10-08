@@ -1,4 +1,4 @@
-import { saleReadiness } from "./sale-readiness.js?v=1";
+import { saleReadiness } from "./sale-readiness.js?v=2";
 
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
 function bridge(){return window.calibreWorkbench||null;}
