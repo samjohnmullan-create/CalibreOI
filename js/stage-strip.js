@@ -23,8 +23,27 @@ if(list&&!document.querySelector('.stage-strip-prev')){
     prev.textContent='‹';
     next.textContent='›';
     parent.append(prev,next);
+
     const amount=()=>Math.max(320,Math.round(list.clientWidth*0.6));
     prev.addEventListener('click',()=>list.scrollBy({left:-amount(),behavior:'smooth'}));
     next.addEventListener('click',()=>list.scrollBy({left:amount(),behavior:'smooth'}));
+
+    const centreActive=()=>{
+      const active=list.querySelector('.stage-btn.active');
+      if(!active)return;
+      const left=active.offsetLeft-(list.clientWidth-active.offsetWidth)/2;
+      list.scrollTo({left:Math.max(0,left),behavior:'smooth'});
+    };
+
+    // Centre once after the normal Workbench paint has populated the stages.
+    setTimeout(centreActive,250);
+
+    // Re-centre only after an explicit stage change. No observers or polling.
+    list.addEventListener('click',event=>{
+      if(!event.target.closest('.stage-btn'))return;
+      setTimeout(centreActive,160);
+    });
+    document.getElementById('prevStage')?.addEventListener('click',()=>setTimeout(centreActive,160));
+    document.getElementById('nextStage')?.addEventListener('click',()=>setTimeout(centreActive,160));
   }
 }
