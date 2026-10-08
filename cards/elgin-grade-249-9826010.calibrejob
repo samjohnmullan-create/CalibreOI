@@ -1,0 +1,235 @@
+{
+  "type": "calibrejob",
+  "version": 4,
+  "pushId": "elgin-grade-249-9826010",
+  "jobId": "CCO-249-9826010",
+  "watchName": "Elgin Grade 249 Sterling Hunter Pocket Watch",
+  "status": "On bench",
+  "jobType": "pocket",
+  "decision": "Full service / repair",
+  "channel": "Not listed",
+  "importUrl": "https://samjohnmullan-create.github.io/CalibreOI/?card=elgin-grade-249-9826010",
+  "passport": {
+    "maker": "Elgin National Watch Co.",
+    "model": "Grade 249, Model 4",
+    "country": "United States (Elgin, Illinois)",
+    "year": "c. 1903",
+    "confidence": "High",
+    "fieldConfidence": {
+      "maker": "Confirmed from movement engraving and dial",
+      "grade": "High - serial-range/physical configuration match",
+      "year": "High - serial-range estimate",
+      "caseMaterial": "Confirmed from Keystone STERLING hallmark",
+      "caseNumber": "Confirmed from case marking"
+    },
+    "dialMarkings": "Elgin; black Roman numerals; outer minute track; single-sunk subsidiary seconds at 6; blued steel hands.",
+    "movementMaker": "Elgin National Watch Co.",
+    "calibre": "Grade 249 / Model 4",
+    "calibreFamily": "Elgin 18-size Model 4",
+    "beatRate": "",
+    "powerReserve": "",
+    "settingType": "Lever set; stem wind",
+    "jewels": "17",
+    "movementType": "Mechanical hand-wound pocket watch",
+    "movementMm": "18s (American size; exact diameter not measured)",
+    "escapement": "Straight-line lever escapement; exposed pallets",
+    "serial": "9826010",
+    "caseNumber": "4156482",
+    "reference": "Elgin Grade 249 / Class 62 family",
+    "caseMaterial": "Keystone Sterling silver (.925 standard indicated by STERLING mark)",
+    "caseStyle": "Full hunter / hunting case",
+    "casebackType": "Hinged rear cover with inner cuvette/dust cover",
+    "crystalType": "Not confirmed from intake photos",
+    "crownType": "Fluted stem-wind pendant crown",
+    "lugWidth": "",
+    "width": "",
+    "height": "",
+    "thickness": "",
+    "complications": "Subsidiary seconds",
+    "waterMark": "Not water resistant; antique pocket watch - keep dry",
+    "strap": "N/A",
+    "hallmarks": "KEYSTONE WATCH CASE / STERLING; Keystone maker device; case serial 4156482",
+    "engravings": "Movement: ELGIN NAT'L WATCH CO.; serial 9826010; 17 JEWELS; SAFETY PINION.",
+    "notes": "Observed from six intake photos. Gilt 18-size movement with full-plate architecture and engraved balance cock. Case shows age-related tarnish, scratching and grime. Dial appears substantially intact in the supplied views, with scattered surface marks; inspect under magnification for hairlines/chips before final condition grading. The SAFETY PINION marking refers to Elgin's train protection arrangement and is unrelated to the reported balance-wheel wobble.",
+    "history": "Grade 249 was Elgin's 18-size, 17-jewel hunting Model 4, produced 1900-1904 in about 31,000 examples. Period catalog evidence describes it as gilt, screw-set jeweled, stem wound and lever set, adjusted, with compensation balance, quick train, straight-line escapement, exposed pallets, sunk seconds dial and dust ring. A nearby documented Grade 249 serial (9729093) is dated 1903, supporting a circa-1903 date for serial 9826010.",
+    "warnings": "Do not run or wind repeatedly until the balance fault is diagnosed. Reported visible balance wobble may indicate a damaged/bent balance staff pivot, damaged/loose balance jewel, excessive endshake/sideshake, or a balance wheel out of true. Confirm before ordering parts.",
+    "listingText": "Circa 1903 Elgin Grade 249 18-size 17-jewel hunting pocket watch in a Keystone sterling-silver full hunter case. Gilt Model 4 movement, lever set, adjusted, with subsidiary seconds and period blued-steel hands. Repair/service history and timing results to be added after workshop completion.",
+    "sources": [
+      "https://pocketwatchdatabase.com/guide/company/elgin/grade/249",
+      "https://pocketwatchdatabase.com/search/result/elgin/9729093",
+      "https://pocketwatchdatabase.com/search/result/elgin/9729365/research",
+      "https://pocketwatchdatabase.com/search/result/elgin/9729365/parts",
+      "https://pocketwatchdatabase.com/parts/elgin/5dfd1faddb9b512bdc6b62fbf97af2ca/balance-staff-857?context=company&grade%5B0%5D=68&manufacturer=elgin",
+      "https://pocketwatchdatabase.com/guide/case-companies/keystone-watch-case-co-cases/grades/Keystone-Sterling"
+    ],
+    "photos": []
+  },
+  "business": {
+    "purchasePrice": "",
+    "buyerPremium": "",
+    "postage": "",
+    "strapCost": "",
+    "batteryCost": "",
+    "partsCost": "",
+    "consumables": "",
+    "externalService": "",
+    "marketplaceFees": "",
+    "shippingToBuyer": "",
+    "otherCost": "",
+    "labourMinutes": "",
+    "labourRate": "",
+    "targetSale": "",
+    "actualSale": "",
+    "minSale": "",
+    "title": "c.1903 Elgin Grade 249 17J Sterling Silver Hunter Pocket Watch",
+    "text": "Market note: Grade 249 has substantial recorded sales coverage, but value is strongly condition- and case-dependent. A broadly comparable 18s 17j Elgin full-hunter example sold for US$256 in April 2026; Grade 249 movement-only/non-working examples can be far lower. This watch's sterling Keystone case is a material value contributor. Set numeric target after balance repair, full service, timing results, dial/crystal inspection and case weight/condition are documented."
+  },
+  "faults": [
+    {
+      "text": "Balance assembly visibly wobbles / appears to run out of true (reported at intake)",
+      "severity": "Parts required"
+    }
+  ],
+  "diagnosticFaults": [
+    {
+      "key": "balance-staff-pivot-possible",
+      "id": "balance-staff-pivot-possible",
+      "text": "Bent, worn or broken balance staff/pivot causing visible balance wobble",
+      "category": "Balance & escapement",
+      "severity": "Parts required",
+      "sourceStage": "Balance & beat",
+      "sourceCheck": "reported-visible-balance-wobble",
+      "sourceQuestion": "Does the balance have excessive side play, endshake, or a visibly damaged pivot?",
+      "status": "possible"
+    },
+    {
+      "key": "balance-jewel-possible",
+      "id": "balance-jewel-possible",
+      "text": "Loose, cracked, chipped or displaced balance jewel / excessive jewel clearance",
+      "category": "Balance & escapement",
+      "severity": "Parts required",
+      "sourceStage": "Balance & beat",
+      "sourceCheck": "inspect-upper-lower-balance-jewels",
+      "sourceQuestion": "Are both balance jewels intact, seated correctly and providing correct pivot clearance?",
+      "status": "possible"
+    },
+    {
+      "key": "balance-wheel-out-of-true-possible",
+      "id": "balance-wheel-out-of-true-possible",
+      "text": "Balance wheel/rim out of true or staff-to-wheel seating/riveting fault",
+      "category": "Balance & escapement",
+      "severity": "Moderate",
+      "sourceStage": "Balance & beat",
+      "sourceCheck": "check-balance-true",
+      "sourceQuestion": "With pivots/jewels confirmed, does the wheel itself run flat and concentric?",
+      "status": "possible"
+    }
+  ],
+  "parts": [
+    {
+      "part": "Balance staff - provisional; verify pivots/seats before ordering",
+      "supplier": "",
+      "partNumber": "Elgin factory #857",
+      "quantity": "1",
+      "cost": "",
+      "ordered": "",
+      "received": false,
+      "fitted": false
+    }
+  ],
+  "timingRuns": [],
+  "photos": {
+    "intake": [],
+    "caseback": [],
+    "movement": [],
+    "dial": [],
+    "damage": [],
+    "progress": [],
+    "finished": [],
+    "hero": []
+  },
+  "stages": [
+    {
+      "name": "Intake",
+      "notes": "Six intake photos reviewed. Identity strongly matches Elgin Grade 249, serial 9826010. Reported fault: balance wheel visibly wobbles. Do not treat the engraved 'Safety Pinion' as related to this symptom.",
+      "condition": "Needs diagnosis / balance fault",
+      "complete": false
+    },
+    {
+      "name": "Pre-service timing",
+      "notes": "Only attempt if movement can run safely without the balance contacting adjacent parts. Record rate/beat error if viable; otherwise mark not testable before repair.",
+      "condition": "Pending balance diagnosis",
+      "complete": false
+    },
+    {
+      "name": "Case & pendant",
+      "notes": "Keystone sterling-silver full hunter case, serial 4156482. Inspect front/rear/cuvette hinges, bow, pendant, crown and case lips. Preserve hallmarks and patina; avoid aggressive polishing. Weigh case/movement separately if practical for documentation.",
+      "condition": "Tarnished/scratched; structurally untested",
+      "complete": false
+    },
+    {
+      "name": "Uncasing",
+      "notes": "Photograph lever-set mechanism, dial side and case/movement seating during removal. Check case screws and dust ring.",
+      "condition": "Pending",
+      "complete": false
+    },
+    {
+      "name": "Dismantling & inspection",
+      "notes": "Prioritise balance assembly. Under microscope inspect upper/lower staff pivots, balance jewels, balance cock alignment, roller table/jewel, hairspring collet/stud and rim true. Check train freedom before adding power.",
+      "condition": "Pending",
+      "complete": false
+    },
+    {
+      "name": "Cleaning & parts inspection",
+      "notes": "Document pivot/jewel wear and any corrosion before cleaning. Grade 249 catalog parts research identifies balance staff factory #857; do not order solely from symptom - verify measurements/fit first.",
+      "condition": "Pending",
+      "complete": false
+    },
+    {
+      "name": "Repairs & parts",
+      "notes": "If staff fault confirmed, replace/fit Elgin #857 or dimensionally verified equivalent, then true balance and verify endshake. Retain replaced original parts with job record.",
+      "condition": "Provisional part identified",
+      "complete": false
+    },
+    {
+      "name": "Reassembly & lubrication",
+      "notes": "Full service recommended if repair proceeds; inspect mainspring/barrel and all train pivots/jewels before reassembly.",
+      "condition": "Pending",
+      "complete": false
+    },
+    {
+      "name": "Train & escapement",
+      "notes": "Verify free train, pallet action, lock/drop and safety action after balance repair. Grade 249 period specification: quick train, straight-line escapement, exposed pallets.",
+      "condition": "Pending",
+      "complete": false
+    },
+    {
+      "name": "Balance & beat",
+      "notes": "Key diagnostic stage: check endshake, sideshake, staff pivots, jewels, balance true/flat, hairspring flat/concentric and centered between regulator pins. Confirm or rule out each diagnostic fault before parts order/final assembly.",
+      "condition": "Primary fault area",
+      "complete": false
+    },
+    {
+      "name": "Casing & function",
+      "notes": "Confirm lever setting, winding, hand clearance, hunter-lid opening/closing and pendant operation. Do not claim water resistance.",
+      "condition": "Pending",
+      "complete": false
+    },
+    {
+      "name": "Regulation",
+      "notes": "Record multi-position timing after adequate run-in. Historical movement is adjusted to temperature, but final workshop performance should be reported as measured rather than assumed.",
+      "condition": "Pending",
+      "complete": false
+    },
+    {
+      "name": "Final QC",
+      "notes": "Document running duration/power reserve, winding/setting, dial/hands/crystal/case condition, final timing, and finished photos. Update target sale only after final condition is known.",
+      "condition": "Pending",
+      "complete": false
+    }
+  ],
+  "diagnosis": "Preliminary diagnosis only: visible balance wobble is more consistent with a balance staff/pivot, balance-jewel clearance/damage, or wheel-trueness problem than a pinion fault. Confirm by inspection before ordering parts.",
+  "repairPerformed": "",
+  "service": "Full mechanical service after balance fault diagnosis/repair",
+  "serviceNotes": "Provisional Elgin balance staff application: factory #857. Verify pivot and seat dimensions and inspect jewels before purchase."
+}
