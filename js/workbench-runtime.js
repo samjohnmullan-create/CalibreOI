@@ -1,3 +1,3 @@
-import "./part-tree-runtime.js?v=1";
+import "./part-tree-runtime.js?v=2";
 import "./research-brief.js?v=4";
-import "./workbench-runtime-core.js?v=3";
+import "./workbench-runtime-core.js?v=4";
