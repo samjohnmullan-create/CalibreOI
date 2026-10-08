@@ -83,8 +83,11 @@ export function mountChannelStrategy({job,save}){
   const main=document.querySelector(".sales-layout main");if(!main)return;
   ensure(job);
   const channelSelect=document.getElementById("channel");
-  if(channelSelect&&!Array.from(channelSelect.options).some(o=>o.value==="Calibre & Co. website")){
-    const o=document.createElement("option");o.textContent=o.value="Calibre & Co. website";channelSelect.appendChild(o);
+  if(channelSelect){
+    Array.from(channelSelect.options).filter(o=>o.value==="Auction").forEach(o=>o.remove());
+    if(!Array.from(channelSelect.options).some(o=>o.value==="Calibre & Co. website")){
+      const o=document.createElement("option");o.textContent=o.value="Calibre & Co. website";channelSelect.appendChild(o);
+    }
   }
   const host=document.createElement("section");host.id="channelStrategy";host.className="card channel-strategy";main.insertBefore(host,main.firstChild);
   const style=document.createElement("style");style.textContent=`.channel-strategy{padding:12px}.cs-head{display:flex;justify-content:space-between;gap:10px;align-items:start}.cs-head h3{margin:0}.cs-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px}.cs-card{padding:10px;border:1px solid var(--line);border-radius:9px;background:var(--surface-2)}.cs-card.best{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}.cs-card h4{margin:0;font-size:.78rem}.cs-card p{margin:3px 0 8px;font-size:.62rem;color:var(--muted);line-height:1.35}.cs-fields{display:grid;grid-template-columns:1fr 1fr;gap:6px}.cs-fields label{font-size:.59rem}.cs-fields input{min-width:0}.cs-results{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin:8px 0}.cs-results div{padding:6px;border-radius:6px;background:var(--surface)}.cs-results span{display:block;font-size:.54rem;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}.cs-results strong{display:block;margin-top:2px;font-size:.72rem}.cs-use{width:100%;min-height:34px}.cs-note{margin-top:8px;font-size:.61rem;color:var(--muted)}@media(max-width:900px){.cs-grid{grid-template-columns:1fr}}`;
@@ -105,7 +108,16 @@ export function mountChannelStrategy({job,save}){
   function queueSave(){clearTimeout(timer);timer=setTimeout(()=>save?.(),350);}
   function bind(){
     host.querySelectorAll("[data-cs]").forEach(input=>input.addEventListener("input",()=>{const id=input.dataset.id,key=input.dataset.cs;ensure(job)[id][key]=input.value;refreshCard(id);queueSave();}));
-    host.querySelectorAll("[data-cs-use]").forEach(btn=>btn.addEventListener("click",async()=>{const id=btn.dataset.csUse,c=CHANNELS.find(x=>x.id===id),g=listing(job,id);job.channel=c.channel;job.sale=job.sale||{};job.sale.selectedChannel=id;job.sale.channelListings=job.sale.channelListings||{};job.sale.channelListings[id]={...g,generatedAt:new Date().toISOString(),economics:economics(job,id)};const title=document.getElementById("listingTitle"),full=document.getElementById("listingText"),short=document.getElementById("shortText");if(title)title.value=g.title;if(full)full.value=g.full;if(short)short.value=g.short;if(channelSelect)channelSelect.value=c.channel;await save?.();[title,full,short,channelSelect].filter(Boolean).forEach(el=>{el.dispatchEvent(new Event("input",{bubbles:true}));el.dispatchEvent(new Event("change",{bubbles:true}));});const msg=document.getElementById("saveState");if(msg)msg.textContent=`${c.label} listing generated and saved`;render();}));
+    host.querySelectorAll("[data-cs-use]").forEach(btn=>btn.addEventListener("click",async()=>{
+      const id=btn.dataset.csUse,c=CHANNELS.find(x=>x.id===id),g=listing(job,id),e=economics(job,id);
+      job.channel=c.channel;job.business=job.business||{};job.business.marketplaceFees=String(Math.round(e.fees*100)/100);job.business.shippingToBuyer=String(Math.round(e.shipping*100)/100);
+      job.sale=job.sale||{};job.sale.selectedChannel=id;job.sale.channelListings=job.sale.channelListings||{};job.sale.channelListings[id]={...g,generatedAt:new Date().toISOString(),economics:e};
+      const title=document.getElementById("listingTitle"),full=document.getElementById("listingText"),short=document.getElementById("shortText"),fees=document.getElementById("marketplaceFees"),ship=document.getElementById("shippingToBuyer");
+      if(title)title.value=g.title;if(full)full.value=g.full;if(short)short.value=g.short;if(channelSelect)channelSelect.value=c.channel;if(fees)fees.value=job.business.marketplaceFees;if(ship)ship.value=job.business.shippingToBuyer;
+      await save?.();
+      [title,full,short,channelSelect,fees,ship].filter(Boolean).forEach(el=>{el.dispatchEvent(new Event("input",{bubbles:true}));el.dispatchEvent(new Event("change",{bubbles:true}));});
+      const msg=document.getElementById("saveState");if(msg)msg.textContent=`${c.label} listing generated and costs synced`;render();
+    }));
   }
   render();
 }
