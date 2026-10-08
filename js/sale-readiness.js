@@ -10,18 +10,31 @@ function latestTiming(job){
 function finalStage(job){return (job?.stages||[]).find(s=>s?.name==="Final QC")||null;}
 function countPhotos(job){
   const p=job?.photos||{};
-  return Object.values(p).reduce((n,v)=>n+(Array.isArray(v)?v.length:0),0);
+  const passport=Object.values(p).reduce((n,v)=>n+(Array.isArray(v)?v.length:0),0);
+  const stage=(job?.stages||[]).reduce((n,s)=>n+(Array.isArray(s?.photos)?s.photos.length:0),0);
+  return passport+stage;
 }
 function hasSalePhoto(job){
   const p=job?.photos||{};
   return Array.isArray(p.sale)&&p.sale.length>0;
 }
+function condition(job){return raw(job?.stages?.[0]?.condition||job?.condition);}
+function dimensions(p){
+  const bits=[];
+  if(present(p.width))bits.push(`${p.width} mm wide`);
+  if(present(p.diameter))bits.push(`${p.diameter} mm diameter`);
+  if(present(p.lugWidth))bits.push(`${p.lugWidth} mm lugs`);
+  if(present(p.thickness))bits.push(`${p.thickness} mm thick`);
+  return bits;
+}
 function check(id,label,ok,detail,required=true){return {id,label,ok:Boolean(ok),detail:detail||"",required};}
 export function saleReadiness(job){
-  const p=job?.passport||{},b=job?.business||{},final=finalStage(job),timing=latestTiming(job),photos=countPhotos(job);
+  const p=job?.passport||{},b=job?.business||{},final=finalStage(job),timing=latestTiming(job),photos=countPhotos(job),cond=condition(job),dims=dimensions(p);
   const items=[
     check("identity","Identity",present(p.maker)||present(p.model)||present(job?.watchName),present(p.calibre)?`Cal. ${p.calibre}`:"Maker/model recorded"),
+    check("condition","Condition",present(cond),present(cond)?cond:"Record the watch condition"),
     check("calibre","Movement / calibre",present(p.calibre)||present(p.movementMaker),present(p.calibre)?`Cal. ${p.calibre}`:"Movement identified",false),
+    check("dimensions","Dimensions",dims.length>0,dims.length?dims.join(" · "):"Add case dimensions",false),
     check("repair","Repair record",present(job?.repairPerformed)||present(job?.diagnosis),present(job?.repairPerformed)?"Work performed recorded":"Diagnosis recorded"),
     check("finalqc","Final QC",!!final?.complete,final?.complete?"Final QC complete":"Complete the Final QC stage"),
     check("timing","Timing",!!timing,timing?`${num(timing.rateSecondsPerDay??timing.rate)>=0?"+":""}${num(timing.rateSecondsPerDay??timing.rate).toFixed(1)} s/day${timing.position?` · ${timing.position}`:""}`:"Save at least one timing run",false),
