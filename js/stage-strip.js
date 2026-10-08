@@ -26,21 +26,4 @@ if(list){
     prev.addEventListener('click',()=>list.scrollBy({left:-amount(),behavior:'smooth'}));
     next.addEventListener('click',()=>list.scrollBy({left:amount(),behavior:'smooth'}));
   }
-
-  // This can safely be upgraded even if an older cached version already made the arrows.
-  if(!list.dataset.stageCentering){
-    list.dataset.stageCentering='1';
-    const centreActive=()=>{
-      const active=list.querySelector('.stage-btn.active');
-      if(!active)return false;
-      const left=active.offsetLeft-(list.clientWidth-active.offsetWidth)/2;
-      list.scrollTo({left:Math.max(0,left),behavior:'smooth'});
-      return true;
-    };
-    const centreSoon=()=>[0,180,450,900].forEach(ms=>setTimeout(centreActive,ms));
-    [120,350,800,1400].forEach(ms=>setTimeout(centreActive,ms));
-    list.addEventListener('click',event=>{if(event.target.closest('.stage-btn'))centreSoon();});
-    document.getElementById('prevStage')?.addEventListener('click',centreSoon);
-    document.getElementById('nextStage')?.addEventListener('click',centreSoon);
-  }
 }
