@@ -112,7 +112,7 @@ async function start(){
     item.category=cleanCategory(item.category);
     if(item.category==="Watch"){
       if(item.sourceKey&&hasWatch(item.sourceKey)){remove(id);await persist("That watch purchase is already a job.");return;}
-      const job=watchFrom(item);state.jobs=Array.isArray(state.jobs)?state.jobs:[];state.jobs.push(job);state.currentId=job.id;remove(id);await saveState(state);location.href="summary.html";return;
+      const job=watchFrom(item);state.jobs=Array.isArray(state.jobs)?state.jobs:[];state.jobs.push(job);state.currentId=job.id;remove(id);await saveState(state);location.href="summary.html?research=1";return;
     }
     if(item.sourceKey&&hasIncoming(item.sourceKey)){remove(id);await persist("That purchase is already in Incoming.");return;}
     state.incoming=Array.isArray(state.incoming)?state.incoming:[];state.incoming.unshift(incomingFrom(item));remove(id);await persist(`${item.itemName} sent to Incoming.`);
