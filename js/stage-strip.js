@@ -1,17 +1,16 @@
 const list=document.getElementById("stageList");
-if(list&&!document.querySelector('.stage-strip-prev')){
-  const style=document.createElement('style');
-  style.textContent=`
-    .stage-list{position:relative;scroll-behavior:smooth}
-    .stage-strip-nav{position:absolute;top:50%;transform:translateY(-50%);z-index:5;width:34px;height:48px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);display:grid;place-items:center;font-size:1.25rem;font-weight:800;cursor:pointer;box-shadow:0 3px 12px rgba(0,0,0,.12)}
-    .stage-strip-nav:hover{border-color:var(--accent)}
-    .stage-strip-prev{left:6px}.stage-strip-next{right:6px}
-    @media(max-width:760px){.stage-strip-nav{display:none}}
-  `;
-  document.head.appendChild(style);
-
+if(list){
   const parent=list.parentElement;
-  if(parent){
+  if(parent&&!document.querySelector('.stage-strip-prev')){
+    const style=document.createElement('style');
+    style.textContent=`
+      .stage-list{position:relative;scroll-behavior:smooth}
+      .stage-strip-nav{position:absolute;top:50%;transform:translateY(-50%);z-index:5;width:34px;height:48px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);display:grid;place-items:center;font-size:1.25rem;font-weight:800;cursor:pointer;box-shadow:0 3px 12px rgba(0,0,0,.12)}
+      .stage-strip-nav:hover{border-color:var(--accent)}
+      .stage-strip-prev{left:6px}.stage-strip-next{right:6px}
+      @media(max-width:760px){.stage-strip-nav{display:none}}
+    `;
+    document.head.appendChild(style);
     parent.style.position='relative';
     const prev=document.createElement('button');
     const next=document.createElement('button');
@@ -23,11 +22,14 @@ if(list&&!document.querySelector('.stage-strip-prev')){
     prev.textContent='‹';
     next.textContent='›';
     parent.append(prev,next);
-
     const amount=()=>Math.max(320,Math.round(list.clientWidth*0.6));
     prev.addEventListener('click',()=>list.scrollBy({left:-amount(),behavior:'smooth'}));
     next.addEventListener('click',()=>list.scrollBy({left:amount(),behavior:'smooth'}));
+  }
 
+  // This can safely be upgraded even if an older cached version already made the arrows.
+  if(!list.dataset.stageCentering){
+    list.dataset.stageCentering='1';
     const centreActive=()=>{
       const active=list.querySelector('.stage-btn.active');
       if(!active)return false;
@@ -35,19 +37,9 @@ if(list&&!document.querySelector('.stage-strip-prev')){
       list.scrollTo({left:Math.max(0,left),behavior:'smooth'});
       return true;
     };
-    const centreSoon=()=>{
-      // A few finite retries allow async save/repaint to finish. No observer/poll loop.
-      [0,180,450,900].forEach(ms=>setTimeout(centreActive,ms));
-    };
-
-    // Initial Workbench paint can complete after this optional module loads.
+    const centreSoon=()=>[0,180,450,900].forEach(ms=>setTimeout(centreActive,ms));
     [120,350,800,1400].forEach(ms=>setTimeout(centreActive,ms));
-
-    // Re-centre only after explicit stage changes.
-    list.addEventListener('click',event=>{
-      if(!event.target.closest('.stage-btn'))return;
-      centreSoon();
-    });
+    list.addEventListener('click',event=>{if(event.target.closest('.stage-btn'))centreSoon();});
     document.getElementById('prevStage')?.addEventListener('click',centreSoon);
     document.getElementById('nextStage')?.addEventListener('click',centreSoon);
   }
