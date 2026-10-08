@@ -52,7 +52,7 @@
     var map=document.createElement("script");map.type="importmap";map.dataset.calibreStoreMap="1";map.textContent=JSON.stringify({imports:imports});document.head.appendChild(map);
   }
   if(!document.querySelector('script[data-calibre-cloud-auto]')){
-    var sync=document.createElement("script");sync.type="module";sync.src="js/cloud-auto.js?v=5";sync.dataset.calibreCloudAuto="1";document.head.appendChild(sync);
+    var sync=document.createElement("script");sync.type="module";sync.src="js/cloud-auto.js?v=6";sync.dataset.calibreCloudAuto="1";document.head.appendChild(sync);
   }
 })();
 
