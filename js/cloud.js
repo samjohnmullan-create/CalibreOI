@@ -4,7 +4,9 @@ export const SUPABASE_URL = "https://jdeqnboljrgrpnvkfthx.supabase.co";
 export const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_fWijlFfBeTw4Ku8EPkno7w_BgOARn0j";
 export const CLOUD_SEEN_KEY = "calibre-cloud-seen-at";
 
+const LOCAL_SESSION={user:{id:"__calibre_local__",email:""},localOnly:true};
 let client;
+
 export function supabaseClient(){
   if(!client){
     client=createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY,{
@@ -14,12 +16,32 @@ export function supabaseClient(){
   return client;
 }
 
+function cachedSession(){
+  try{
+    for(let i=0;i<localStorage.length;i++){
+      const key=localStorage.key(i)||"";
+      if(!key.startsWith("sb-")||!key.includes("-auth-token"))continue;
+      const raw=localStorage.getItem(key);
+      if(!raw)continue;
+      const parsed=JSON.parse(raw);
+      const value=parsed?.currentSession||parsed;
+      if(value?.user?.id)return value;
+    }
+  }catch{}
+  return null;
+}
+
 export async function session(){
   try{
     const {data,error}=await supabaseClient().auth.getSession();
     if(error)throw error;
-    return data.session||null;
-  }catch{return null;}
+    if(data?.session?.user)return data.session;
+  }catch{}
+
+  // A bench app must remain usable if auth refresh/CDN/network is temporarily
+  // unavailable. Preserve a cached real session when possible, otherwise use
+  // an explicit local-only session so navigation never locks or redirects.
+  return cachedSession()||LOCAL_SESSION;
 }
 
 export async function signUp(email,password){
@@ -53,7 +75,7 @@ export function markCloudSeen(updatedAt){ if(updatedAt)localStorage.setItem(CLOU
 
 export async function readCloudState(){
   const s=await session();
-  if(!s?.user)return {signedIn:false,state:null,updatedAt:null};
+  if(!s?.user||s.localOnly)return {signedIn:false,state:null,updatedAt:null};
   const {data,error}=await supabaseClient().from("calibre_state").select("data,updated_at").eq("user_id",s.user.id).maybeSingle();
   if(error)throw error;
   return {signedIn:true,user:s.user,state:data?.data||null,updatedAt:data?.updated_at||null};
@@ -61,7 +83,7 @@ export async function readCloudState(){
 
 export async function writeCloudState(state){
   const s=await session();
-  if(!s?.user)return {signedIn:false,updatedAt:null};
+  if(!s?.user||s.localOnly)return {signedIn:false,updatedAt:null};
   const updatedAt=new Date().toISOString();
   const payload={user_id:s.user.id,data:cleanState(state),updated_at:updatedAt};
   const {error}=await supabaseClient().from("calibre_state").upsert(payload,{onConflict:"user_id"});
@@ -72,7 +94,7 @@ export async function writeCloudState(state){
 
 export async function readInbox(){
   const s=await session();
-  if(!s?.user)return {signedIn:false,items:[]};
+  if(!s?.user||s.localOnly)return {signedIn:false,items:[]};
   const {data,error}=await supabaseClient()
     .from("calibre_inbox")
     .select("id,push_id,job_data,created_at")
@@ -84,7 +106,7 @@ export async function readInbox(){
 
 export async function markInboxImported(id){
   const s=await session();
-  if(!s?.user)throw new Error("Not signed in");
+  if(!s?.user||s.localOnly)throw new Error("Cloud session unavailable");
   const {error}=await supabaseClient()
     .from("calibre_inbox")
     .update({imported_at:new Date().toISOString()})
@@ -95,5 +117,5 @@ export async function markInboxImported(id){
 
 export async function cloudStatus(){
   const s=await session();
-  return {configured:true,signedIn:!!s?.user,email:s?.user?.email||""};
+  return {configured:true,signedIn:!!s?.user&&!s.localOnly,email:s?.localOnly?"":(s?.user?.email||"")};
 }
