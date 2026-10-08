@@ -24,6 +24,15 @@ Version 4 can carry the complete working job, including:
 - job photos
 - diagnosis and repair performed
 
+## Pre-job photos
+
+Photos supplied during identification/research should be treated as the watch's pre-job record rather than workshop-progress photos.
+
+- Put stable photo URLs in `photos.intake` so they appear with the job's intake images.
+- Where `mediaAssets` are supplied, use category `original`, link them to the job/watch, and describe the view in `caption` or `evidenceNote`.
+- Keep movement, dial, caseback and damage images in the pre-job set even when the same image is also useful as identity evidence.
+- ChatGPT-generated job cards should include all usable supplied pre-job photos whenever stable storage URLs are available.
+
 Import remains tolerant of older cards; missing fields are normalised by `store.js`.
 
 ## One-tap link
