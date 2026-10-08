@@ -25,11 +25,37 @@ function applyEvidence(score,why,e){
 export function recordFitEvidence(state,job,{sourceType,sourceId,partId="",partName="",result,note=""}){
   if(!state||!job||!sourceType||!sourceId||!["verified","ruledout","used"].includes(result))throw new Error("Invalid parts-fit evidence");
   state.partFitEvidence=Array.isArray(state.partFitEvidence)?state.partFitEvidence:[];
-  const entry={id:"fit-"+Date.now().toString(36)+Math.random().toString(36).slice(2,7),sourceType,sourceId:String(sourceId),sourceKey:sourceKey(sourceType,String(sourceId),partId),partId:String(partId||""),partName:String(partName||""),targetJobId:String(job.id||""),targetKey:targetKey(job),targetWatch:String(job.watchName||""),targetCalibre:String(job.passport?.calibre||""),result,note:String(note||""),at:new Date().toISOString()};
+  const entry={id:"fit-"+Date.now().toString(36)+Math.random().toString(36).slice(2,7),sourceType,sourceId:String(sourceId),sourceKey:sourceKey(sourceType,String(sourceId),partId),partId:String(partId||""),partName:String(partName||""),targetJobId:String(job.id||""),targetKey:targetKey(job),targetWatch:String(job.watchName||""),targetCalibre:String(job.passport?.calibre||""),targetMaker:String(job.passport?.movementMaker||job.passport?.maker||""),targetModel:String(job.passport?.model||""),result,note:String(note||""),at:new Date().toISOString()};
   state.partFitEvidence.unshift(entry);
   return entry;
 }
 export function fitHistory(state,job){const target=targetKey(job);return evidenceList(state).filter(e=>e&&(e.targetJobId===job?.id||e.targetKey===target)).sort((a,b)=>String(b.at||"").localeCompare(String(a.at||"")));}
+
+function sourceLabel(state,e){
+  if(e.sourceType==="stock"){
+    const p=(state?.partsStock||[]).find(x=>String(x.id)===String(e.sourceId));
+    return p?.name||p?.reference||e.partName||"Loose stock part";
+  }
+  const d=(state?.jobs||[]).find(x=>String(x.id)===String(e.sourceId));
+  return d?.watchName||"Donor watch";
+}
+function evidenceSearchText(state,e){return [e.partName,e.partId,e.targetWatch,e.targetCalibre,e.targetMaker,e.targetModel,e.note,e.result,e.sourceType,sourceLabel(state,e)].filter(Boolean).join(" ");}
+export function compatibilityReference(state,{query="",result="all",source="all"}={}){
+  const q=fold(query),all=evidenceList(state).slice().sort((a,b)=>String(b.at||"").localeCompare(String(a.at||"")));
+  const rows=all.filter(e=>{
+    if(result!=="all"&&e.result!==result)return false;
+    if(source!=="all"&&e.sourceType!==source)return false;
+    if(q&&!fold(evidenceSearchText(state,e)).includes(q))return false;
+    return true;
+  }).map(e=>({...e,sourceLabel:sourceLabel(state,e)}));
+  const byCalibre=new Map();
+  for(const e of all){const key=compact(e.targetCalibre)||"unknown";const g=byCalibre.get(key)||{key,label:e.targetCalibre||"Unknown calibre",verified:0,used:0,ruledout:0,total:0,parts:new Set(),sources:new Set()};g.total++;g[e.result]=(g[e.result]||0)+1;if(e.partName)g.parts.add(e.partName);g.sources.add(e.sourceKey);byCalibre.set(key,g);}
+  const calibres=[...byCalibre.values()].map(g=>({...g,parts:[...g.parts],sources:[...g.sources]})).sort((a,b)=>b.total-a.total||a.label.localeCompare(b.label));
+  const byPair=new Map();
+  for(const e of all){const key=[compact(e.targetCalibre)||e.targetKey||"unknown",fold(e.partName||e.partId||"part")].join("|");const g=byPair.get(key)||{key,calibre:e.targetCalibre||"Unknown calibre",part:e.partName||e.partId||"Part",verified:0,used:0,ruledout:0,total:0};g.total++;g[e.result]=(g[e.result]||0)+1;byPair.set(key,g);}
+  const conflicts=[...byPair.values()].filter(g=>(g.verified+g.used)>0&&g.ruledout>0).sort((a,b)=>b.total-a.total);
+  return {rows,calibres,conflicts,stats:{total:all.length,verified:all.filter(e=>e.result==="verified").length,used:all.filter(e=>e.result==="used").length,ruledout:all.filter(e=>e.result==="ruledout").length,calibres:calibres.length}};
+}
 
 export function inventoryMatches(job,partsStock=[],state={}){
   if(!job)return [];
