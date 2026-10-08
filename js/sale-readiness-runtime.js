@@ -1,7 +1,7 @@
 import { loadState, saveState, current, escapeHtml } from "./store.js?v=26";
 import { saleReadiness } from "./sale-readiness.js?v=3";
 import { mountListingPack, makeListingPackSnapshot } from "./listing-pack.js?v=2";
-import { mountChannelStrategy } from "./channel-strategy.js?v=1";
+import { mountChannelStrategy } from "./channel-strategy.js?v=2";
 
 const esc=escapeHtml;
 let state=await loadState(),job=current(state);
