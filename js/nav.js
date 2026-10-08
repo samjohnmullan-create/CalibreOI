@@ -66,7 +66,7 @@ document.querySelectorAll(".brandbar").forEach(function(bar){
 
   var primary=[
     {id:"home",href:"index.html",label:"Home",icon:"M4 10.5 12 4l8 6.5V20h-5v-6H9v6H4z"},
-    {id:"workshop",href:"workbench.html?v=24",label:"Workshop",icon:"M4 18h16M6 18V8h4v10M14 18V5h4v13"},
+    {id:"workshop",href:"workbench.html?v=25",label:"Workshop",icon:"M4 18h16M6 18V8h4v10M14 18V5h4v13"},
     {id:"collection",href:"inventory.html",label:"Collection",icon:"M5 7h14v13H5zM8 7V4h8v3M8 11h8"},
     {id:"business",href:"finance.html",label:"Business",icon:"M5 7h14v11H5zM5 11h14M8 15h3"},
     {id:"calibre",href:"calibre.html",label:"Calibre",icon:"M12 3a4 4 0 0 1 4 4v1a4 4 0 1 1 0 8v1a4 4 0 1 1-8 0v-1a4 4 0 1 1 0-8V7a4 4 0 0 1 4-4z"}
@@ -95,7 +95,7 @@ document.querySelectorAll(".brandbar").forEach(function(bar){
     strip.innerHTML='<div class="watch-strip-photo" data-watch-photo></div><div class="watch-strip-main"><div class="watch-strip-name" data-watch-name>Loading watch…</div><div class="watch-strip-meta" data-watch-meta></div></div><div class="watch-strip-state"><span class="badge" data-watch-status>—</span><span class="watch-strip-job" data-watch-job></span></div>';
     if(main)main.insertAdjacentElement("afterend",strip);
 
-    var watchTabs=[["workbench.html?v=24","Repair"],["passport.html","Identity"],["timegrapher.html?v=5","Timing"],["suppliers.html","Parts"],["business.html","Money"],["sales.html","Sale"],["summary.html","Summary"],["documents.html","Documents"]];
+    var watchTabs=[["workbench.html?v=25","Repair"],["passport.html","Identity"],["timegrapher.html?v=5","Timing"],["suppliers.html","Parts"],["business.html","Money"],["sales.html","Sale"],["summary.html","Summary"],["documents.html","Documents"]];
     var sub=document.createElement("nav");
     sub.className="contextnav watch-contextnav";
     sub.setAttribute("aria-label","Current watch sections");
@@ -131,12 +131,12 @@ document.querySelectorAll(".brandbar").forEach(function(bar){
   function injectWorkbenchRuntime(src,marker){
     var r=document.createElement("script");r.type="module";r.src=src;r.dataset.calibreWorkbenchRuntime=marker||"1";document.head.appendChild(r);
   }
-  if(here==="workbench.html"&&!document.querySelector('script[data-calibre-workbench-runtime]'))injectWorkbenchRuntime("js/workbench-runtime.js?v=5","primary");
+  if(here==="workbench.html"&&!document.querySelector('script[data-calibre-workbench-runtime]'))injectWorkbenchRuntime("js/workbench-runtime.js?v=6","primary");
   if(here==="workbench.html")setTimeout(function(){
     var faults=document.getElementById("faults");
     if(!faults||!faults.textContent.includes("Reading diagnostic state"))return;
     if(document.querySelector('script[data-calibre-workbench-runtime="fallback"]'))return;
-    injectWorkbenchRuntime("js/workbench-runtime.js?v=5-fallback","fallback");
+    injectWorkbenchRuntime("js/workbench-runtime.js?v=6-fallback","fallback");
   },1800);
 })();
 
