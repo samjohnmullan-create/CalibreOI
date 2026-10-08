@@ -14,7 +14,7 @@ if(here==="passport.html")import("./passport-media.js?v=1").catch(err=>console.w
 if(here==="backup.html")import("./backup-audit.js?v=2").catch(err=>console.warn("Calibre media migration audit unavailable",err));
 if(here==="sales.html")import("./publish-controls.js?v=1").catch(err=>console.warn("Calibre public publishing controls unavailable",err));
 if(here==="finance.html"||here==="index.html")import("./available-cash.js?v=1").catch(err=>console.warn("Calibre cash position unavailable",err));
-if(here==="suppliers.html")import("./parts-intelligence-runtime.js?v=1").catch(err=>console.warn("Calibre parts intelligence unavailable",err));
+if(here==="suppliers.html")import("./parts-intelligence-runtime.js?v=2").catch(err=>console.warn("Calibre parts intelligence unavailable",err));
 import("./archive-cover-runtime.js?v=1").catch(err=>console.warn("Calibre archive covers unavailable",err));
 
 function isEditing(){
