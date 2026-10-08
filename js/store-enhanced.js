@@ -1,7 +1,7 @@
-import * as cloud from "./store-cloud.js?v=5";
+import * as cloud from "./store-cloud-core.js?v=5";
 import * as base from "./store-base.js?v=1";
 
-export * from "./store-cloud.js?v=5";
+export * from "./store-cloud-core.js?v=5";
 
 function list(v){return Array.isArray(v)?v.filter(Boolean):[];}
 function text(v){return typeof v==="string"?v:"";}
