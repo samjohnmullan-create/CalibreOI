@@ -7,9 +7,8 @@ if(list){
   .stage-strip-shell .stage-list::-webkit-scrollbar{height:7px}
   .stage-strip-shell .stage-list::-webkit-scrollbar-thumb{background:var(--line);border-radius:999px}
   .stage-strip-shell .stage-btn{scroll-snap-align:center;flex:0 0 156px}
-  .stage-strip-nav{position:absolute;top:50%;translate:0 -50%;z-index:4;width:34px;height:48px;border:1px solid var(--line);border-radius:8px;background:color-mix(in srgb,var(--surface) 94%,transparent);color:var(--ink);display:grid;place-items:center;font-size:1.25rem;font-weight:800;cursor:pointer;box-shadow:0 3px 12px rgba(0,0,0,.12);backdrop-filter:blur(5px)}
+  .stage-strip-nav{position:absolute;top:50%;translate:0 -50%;z-index:4;width:34px;height:48px;border:1px solid var(--line);border-radius:8px;background:color-mix(in srgb,var(--surface) 94%,transparent);color:var(--ink);display:grid;place-items:center;font-size:1.25rem;font-weight:800;cursor:pointer;box-shadow:0 3px 12px rgba(0,0,0,.12)}
   .stage-strip-nav:hover{border-color:var(--accent);background:var(--surface)}
-  .stage-strip-nav:disabled{opacity:.28;cursor:default}
   .stage-strip-prev{left:6px}.stage-strip-next{right:6px}
   .stage-strip-shell:before,.stage-strip-shell:after{content:"";position:absolute;top:0;bottom:8px;width:54px;z-index:2;pointer-events:none}
   .stage-strip-shell:before{left:0;background:linear-gradient(90deg,var(--bg),transparent)}
@@ -23,6 +22,7 @@ if(list){
     shell.className='stage-strip-shell';
     list.parentNode.insertBefore(shell,list);
     shell.appendChild(list);
+
     const prev=document.createElement('button');
     const next=document.createElement('button');
     prev.type=next.type='button';
@@ -30,34 +30,25 @@ if(list){
     next.className='stage-strip-nav stage-strip-next';
     prev.setAttribute('aria-label','Scroll stages left');
     next.setAttribute('aria-label','Scroll stages right');
-    prev.textContent='‹';next.textContent='›';
+    prev.textContent='‹';
+    next.textContent='›';
     shell.append(prev,next);
 
     const step=()=>Math.max(360,Math.round(list.clientWidth*.62));
     prev.onclick=()=>list.scrollBy({left:-step(),behavior:'smooth'});
     next.onclick=()=>list.scrollBy({left:step(),behavior:'smooth'});
-    const update=()=>{const max=Math.max(0,list.scrollWidth-list.clientWidth);prev.disabled=list.scrollLeft<=4;next.disabled=list.scrollLeft>=max-4;};
-    list.addEventListener('scroll',update,{passive:true});
-    window.addEventListener('resize',update,{passive:true});
-    update();
 
-    list.addEventListener('wheel',e=>{
-      if(matchMedia('(max-width:760px)').matches)return;
-      if(list.scrollWidth<=list.clientWidth)return;
-      const delta=Math.abs(e.deltaX)>Math.abs(e.deltaY)?e.deltaX:e.deltaY;
-      if(!delta)return;
-      e.preventDefault();
-      list.scrollBy({left:delta,behavior:'auto'});
-    },{passive:false});
-
-    let lastActive=null;
     const centreActive=()=>{
       const active=list.querySelector('.stage-btn.active');
-      if(!active||active===lastActive)return;
-      lastActive=active;
-      requestAnimationFrame(()=>active.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'}));
+      if(active)active.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
     };
-    new MutationObserver(()=>{centreActive();update();}).observe(list,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
-    centreActive();
+
+    list.addEventListener('click',e=>{
+      if(!e.target.closest('.stage-btn'))return;
+      setTimeout(centreActive,120);
+    },{passive:true});
+
+    document.getElementById('prevStage')?.addEventListener('click',()=>setTimeout(centreActive,120),{passive:true});
+    document.getElementById('nextStage')?.addEventListener('click',()=>setTimeout(centreActive,120),{passive:true});
   }
 }
