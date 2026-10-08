@@ -58,8 +58,8 @@ async function financeEnhancement(){
     const headline=document.getElementById("headline");
     if(headline){const labels=[...headline.querySelectorAll("span")];const old=labels.find(x=>x.textContent.trim()==="Available cash");if(old){old.textContent="Available to spend";old.parentElement.querySelector("strong").textContent=money(c.available);}}
   }
-  let timer;
-  input.addEventListener("input",()=>{state.financeSettings.openingCash=input.value;paint();clearTimeout(timer);status.textContent="Saving…";timer=setTimeout(async()=>{await saveState(state);status.textContent="Saved";},350);});
+  input.addEventListener("input",()=>{state.financeSettings.openingCash=input.value;status.textContent="Unsaved";paint();});
+  input.addEventListener("change",async()=>{status.textContent="Saving…";state.financeSettings.openingCash=input.value;await saveState(state);status.textContent="Saved · refreshing cash state…";setTimeout(()=>location.reload(),120);});
   paint();
   const period=document.getElementById("period");if(period)period.addEventListener("change",()=>setTimeout(paint,0));
 }
