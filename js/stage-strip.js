@@ -30,20 +30,25 @@ if(list&&!document.querySelector('.stage-strip-prev')){
 
     const centreActive=()=>{
       const active=list.querySelector('.stage-btn.active');
-      if(!active)return;
+      if(!active)return false;
       const left=active.offsetLeft-(list.clientWidth-active.offsetWidth)/2;
       list.scrollTo({left:Math.max(0,left),behavior:'smooth'});
+      return true;
+    };
+    const centreSoon=()=>{
+      // A few finite retries allow async save/repaint to finish. No observer/poll loop.
+      [0,180,450,900].forEach(ms=>setTimeout(centreActive,ms));
     };
 
-    // Centre once after the normal Workbench paint has populated the stages.
-    setTimeout(centreActive,250);
+    // Initial Workbench paint can complete after this optional module loads.
+    [120,350,800,1400].forEach(ms=>setTimeout(centreActive,ms));
 
-    // Re-centre only after an explicit stage change. No observers or polling.
+    // Re-centre only after explicit stage changes.
     list.addEventListener('click',event=>{
       if(!event.target.closest('.stage-btn'))return;
-      setTimeout(centreActive,160);
+      centreSoon();
     });
-    document.getElementById('prevStage')?.addEventListener('click',()=>setTimeout(centreActive,160));
-    document.getElementById('nextStage')?.addEventListener('click',()=>setTimeout(centreActive,160));
+    document.getElementById('prevStage')?.addEventListener('click',centreSoon);
+    document.getElementById('nextStage')?.addEventListener('click',centreSoon);
   }
 }
