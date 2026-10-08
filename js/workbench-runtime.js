@@ -13,5 +13,6 @@ import("./workbench-runtime-core.js?v=5")
 import("./research-brief.js?v=4").catch(err=>report("research brief",err));
 import("./part-tree-runtime.js?v=3").catch(err=>report("parts tree",err));
 import("./repair-timeline-runtime.js?v=1").catch(err=>report("repair timeline",err));
-import("./final-sale-handoff.js?v=2").catch(err=>report("sale handoff",err));
+import("./final-qc-runtime.js?v=1").catch(err=>report("final QC",err));
+import("./final-sale-handoff.js?v=3").catch(err=>report("sale handoff",err));
 import("./stage-strip.js?v=7").catch(err=>report("stage navigation",err));
