@@ -7,6 +7,7 @@ const now=()=>new Date().toISOString();
 const esc=escapeHtml;
 const RESEARCH_MEDIA_BUCKET="calibre-research-media";
 const RESEARCH_MEDIA_TTL_SECONDS=12*60*60;
+const RESEARCH_MEDIA_PROXY="https://jdeqnboljrgrpnvkfthx.supabase.co/functions/v1/research-media";
 
 function mediaRefs(job){
   return (job?.mediaAssets||[]).filter(a=>a&&!a.deletedAt).map(a=>({
@@ -44,27 +45,34 @@ function safePart(v){return raw(v).replace(/[^a-zA-Z0-9._-]+/g,"-").replace(/^-+
 async function temporaryResearchMedia(job,userId,requestId){
   const assets=(job?.mediaAssets||[]).filter(a=>a&&!a.deletedAt&&a.storageKey);
   if(!assets.length)return [];
-  const bucket=supabaseClient().storage.from(RESEARCH_MEDIA_BUCKET);
+  const client=supabaseClient(),bucket=client.storage.from(RESEARCH_MEDIA_BUCKET);
   const expiresAt=new Date(Date.now()+RESEARCH_MEDIA_TTL_SECONDS*1000).toISOString();
+  await client.from("calibre_research_media_grants").delete().eq("request_id",requestId);
   return Promise.all(assets.map(async asset=>{
     const blob=await fetchPrivateMedia(asset);
     const key=safePart(asset.id||asset.storageKey.split("/").pop());
     const path=`${userId}/${requestId}/${key}${mediaExtension(asset,blob)}`;
-    const upload=await bucket.upload(path,blob,{contentType:asset.mimeType||blob.type||"image/jpeg",upsert:true,cacheControl:"3600"});
+    const mimeType=asset.mimeType||blob.type||"image/jpeg";
+    const upload=await bucket.upload(path,blob,{contentType:mimeType,upsert:true,cacheControl:"3600"});
     if(upload.error)throw upload.error;
     const signed=await bucket.createSignedUrl(path,RESEARCH_MEDIA_TTL_SECONDS);
     if(signed.error||!signed.data?.signedUrl)throw signed.error||new Error("Could not create temporary photo link.");
+    const grant=await client.from("calibre_research_media_grants").insert({
+      owner_id:userId,request_id:requestId,object_path:path,mime_type:mimeType,expires_at:expiresAt,signed_url:signed.data.signedUrl
+    }).select("token").single();
+    if(grant.error||!grant.data?.token)throw grant.error||new Error("Could not create research media grant.");
     return {
       id:raw(asset.id),category:raw(asset.category),originalName:raw(asset.originalName),mimeType:raw(asset.mimeType),
       caption:raw(asset.caption),evidenceNote:raw(asset.evidenceNote),createdAt:raw(asset.createdAt),isCover:!!asset.isCover,
-      temporaryUrl:signed.data.signedUrl,temporaryExpiresAt:expiresAt,temporaryPath:path
+      temporaryUrl:`${RESEARCH_MEDIA_PROXY}?token=${encodeURIComponent(grant.data.token)}`,
+      temporaryExpiresAt:expiresAt,temporaryTransport:"grant-proxy"
     };
   }));
 }
 export function researchRequestSnapshot(job){
   const p=job?.passport||{},b=job?.business||{};
   return {
-    version:2,
+    version:3,
     requestedAt:now(),
     watch:{id:job?.id||"",jobId:job?.jobId||"",pushId:job?.pushId||"",watchName:job?.watchName||"",status:job?.status||"",jobType:job?.jobType||"",stage:Number(job?.stage)||0},
     purchase:{source:job?.purchaseSource?.source||p.seller||"",orderId:job?.purchaseSource?.orderId||p.invoiceNumber||"",sourceRef:job?.purchaseSource?.sourceRef||"",purchasePrice:b.purchasePrice||"",postage:b.postage||"",acquiredAt:job?.acquiredAt||""},
@@ -90,7 +98,7 @@ export function researchRequestSnapshot(job){
       "Populate Passport, research brief, diagnostics and business valuation fields",
       "Return the enriched record as a calibrejob update for this same watch"
     ],
-    privacyNote:"Temporary research photo links are read-only signed URLs and expire automatically. Do not republish them."
+    privacyNote:"Research photos use random, expiring grant-proxy URLs. They do not expose the private Calibre archive path or raw storage link."
   };
 }
 
@@ -147,7 +155,7 @@ export async function submitResearchRequest(job,state){
     const temp=await temporaryResearchMedia(job,s.user.id,requestId);
     if(temp.length){
       snapshot.media=temp;
-      snapshot.mediaAccess={status:"temporary-signed",count:temp.length,ttlHours:12,expiresAt:temp[0].temporaryExpiresAt};
+      snapshot.mediaAccess={status:"temporary-grant-proxy",count:temp.length,ttlHours:12,expiresAt:temp[0].temporaryExpiresAt};
     }else snapshot.mediaAccess={status:"no-photos",count:0,ttlHours:12,expiresAt:""};
   }catch(err){
     mediaError=err?.message||"Temporary photo sharing failed.";
@@ -175,7 +183,7 @@ export async function mountResearchRequestCard(){
     const action=completed?"Request new research":pending?"Refresh research request":"Request research";
     const linkText=r.photoLinks?`${r.photoLinks} temporary link${r.photoLinks===1?"":"s"}${r.photoLinksExpireAt?` · expire ${new Date(r.photoLinksExpireAt).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}`:""}`:photos?"Temporary links not generated yet":"No archived photos";
     const statusText=completed?`Completed${r.completedAt?` · ${new Date(r.completedAt).toLocaleString()}`:""}`:pending?`Pending · ${r.requestedAt?new Date(r.requestedAt).toLocaleString():"sent"}`:"";
-    card.innerHTML=`<div class="row" style="justify-content:space-between;align-items:start"><div><div class="kicker">RESEARCH HANDOFF</div><h3 style="margin:.2rem 0">Send this watch for research</h3><p class="muted small" style="margin:.2rem 0">Packages the job plus temporary, read-only photo access so the actual watch images can be inspected during research.</p></div><span class="badge">${badge}</span></div><div class="grid2" style="margin-top:9px"><div><span class="muted small">Archived media</span><strong style="display:block">${photos} file${photos===1?"":"s"}</strong></div><div><span class="muted small">Research photo access</span><strong style="display:block">${esc(linkText)}</strong></div></div>${legacy?`<p class="muted small" style="margin:.45rem 0 0">${legacy} legacy photo${legacy===1?"":"s"} still need migration to archived media before temporary sharing.</p>`:""}<div class="row" style="margin-top:10px"><button id="sendResearchRequest" class="btn" type="button">${action}</button><span id="researchRequestMsg" class="muted small">${esc(message||statusText)}</span></div>`;
+    card.innerHTML=`<div class="row" style="justify-content:space-between;align-items:start"><div><div class="kicker">RESEARCH HANDOFF</div><h3 style="margin:.2rem 0">Send this watch for research</h3><p class="muted small" style="margin:.2rem 0">Packages the job plus temporary, token-gated photo access so the actual watch images can be inspected during research.</p></div><span class="badge">${badge}</span></div><div class="grid2" style="margin-top:9px"><div><span class="muted small">Archived media</span><strong style="display:block">${photos} file${photos===1?"":"s"}</strong></div><div><span class="muted small">Research photo access</span><strong style="display:block">${esc(linkText)}</strong></div></div>${legacy?`<p class="muted small" style="margin:.45rem 0 0">${legacy} legacy photo${legacy===1?"":"s"} still need migration to archived media before temporary sharing.</p>`:""}<div class="row" style="margin-top:10px"><button id="sendResearchRequest" class="btn" type="button">${action}</button><span id="researchRequestMsg" class="muted small">${esc(message||statusText)}</span></div>`;
     card.querySelector("#sendResearchRequest").onclick=async()=>{
       const btn=card.querySelector("#sendResearchRequest"),msg=card.querySelector("#researchRequestMsg");btn.disabled=true;msg.textContent=photos?`Sending and preparing ${photos} temporary photo link${photos===1?"":"s"}…`:"Sending…";
       try{
