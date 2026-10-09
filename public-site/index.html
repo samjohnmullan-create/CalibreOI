@@ -4,40 +4,27 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Calibre & Co. — Vintage Watches</title>
-<meta name="description" content="A simple catalogue of vintage watches researched, documented and prepared by Calibre & Co.">
+<meta name="description" content="Calibre & Co. vintage watch catalogue.">
 <link rel="stylesheet" href="css/site.css">
 </head>
 <body>
 <div class="wrap">
 <header class="site-head">
   <a class="brand" href="index.html" aria-label="Calibre & Co. home"><img src="assets/calibre-horizontal-black.svg" alt="Calibre & Co."></a>
-  <nav class="nav"><a class="active" href="index.html">Catalogue</a><a href="#about">About</a></nav>
 </header>
 <main>
-  <section class="hero">
-    <div class="eyebrow">CALIBRE & CO. / VINTAGE WATCHES</div>
-    <h1>Old watches.<br>Properly documented.</h1>
-    <p>A small, evolving catalogue of vintage watches that have passed through the Calibre & Co. workshop. Each published watch carries the details we know, the work recorded and the photographs available.</p>
-    <div class="principles" aria-label="What to expect"><span>Researched</span><span>Workshop documented</span><span>Condition recorded</span></div>
-  </section>
-
-  <section class="catalogue-head">
-    <div><div class="eyebrow">THE CATALOGUE</div><h2>Watches</h2></div>
+  <section class="catalogue-head" style="margin-top:44px">
+    <div><h1 style="margin:0;font-family:Georgia,'Times New Roman',serif;font-weight:400;font-size:clamp(2.4rem,5vw,4.8rem);letter-spacing:-.045em">Watches</h1></div>
     <span id="count" class="count"></span>
   </section>
   <section class="toolbar" aria-label="Catalogue filters">
-    <input id="q" type="search" placeholder="Search maker, model, calibre or year" aria-label="Search catalogue">
-    <select id="status" aria-label="Filter catalogue"><option value="all">All published</option><option value="for_sale">For sale</option><option value="catalogue">Catalogue</option><option value="sold">Sold archive</option></select>
+    <input id="q" type="search" placeholder="Search watches" aria-label="Search catalogue">
+    <select id="status" aria-label="Filter catalogue"><option value="all">All published</option><option value="for_sale">For sale</option><option value="catalogue">Catalogue</option><option value="sold">Sold</option></select>
   </section>
   <section id="catalogue" class="catalogue"></section>
-  <section id="empty" class="empty" hidden>No published watches match that search.</section>
-
-  <section id="about" class="about-block">
-    <div class="eyebrow">ABOUT CALIBRE & CO.</div>
-    <div class="about-grid"><h2>More record than showroom.</h2><p>This catalogue is intentionally simple. It exists to show each watch clearly and keep its identity, photographs and workshop history together. Some watches are available for sale; others remain here as part of the Calibre & Co. archive.</p></div>
-  </section>
+  <section id="empty" class="empty" hidden>No published watches.</section>
 </main>
-<footer class="footer"><img src="assets/calibre-mark-black.svg" alt=""><span>Calibre & Co. · Vintage watches & workshop records</span></footer>
+<footer class="footer"><img src="assets/calibre-mark-black.svg" alt=""><span>Calibre & Co.</span></footer>
 </div>
 <script type="module" src="js/catalogue.js"></script>
 </body>
