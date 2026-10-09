@@ -16,3 +16,4 @@ import("./repair-timeline-runtime.js?v=1").catch(err=>report("repair timeline",e
 import("./final-qc-runtime.js?v=1").catch(err=>report("final QC",err));
 import("./final-sale-handoff.js?v=3").catch(err=>report("sale handoff",err));
 import("./stage-strip.js?v=7").catch(err=>report("stage navigation",err));
+import("./needs-parts-runtime.js?v=1").catch(err=>report("parts auto-match",err));
