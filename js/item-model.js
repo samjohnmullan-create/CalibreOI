@@ -161,7 +161,9 @@ export function legacyJobToWork(job = {}, itemId = "") {
 export function allItems(state = {}) {
   const explicit=(Array.isArray(state.items)?state.items:[]).map(normaliseItem), byLegacyJob=new Set(explicit.map(item=>item.legacyJobId).filter(Boolean));
   const derived=(Array.isArray(state.jobs)?state.jobs:[]).filter(job=>!byLegacyJob.has(job.id)).map(legacyJobToItem);
-  return [...explicit,...derived];
+  const list=[...explicit,...derived];
+  if(typeof location!=="undefined" && /(^|\/)finance\.html$/.test(location.pathname)) return list.filter(isResaleItem);
+  return list;
 }
 
 export function itemDisplayName(item = {}) { return text(item.title||item.identity?.title||[item.identity?.maker,item.identity?.model].filter(Boolean).join(" ")||"Untitled item"); }
