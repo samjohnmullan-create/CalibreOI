@@ -86,6 +86,18 @@ export function blankIdentity(partial = {}) {
   };
 }
 
+export function blankPreparation(partial = {}) {
+  return {
+    cleaning: "",
+    restoration: "",
+    repairs: "",
+    photography: "",
+    listingPrep: "",
+    finalCondition: "",
+    ...partial
+  };
+}
+
 export function blankWatchExtension(partial = {}) {
   return {
     passport: {},
@@ -112,6 +124,7 @@ export function blankItem(partial = {}) {
     identity: blankIdentity(partial.identity),
     condition: partial.condition || "",
     research: Array.isArray(partial.research) ? partial.research : [],
+    preparation: blankPreparation(partial.preparation),
     mediaAssets: Array.isArray(partial.mediaAssets) ? partial.mediaAssets : [],
     commercial: blankCommercial(partial.commercial),
     sale: partial.sale && typeof partial.sale === "object" ? partial.sale : {},
@@ -130,6 +143,7 @@ export function normaliseItem(raw = {}) {
   const item = blankItem(raw);
   item.identity = blankIdentity(raw.identity);
   item.commercial = blankCommercial(raw.commercial);
+  item.preparation = blankPreparation(raw.preparation);
   item.research = Array.isArray(raw.research) ? raw.research : [];
   item.mediaAssets = Array.isArray(raw.mediaAssets) ? raw.mediaAssets : [];
   item.workIds = Array.isArray(raw.workIds) ? raw.workIds : [];
