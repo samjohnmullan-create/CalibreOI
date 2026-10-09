@@ -1,4 +1,4 @@
-import { loadState, saveState, current } from "./store.js?v=26";
+import { loadState, saveState, current, compressImage } from "./store.js?v=26";
 import { uploadMedia } from "./media.js?v=2";
 
 const SLOT_CATEGORY={
@@ -30,15 +30,41 @@ function status(text){
 }
 function keyFor(file,slot){return [slot,file.name,file.size,file.lastModified].join("|");}
 function countAssets(job){return (job?.mediaAssets||[]).filter(a=>a&&a.storageKey).length;}
+function isPhotoSlot(slot){return Object.prototype.hasOwnProperty.call(SLOT_CATEGORY,slot);}
 
-async function attachAsset(asset){
+async function attachAsset(asset,{slot="",preview=""}={}){
   const state=await loadState();
   const job=current(state);
   if(!job)throw new Error("No watch is open.");
   job.mediaAssets=Array.isArray(job.mediaAssets)?job.mediaAssets:[];
   if(!job.mediaAssets.some(a=>a?.id===asset.id||a?.storageKey===asset.storageKey))job.mediaAssets.push(asset);
+
+  // The private archive is durable, but the passport grid uses lightweight local previews.
+  // Keep both records in sync so a cloud/media save can never leave an archived image
+  // showing as an empty thumbnail slot.
+  if(isPhotoSlot(slot)&&preview){
+    job.photos=job.photos&&typeof job.photos==="object"?job.photos:{};
+    job.photos[slot]=Array.isArray(job.photos[slot])?job.photos[slot]:[];
+    if(!job.photos[slot].length)job.photos[slot].push(preview);
+  }
+
   await saveState(state);
   return job;
+}
+
+function paintSlotPreview(slot,preview){
+  if(!isPhotoSlot(slot)||!preview)return;
+  const input=document.getElementById(`file-${slot}`);
+  const row=input?.closest(".shotrow");
+  if(!row)return;
+  const existing=row.querySelector("img");
+  if(existing){existing.src=preview;return;}
+  const ph=row.querySelector(".ph");
+  if(!ph)return;
+  const img=document.createElement("img");
+  img.src=preview;
+  img.alt="";
+  ph.replaceWith(img);
 }
 
 async function archive(file,{slot="evidence",category="identity",stageId=""}={}){
@@ -50,8 +76,18 @@ async function archive(file,{slot="evidence",category="identity",stageId=""}={})
     status(`Archiving ${SLOT_LABEL[slot]||slot} at full resolution…`);
     const state=await loadState(),job=current(state);
     if(!job)throw new Error("No watch is open.");
+
+    // Generate the durable slot preview as part of the same archive workflow.
+    // This deliberately duplicates the page's fast preview save: whichever operation
+    // finishes last still leaves the job with a valid thumbnail.
+    let preview="";
+    if(isPhotoSlot(slot)){
+      try{preview=await compressImage(file);}catch(err){console.warn("Passport preview generation failed",err);}
+    }
+
     const asset=await uploadMedia(file,{watchId:job.id,jobId:job.jobId||"",stageId:stageId||slot,category});
-    const savedJob=await attachAsset(asset);
+    const savedJob=await attachAsset(asset,{slot,preview});
+    paintSlotPreview(slot,preview);
     status(`${countAssets(savedJob)} private media item${countAssets(savedJob)===1?"":"s"} archived for this watch.`);
     paintSummary(savedJob);
   }catch(err){
