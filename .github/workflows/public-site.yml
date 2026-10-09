@@ -5,6 +5,8 @@ on:
     branches: [main]
     paths:
       - 'public-site/**'
+      - 'assets/brand/calibre-horizontal-black.svg'
+      - 'assets/brand/calibre-mark-black.svg'
       - '.github/workflows/public-site.yml'
   workflow_dispatch:
 
@@ -23,6 +25,9 @@ jobs:
         shell: bash
         run: |
           cp -R public-site public-deploy
+          mkdir -p public-deploy/assets
+          cp assets/brand/calibre-horizontal-black.svg public-deploy/assets/calibre-horizontal-black.svg
+          cp assets/brand/calibre-mark-black.svg public-deploy/assets/calibre-mark-black.svg
           sed -i "s#css/site.css#css/site.css?v=${GITHUB_SHA}#g" public-deploy/index.html public-deploy/watch.html
           sed -i "s#js/catalogue.js#js/catalogue.js?v=${GITHUB_SHA}#g" public-deploy/index.html public-deploy/watch.html
 
