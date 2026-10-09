@@ -7,6 +7,14 @@ export const ITEM_TYPES = [
   ["other", "Other"]
 ];
 
+export const ITEM_PURPOSES = [
+  ["resale", "Resale"],
+  ["personal", "Personal / Collection"],
+  ["customer", "Customer"],
+  ["donor", "Donor / Spares"],
+  ["reference", "Reference"]
+];
+
 export const ITEM_STATUSES = [
   "Incoming",
   "Acquired",
@@ -18,7 +26,6 @@ export const ITEM_STATUSES = [
   "Listed",
   "Sold",
   "Retained",
-  "Donor / spares",
   "Archived"
 ];
 
@@ -40,6 +47,10 @@ const text = value => value == null ? "" : String(value);
 
 export function isWatchLike(item) {
   return ["watch", "clock"].includes(item?.type);
+}
+
+export function isResaleItem(item) {
+  return (item?.purpose || "resale") === "resale";
 }
 
 export function blankCommercial(partial = {}) {
@@ -89,9 +100,13 @@ export function worksForItem(state = {}, itemId = "") {
 export function blankItem(partial = {}) {
   const createdAt = partial.createdAt || now();
   const type = ITEM_TYPES.some(([key]) => key === partial.type) ? partial.type : "other";
+  const oldDonorStatus = partial.status === "Donor / spares";
+  const requestedPurpose = oldDonorStatus ? "donor" : partial.purpose;
+  const purpose = ITEM_PURPOSES.some(([key]) => key === requestedPurpose) ? requestedPurpose : "resale";
+  const requestedStatus = oldDonorStatus ? "Retained" : partial.status;
   const item = {
-    id: partial.id || id("item"), type, title: partial.title || "Untitled item",
-    status: ITEM_STATUSES.includes(partial.status) ? partial.status : "Acquired",
+    id: partial.id || id("item"), type, purpose, title: partial.title || "Untitled item",
+    status: ITEM_STATUSES.includes(requestedStatus) ? requestedStatus : "Acquired",
     identity: blankIdentity(partial.identity), condition: partial.condition || "",
     research: Array.isArray(partial.research) ? partial.research : [], preparation: blankPreparation(partial.preparation),
     mediaAssets: Array.isArray(partial.mediaAssets) ? partial.mediaAssets : [], commercial: blankCommercial(partial.commercial),
@@ -114,14 +129,15 @@ export function normaliseItem(raw = {}) {
 
 function legacyType(job = {}) { return job.jobType === "clock" ? "clock" : "watch"; }
 function legacyStatus(job = {}) {
-  const map = { Purchased:"Acquired", "Awaiting inspection":"Researching", "On bench":"On bench", "Awaiting parts":"Awaiting parts", "Ready for photos":"Preparing", "Ready to list":"Ready to list", Listed:"Listed", Sold:"Sold", Spares:"Donor / spares" };
+  const map = { Purchased:"Acquired", "Awaiting inspection":"Researching", "On bench":"On bench", "Awaiting parts":"Awaiting parts", "Ready for photos":"Preparing", "Ready to list":"Ready to list", Listed:"Listed", Sold:"Sold", Spares:"Retained" };
   return map[job.status] || "Acquired";
 }
+function legacyPurpose(job = {}) { return job.status === "Spares" ? "donor" : "resale"; }
 
 export function legacyJobToItem(job = {}) {
   const p=job.passport||{}, b=job.business||{}, type=legacyType(job);
   return blankItem({
-    id:job.itemId||`item-${job.id||id("legacy")}`, type,
+    id:job.itemId||`item-${job.id||id("legacy")}`, type, purpose:legacyPurpose(job),
     title:job.watchName||[p.maker,p.model].filter(Boolean).join(" ")||"Untitled watch", status:legacyStatus(job),
     identity:{maker:p.maker||"",model:p.model||"",title:job.watchName||"",country:p.country||"",era:"",year:p.year||"",materials:p.caseMaterial||"",marks:[p.hallmarks,p.engravings].filter(Boolean).join(" · "),reference:p.reference||p.caseNumber||"",serial:p.serial||"",dimensions:[p.width,p.height,p.thickness].filter(Boolean).join(" × "),notes:p.notes||""},
     condition:job.condition||job.stages?.[0]?.condition||"", mediaAssets:Array.isArray(job.mediaAssets)?job.mediaAssets:[],
