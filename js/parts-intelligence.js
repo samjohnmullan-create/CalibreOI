@@ -36,6 +36,10 @@ function sourceLabel(state,e){
     const p=(state?.partsStock||[]).find(x=>String(x.id)===String(e.sourceId));
     return p?.name||p?.reference||e.partName||"Loose stock part";
   }
+  if(e.sourceType==="donorItem"){
+    const d=(state?.items||[]).find(x=>String(x.id)===String(e.sourceId));
+    return d?.title||"Donor item";
+  }
   const d=(state?.jobs||[]).find(x=>String(x.id)===String(e.sourceId));
   return d?.watchName||"Donor watch";
 }
@@ -44,7 +48,10 @@ export function compatibilityReference(state,{query="",result="all",source="all"
   const q=fold(query),all=evidenceList(state).slice().sort((a,b)=>String(b.at||"").localeCompare(String(a.at||"")));
   const rows=all.filter(e=>{
     if(result!=="all"&&e.result!==result)return false;
-    if(source!=="all"&&e.sourceType!==source)return false;
+    if(source!=="all"){
+      if(source==="donor"&&!['donor','donorItem'].includes(e.sourceType))return false;
+      if(source!=="donor"&&e.sourceType!==source)return false;
+    }
     if(q&&!fold(evidenceSearchText(state,e)).includes(q))return false;
     return true;
   }).map(e=>({...e,sourceLabel:sourceLabel(state,e)}));
@@ -78,16 +85,27 @@ export function inventoryMatches(job,partsStock=[],state={}){
 export function donorMatches(job,jobs=[],state={}){
   if(!job)return [];
   const needCal=compact(job.passport?.calibre),needPlate=num(job.passport?.movementMm),needMaker=fold(job.passport?.movementMaker||job.passport?.maker),needText=neededText(job);
-  return (jobs||[]).filter(d=>d&&d.id!==job.id&&d.status==="Spares").map(donor=>{let score=0;const why=[],cal=compact(donor.passport?.calibre),plate=num(donor.passport?.movementMm),maker=fold(donor.passport?.movementMaker||donor.passport?.maker),txt=[donor.watchName,donor.passport?.model,donor.passport?.calibre,donor.passport?.calibreFamily,donor.fitsNote].filter(Boolean).join(" ");
+  return (jobs||[]).filter(d=>d&&d.id!==job.id&&d.status==="Spares").map(donor=>{let score=0;const why=[],cal=compact(donor.passport?.calibre),plate=num(donor.passport?.movementMm),maker=fold(donor.passport?.movementMaker||donor.passport?.maker),txt=[donor.watchName,donor.passport?.model,donor.passport?.calibre,donor.passport?.calibreFamily,donor.fitsNote,donor.storageLocation].filter(Boolean).join(" ");
     if(needCal&&cal&&needCal===cal)score+=addReason(why,"Same recorded calibre.",68);else if(needCal&&cal&&(needCal.includes(cal)||cal.includes(needCal)))score+=addReason(why,"Calibre text overlaps but is not exact.",34);
     if(needMaker&&maker&&needMaker===maker)score+=addReason(why,"Same movement/maker name.",10);
     if(needPlate&&plate){const delta=Math.abs(needPlate-plate);if(delta<=.2)score+=addReason(why,"Movement size is within 0.2 mm.",16);else if(delta<=.5)score+=addReason(why,"Movement size is within 0.5 mm; measure first.",8);else if(needCal&&cal&&needCal===cal){score-=25;why.push("Warning: calibre matches but recorded movement sizes disagree.");}}
     if(fold(donor.fitsNote).includes(fold(job.watchName))||fold(donor.fitsNote).includes(fold(job.passport?.calibre)))score+=addReason(why,"You previously recorded that this donor fits this watch/calibre.",30);
     const ov=overlap(needText,txt);if(ov>=.3)score+=addReason(why,"Identity/parts wording overlaps with the open watch.",12);
     const kept=(donor.sparesParts||[]).filter(x=>x.keep);if(!kept.length){score-=20;why.push("No donor parts are currently marked as available.");}
-    const partEvidence=kept.map(k=>latestEvidence(state,job,"donor",donor.id,k.id)).filter(Boolean).sort((a,b)=>String(b.at||"").localeCompare(String(a.at||"")))[0]||latestEvidence(state,job,"donor",donor.id,"");score=applyEvidence(score,why,partEvidence);
-    return {donor,score:Math.max(0,Math.min(100,score)),level:classify(score),why,kept,evidence:partEvidence};
+    const evidenceType=donor._sourceType||"donor",evidenceId=donor._sourceId||donor.id;
+    const partEvidence=kept.map(k=>latestEvidence(state,job,evidenceType,evidenceId,k.id)).filter(Boolean).sort((a,b)=>String(b.at||"").localeCompare(String(a.at||"")))[0]||latestEvidence(state,job,evidenceType,evidenceId,"");score=applyEvidence(score,why,partEvidence);
+    return {donor,score:Math.max(0,Math.min(100,score)),level:classify(score),why,kept,evidence:partEvidence,sourceType:evidenceType,sourceId:evidenceId};
   }).sort((a,b)=>b.score-a.score);
 }
 
-export function compatibilitySummary(job,state){return {inventory:inventoryMatches(job,state?.partsStock||[],state),donors:donorMatches(job,state?.jobs||[],state),history:fitHistory(state,job)};}
+function donorSources(state={}){
+  const legacy=(state.jobs||[]).filter(j=>j?.status==="Spares");
+  const linkedItemIds=new Set(legacy.map(j=>String(j.itemId||"")).filter(Boolean));
+  const items=(state.items||[]).filter(item=>item&&item.purpose==="donor"&&item.status!=="Archived"&&!linkedItemIds.has(String(item.id||""))).map(item=>{
+    const w=item.watch||{},p=w.passport||{},m=w.movement||{};
+    return {id:`item:${item.id}`,status:"Spares",watchName:item.title||"Donor item",passport:{...p,maker:p.maker||item.identity?.maker||"",model:p.model||item.identity?.model||"",calibre:p.calibre||m.calibre||"",calibreFamily:p.calibreFamily||m.calibreFamily||"",movementMm:p.movementMm||m.movementMm||"",movementMaker:p.movementMaker||m.maker||item.identity?.maker||""},sparesParts:Array.isArray(w.sparesParts)?w.sparesParts:[],fitsNote:w.fitsNote||"",storageLocation:w.storageLocation||"",_sourceType:"donorItem",_sourceId:String(item.id),_itemId:String(item.id)};
+  });
+  return [...legacy,...items];
+}
+
+export function compatibilitySummary(job,state){return {inventory:inventoryMatches(job,state?.partsStock||[],state),donors:donorMatches(job,donorSources(state),state),history:fitHistory(state,job)};}
