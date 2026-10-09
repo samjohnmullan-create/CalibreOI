@@ -10,13 +10,13 @@
   "passport": {
     "maker": "FBS / Förstner & Blessing",
     "model": "Ladies rectangular cocktail watch",
-    "country": "Germany / Swiss movement likely",
+    "country": "Germany",
     "year": "c. 1940s–1950s",
     "confidence": "Probable",
     "dialMarkings": "FBS (faded/partially illegible), applied Arabic numerals",
-    "movementMaker": "Unknown Swiss ébauche",
+    "movementMaker": "Unconfirmed; Guba is a plausible candidate family",
     "calibre": "Unknown - identification pending",
-    "calibreFamily": "Small Swiss manual-wind ladies movement",
+    "calibreFamily": "Small manual-wind ladies form movement; Guba G25/G500 candidates only",
     "jewels": "17",
     "movementType": "Mechanical manual wind",
     "escapement": "Swiss lever",
@@ -26,20 +26,21 @@
     "crownType": "Fluted crown",
     "strap": "Integrated expansion-style metal bracelet",
     "complications": "Hours, minutes",
-    "notes": "Watch currently working. Dial signature is heavily faded but reads FBS with moderate confidence. Movement is unsigned externally and marked 17 JEWELS. FBS is documented as Förstner & Blessing, Schömberg/Pforzheim, Germany. Calibre identification remains pending until movement-side markings are found.",
-    "history": "Mikrolisk records the trade mark 'Uhren FBS Fabrik' for Förstner & Blessing of Schömberg (Pforzheim), Germany. Period examples of FBS-branded watches and F.B.S. pocket watches are documented. The watch's ornate rectangular cocktail styling is consistent with mid-20th-century ladies fashion watches.",
-    "warnings": "Do not polish aggressively. Preserve dial printing, original marcasite-style stones and filigree detail. Confirm case metal before chemical cleaning.",
+    "notes": "Watch currently working. Dial signature is heavily faded but reads FBS with moderate confidence. Movement is unsigned externally and marked 17 JEWELS. FBS is documented as Förstner & Blessing, Schömberg/Pforzheim, Germany. Exact calibre remains unconfirmed. Guba is a plausible movement family because documented FBS watches exist with Guba movements and Guba produced small 17-jewel ladies form calibres, including G25 and G500; this is a research lead, not an identification. Confirm from movement stamp, under-balance markings, dial-side markings and bridge geometry before ordering parts.",
+    "history": "Mikrolisk records the trade mark 'Uhren FBS Fabrik' for Förstner & Blessing of Schömberg (Pforzheim), Germany. The ornate rectangular cocktail styling is consistent with mid-20th-century ladies fashion watches. Documented FBS examples using Guba movements make a German Guba ébauche plausible, but the calibre in this watch is not yet proven.",
+    "warnings": "Do not polish aggressively. Preserve dial printing, original marcasite-style stones and filigree detail. Confirm case metal before chemical cleaning. Do not order movement parts against G25/G500 until calibre is physically confirmed.",
     "sources": [
       "Mikrolisk horological trade mark index - FBS / Förstner & Blessing",
-      "Uhrforum discussion documenting FBS = Uhrenfabrik Förstner & Blessing",
-      "Liqwerk auction archive with F.B.S. watch examples"
+      "Documented FBS watch examples fitted with Guba movements",
+      "Guba calibre references for small 17-jewel ladies form movements (G25/G500)",
+      "Current FBS market listing used only as an asking-price sense check"
     ]
   },
   "business": {
     "targetSale": "145",
     "minSale": "95",
     "title": "Vintage FBS 17 Jewel Ladies Cocktail Watch - Marcasite Style - Manual Wind",
-    "text": "Mid-century FBS ladies cocktail watch with ornate rectangular case, decorative marcasite-style detailing, applied Arabic numerals and a 17-jewel manual-wind movement. Working at intake. Dial carries a faded FBS signature associated with Förstner & Blessing of Pforzheim/Schömberg, Germany. Service history unknown."
+    "text": "Mid-century FBS ladies cocktail watch with ornate rectangular case, decorative marcasite-style detailing, applied Arabic numerals and a 17-jewel manual-wind movement. Working at intake. Dial carries a faded FBS signature associated with Förstner & Blessing of Pforzheim/Schömberg, Germany. Exact movement calibre and service history remain unconfirmed."
   },
   "faults": [
     {"text":"Crystal heavily scratched / hazy","severity":"Moderate"},
@@ -48,21 +49,21 @@
     {"text":"Movement calibre not yet identified","severity":"Minor"}
   ],
   "diagnosticFaults": [
-    {"id":"movement-calibre-id","text":"Identify movement calibre from under-balance or dial-side markings","category":"Identity","severity":"Moderate","sourceStage":"Dismantling & inspection","sourceCheck":"movement-id","sourceQuestion":"Locate calibre or ébauche stamp","status":"possible"},
+    {"id":"movement-calibre-id","text":"Identify movement calibre from under-balance or dial-side markings; compare bridge geometry with Guba G25/G500 only as candidates","category":"Identity","severity":"Moderate","sourceStage":"Dismantling & inspection","sourceCheck":"movement-id","sourceQuestion":"Locate calibre or ébauche stamp","status":"possible"},
     {"id":"service-condition","text":"Working at intake but service condition unknown; inspect lubrication, pivots, jewels and mainspring","category":"Movement","severity":"Moderate","sourceStage":"Dismantling & inspection","sourceCheck":"service-condition","sourceQuestion":"Assess movement wear and service state","status":"possible"}
   ],
   "parts": [],
   "timingRuns": [],
-  "diagnosis": "Working manual-wind movement. Brand locked in as FBS / Förstner & Blessing based on faded dial signature and documented FBS trade mark. Exact movement calibre still to be confirmed.",
+  "diagnosis": "Working manual-wind movement. Brand locked in as FBS / Förstner & Blessing based on faded dial signature and documented FBS trade mark. Exact movement calibre remains unconfirmed; Guba is a plausible candidate family but not yet proven.",
   "repairPerformed": "",
   "stages": [
     {"name":"Intake","notes":"Working at intake. Photograph dial, case, bracelet and movement before cleaning. Brand recorded as FBS / Förstner & Blessing.","condition":"Working; cosmetic ageing","complete":false,"photos":[],"checks":{}},
     {"name":"Pre-service timing","notes":"Record rate and beat error before dismantling if signal is stable.","condition":"Pending","complete":false,"photos":[],"checks":{}},
     {"name":"Uncasing","notes":"Check case-back and inner case for maker, metal and hallmarks before any cleaning.","condition":"Pending","complete":false,"photos":[],"checks":{}},
-    {"name":"Dismantling & inspection","notes":"Search for calibre/ébauche mark under balance and on dial side. Inspect balance pivots, jewels, train, barrel and keyless works.","condition":"Pending","complete":false,"photos":[],"checks":{}},
+    {"name":"Dismantling & inspection","notes":"Search for calibre/ébauche mark under balance and on dial side. Compare bridge geometry against Guba G25/G500 only as research candidates. Inspect balance pivots, jewels, train, barrel and keyless works.","condition":"Pending","complete":false,"photos":[],"checks":{}},
     {"name":"Cleaning & parts inspection","notes":"Use conservative cleaning around decorative stone settings and dial. Confirm stones are secure before ultrasonic cleaning of case components.","condition":"Pending","complete":false,"photos":[],"checks":{}},
     {"name":"Repairs & parts","notes":"Only replace parts after calibre identification. Preserve original hands, crown and decorative case components where possible.","condition":"Pending","complete":false,"photos":[],"checks":{}},
-    {"name":"Reassembly & lubrication","notes":"Lubricate appropriate to small Swiss manual movement after calibre identification.","condition":"Pending","complete":false,"photos":[],"checks":{}},
+    {"name":"Reassembly & lubrication","notes":"Lubricate appropriate to the confirmed small manual-wind movement after calibre identification.","condition":"Pending","complete":false,"photos":[],"checks":{}},
     {"name":"Train & escapement","notes":"Check freedom of train and escapement after cleaning.","condition":"Pending","complete":false,"photos":[],"checks":{}},
     {"name":"Balance & beat","notes":"Check balance endshake, hairspring flatness/centering, amplitude and beat error.","condition":"Pending","complete":false,"photos":[],"checks":{}},
     {"name":"Casing & function","notes":"Verify winding, setting, hand clearance and secure movement fit.","condition":"Pending","complete":false,"photos":[],"checks":{}},
