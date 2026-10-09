@@ -1,5 +1,5 @@
 import { loadState, current, escapeHtml } from "./store.js?v=26";
-import { compatibilitySummary } from "./parts-intelligence.js?v=3";
+import { compatibilitySummary } from "./parts-intelligence.js?v=4";
 
 const esc=escapeHtml;
 const MAX_PER_GROUP=3;
@@ -23,7 +23,7 @@ function stockRow(x){
 }
 function donorRow(x){
   const d=x.donor||{},p=d.passport||{},kept=(x.kept||[]).map(k=>k.name).filter(Boolean).slice(0,3).join(", ");
-  return `<div class="npr-row"><div class="npr-main"><strong>${esc(d.watchName||"Unnamed donor")}</strong><small>${esc([p.maker,p.calibre,kept&&`Available: ${kept}`].filter(Boolean).join(" · ")||"Donor watch")}</small>${evidenceText(x.evidence)}${whyText(x.why)}</div><div class="npr-score">${pill(x.level)}<span>${Number(x.score)||0}</span></div></div>`;
+  return `<div class="npr-row"><div class="npr-main"><strong>${esc(d.watchName||"Unnamed donor")}</strong><small>${esc([p.maker,p.calibre,d.storageLocation&&`Stored: ${d.storageLocation}`,kept&&`Available: ${kept}`].filter(Boolean).join(" · ")||"Donor watch")}</small>${evidenceText(x.evidence)}${whyText(x.why)}</div><div class="npr-score">${pill(x.level)}<span>${Number(x.score)||0}</span></div></div>`;
 }
 function historyRows(history=[]){
   if(!history.length)return "<span class='muted small'>No previous fit decisions for this watch/calibre yet.</span>";
