@@ -3,10 +3,15 @@ if(list&&!list.dataset.safeStageNav){
   list.dataset.safeStageNav="1";
   const parent=list.parentElement;
   if(parent){
-    parent.style.position="relative";
+    const wrap=document.createElement("div");
+    wrap.className="stage-strip-wrap";
+    parent.insertBefore(wrap,list);
+    wrap.appendChild(list);
+
     const style=document.createElement("style");
     style.textContent=`
-      .stage-list{scroll-behavior:smooth;scroll-padding-inline:48px}
+      .stage-strip-wrap{position:relative;margin-bottom:12px}
+      .stage-strip-wrap .stage-list{margin-bottom:0;scroll-behavior:smooth;scroll-padding-inline:48px}
       .stage-strip-nav{position:absolute;top:50%;transform:translateY(-50%);z-index:5;width:34px;height:48px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);display:grid;place-items:center;font-size:1.25rem;font-weight:800;cursor:pointer;box-shadow:0 3px 12px rgba(0,0,0,.12)}
       .stage-strip-nav:hover{border-color:var(--accent)}
       .stage-strip-prev{left:6px}.stage-strip-next{right:6px}
@@ -23,7 +28,7 @@ if(list&&!list.dataset.safeStageNav){
     next.setAttribute("aria-label","Scroll stages right");
     prev.textContent="‹";
     next.textContent="›";
-    parent.append(prev,next);
+    wrap.append(prev,next);
 
     const amount=()=>Math.max(320,Math.round(list.clientWidth*.6));
     prev.onclick=()=>list.scrollBy({left:-amount(),behavior:"smooth"});
@@ -36,10 +41,7 @@ if(list&&!list.dataset.safeStageNav){
       list.scrollTo({left:Math.max(0,target),behavior:"smooth"});
     };
 
-    // One initial centre after the normal Workbench paint.
     requestAnimationFrame(()=>requestAnimationFrame(centreActive));
-
-    // Re-centre only in response to explicit user stage changes.
     list.addEventListener("click",e=>{
       if(!e.target.closest(".stage-btn"))return;
       setTimeout(centreActive,0);
