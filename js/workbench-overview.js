@@ -1,5 +1,5 @@
 import { loadState, saveState, escapeHtml } from "./store.js?v=26";
-import { allItems, ITEM_PURPOSES, WORK_TYPES, normaliseWork, itemDisplayName } from "./item-model.js?v=4";
+import { allItems, ITEM_PURPOSES, WORK_TYPES, normaliseWork, normaliseItem, itemDisplayName } from "./item-model.js?v=4";
 
 const esc=escapeHtml;
 const purposeLabel=v=>ITEM_PURPOSES.find(([k])=>k===v)?.[1]||"Resale";
@@ -11,6 +11,27 @@ const view=params.get("view")==="service"?"service":"queue";
 
 const state=await loadState();
 state.workRecords=Array.isArray(state.workRecords)?state.workRecords:[];
+state.items=Array.isArray(state.items)?state.items:[];
+const num=v=>Number(v)||0;
+function syncWorkRollups(){
+ let changed=false;
+ state.items=state.items.map(raw=>{
+  const item=normaliseItem(raw),c=item.commercial||(item.commercial={});
+  const records=state.workRecords.map(normaliseWork).filter(w=>String(w.itemId)===String(item.id)&&w.status!=="Cancelled");
+  const nextCost=records.reduce((n,w)=>n+num(w.cost),0),nextLabour=records.reduce((n,w)=>n+num(w.labourMinutes),0);
+  const oldCost=num(c.workRollupCost),oldLabour=num(c.workRollupLabourMinutes);
+  const nextPreparation=Math.max(0,num(c.preparationCost)-oldCost)+nextCost;
+  const nextMinutes=Math.max(0,num(c.labourMinutes)-oldLabour)+nextLabour;
+  if(num(c.preparationCost)!==nextPreparation||num(c.labourMinutes)!==nextMinutes||oldCost!==nextCost||oldLabour!==nextLabour){
+   c.preparationCost=String(nextPreparation||"");c.labourMinutes=String(nextMinutes||"");
+   c.workRollupCost=String(nextCost||"");c.workRollupLabourMinutes=String(nextLabour||"");
+   item.updatedAt=new Date().toISOString();changed=true;
+  }
+  return item;
+ });
+ return changed;
+}
+if(syncWorkRollups()) await saveState(state);
 const items=allItems(state);
 const byLegacy=new Map(items.filter(x=>x.legacyJobId).map(x=>[x.legacyJobId,x]));
 const byId=new Map(items.map(x=>[String(x.id),x]));
