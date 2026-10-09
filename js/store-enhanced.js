@@ -1,5 +1,6 @@
 import * as cloud from "./store-cloud-core.js?v=5";
 import * as base from "./store-base.js?v=1";
+import { ensureSpecialistJob, isSpecialistItem, isSpecialistPage, pageName, syncCurrentJobToItem, syncLinkedJobsFromItems } from "./watch-item-bridge.js?v=1";
 
 export * from "./store-cloud-core.js?v=5";
 
@@ -47,6 +48,13 @@ export function exportCard(job){
   return out;
 }
 
+export async function saveState(state){
+  const page=pageName();
+  if(page==="item.html")syncLinkedJobsFromItems(state);
+  else if(isSpecialistPage(page))syncCurrentJobToItem(state);
+  return cloud.saveState(state);
+}
+
 export async function importInboxItems(items){
   const result=await cloud.importInboxItems(items);
   const cards=list(items).filter(item=>item?.job_data?.type==="calibrejob"&&item.job_data);
@@ -59,6 +67,28 @@ export async function importInboxItems(items){
     if(!job)continue;
     enrich(job,raw);changed=true;
   }
-  if(changed)await cloud.saveState(state);
+  if(changed)await saveState(state);
   return {...result,state};
 }
+
+async function installItemSpecialistTools(){
+  if(typeof document==="undefined"||pageName()!=="item.html"||document.querySelector("[data-specialist-item-tools]"))return;
+  const itemId=new URLSearchParams(location.search).get("id")||"";if(!itemId)return;
+  const state=await cloud.loadState();state.items=Array.isArray(state.items)?state.items:[];
+  const item=state.items.find(x=>String(x.id)===String(itemId));if(!isSpecialistItem(item))return;
+  const head=document.querySelector(".item-head"),tabs=document.getElementById("itemTabs");if(!head||!tabs)return;
+  const existing=(state.jobs||[]).find(j=>(item.watch?.specialistJobId&&j.id===item.watch.specialistJobId)||(j.itemId&&String(j.itemId)===String(item.id)));
+  const box=document.createElement("section");box.className="card";box.dataset.specialistItemTools="1";box.style.marginBottom="12px";
+  box.innerHTML=`<div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap"><div><div class="kicker">${item.type==="clock"?"CLOCKMAKER":"WATCHMAKER"} TOOLS</div><h3 style="margin:3px 0 4px">Specialist workspace</h3><p class="muted small" style="margin:0">Passport, service, timing, parts and sale records stay linked to this Item.</p></div><span class="badge">${existing?"Linked":"Ready to link"}</span></div><div class="row" style="margin-top:10px;gap:6px;flex-wrap:wrap"><button class="btn" data-specialist-go="workbench.html?view=service">Service</button><button class="btn secondary" data-specialist-go="passport.html">Passport</button><button class="btn secondary" data-specialist-go="timegrapher.html">Timing</button><button class="btn secondary" data-specialist-go="suppliers.html">Parts</button><button class="btn secondary" data-specialist-go="business.html">Costs</button><button class="btn secondary" data-specialist-go="sales.html">Sale</button><button class="btn secondary" data-specialist-go="summary.html">Record</button><button class="btn secondary" data-specialist-go="documents.html">Files</button></div>`;
+  head.insertAdjacentElement("afterend",box);
+  box.querySelectorAll("[data-specialist-go]").forEach(btn=>btn.addEventListener("click",async()=>{
+    btn.disabled=true;
+    try{
+      ensureSpecialistJob(state,item,base.blankJob);
+      await cloud.saveState(state);
+      location.href=btn.dataset.specialistGo;
+    }catch(err){btn.disabled=false;console.error("Specialist handoff failed",err);alert("Could not open the specialist workspace. "+(err?.message||""));}
+  }));
+}
+
+if(typeof window!=="undefined")queueMicrotask(()=>installItemSpecialistTools().catch(err=>console.warn("Item specialist tools unavailable",err)));
