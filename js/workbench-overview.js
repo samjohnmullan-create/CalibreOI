@@ -55,8 +55,8 @@ if(!shell||!watchHero) throw new Error("Workbench shell unavailable");
 const style=document.createElement("style");
 style.textContent=`
 .workbench-tabs{display:flex;gap:3px;overflow-x:auto;border-bottom:1px solid var(--line);margin:0 0 12px;scrollbar-width:none}.workbench-tabs::-webkit-scrollbar{display:none}.workbench-tabs a{flex:0 0 auto;border-bottom:2px solid transparent;color:var(--muted);padding:8px 10px;font-size:.72rem;font-weight:800;text-decoration:none}.workbench-tabs a.on{color:var(--accent);border-bottom-color:var(--accent)}
-.work-queue{margin:0 0 14px}.work-queue-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:10px}.work-queue-head h2{margin:2px 0 3px}.work-filters{display:grid;grid-template-columns:minmax(180px,1fr) 170px 165px 165px;gap:8px;margin-bottom:10px}.work-list{display:grid;gap:7px}.work-item{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px 11px;border:1px solid var(--line);border-radius:9px;background:var(--surface);text-decoration:none;color:var(--ink)}.work-item:hover{border-color:var(--accent)}.work-item-meta{display:flex;gap:5px;flex-wrap:wrap;margin-top:4px}.work-pill{display:inline-flex;padding:3px 7px;border:1px solid var(--line);border-radius:999px;font-size:.61rem;font-weight:800;color:var(--muted)}.work-pill.purpose{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 45%,var(--line))}.work-empty{padding:14px 4px;color:var(--muted)}.work-summary{display:flex;gap:8px;flex-wrap:wrap}.work-summary span{font-size:.68rem;color:var(--muted)}
-@media(max-width:760px){.work-filters{grid-template-columns:1fr 1fr}.work-filters label:first-child{grid-column:1/-1}.work-item{grid-template-columns:1fr}.work-item .btn{justify-self:start}.workbench-tabs{border-bottom:0;gap:5px}.workbench-tabs a{border:1px solid var(--line);border-radius:999px;padding:6px 10px}.workbench-tabs a.on{background:color-mix(in srgb,var(--accent) 9%,var(--surface));border-color:var(--accent)}}
+.work-queue{margin:0 0 14px}.work-queue-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:10px}.work-queue-head h2{margin:2px 0 3px}.work-filters{display:grid;grid-template-columns:minmax(180px,1fr) 170px 165px 165px;gap:8px;margin-bottom:10px}.work-list{display:grid;gap:7px}.work-item{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px 11px;border:1px solid var(--line);border-radius:9px;background:var(--surface);color:var(--ink)}.work-item:hover{border-color:var(--accent)}.work-item-meta{display:flex;gap:5px;flex-wrap:wrap;margin-top:4px}.work-pill{display:inline-flex;padding:3px 7px;border:1px solid var(--line);border-radius:999px;font-size:.61rem;font-weight:800;color:var(--muted)}.work-pill.purpose{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 45%,var(--line))}.work-empty{padding:14px 4px;color:var(--muted)}.work-summary{display:flex;gap:8px;flex-wrap:wrap}.work-summary span{font-size:.68rem;color:var(--muted)}.work-item-actions{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.work-delete{border-color:color-mix(in srgb,var(--danger) 45%,var(--line));color:var(--danger)}
+@media(max-width:760px){.work-filters{grid-template-columns:1fr 1fr}.work-filters label:first-child{grid-column:1/-1}.work-item{grid-template-columns:1fr}.work-item-actions{justify-self:start}.workbench-tabs{border-bottom:0;gap:5px}.workbench-tabs a{border:1px solid var(--line);border-radius:999px;padding:6px 10px}.workbench-tabs a.on{background:color-mix(in srgb,var(--accent) 9%,var(--surface));border-color:var(--accent)}}
 @media(max-width:480px){.work-filters{grid-template-columns:1fr}.work-filters label:first-child{grid-column:auto}}
 `;
 document.head.appendChild(style);
@@ -90,14 +90,26 @@ $("wqStatus").innerHTML='<option value="all">All statuses</option>'+[...new Set(
 
 function itemPurpose(row){return row.item?.purpose||"resale"}
 function hay(row){return [row.title,row.status,workTypeLabel(row.type),row.item?.title,row.item?.identity?.maker,purposeLabel(itemPurpose(row))].filter(Boolean).join(" ").toLowerCase()}
+async function deleteWatchJob(id){
+ const target=(state.jobs||[]).find(j=>String(j.id)===String(id));
+ if(!target)return;
+ const label=target.watchName||target.passport?.maker||"this job";
+ if(!confirm(`Delete ${label} from the Workbench queue?\n\nThe linked Item will be kept.`))return;
+ if(!confirm("Delete this job card permanently? This cannot be undone."))return;
+ state.jobs=(state.jobs||[]).filter(j=>String(j.id)!==String(id));
+ if(String(state.currentId||"")===String(id)) state.currentId=state.jobs[0]?.id||null;
+ await saveState(state);
+ location.reload();
+}
 function render(){
  const q=$("wqSearch").value.trim().toLowerCase(),purpose=$("wqPurpose").value,type=$("wqType").value,status=$("wqStatus").value;
  const filtered=rows.filter(r=>(!q||hay(r).includes(q))&&(purpose==="all"||itemPurpose(r)===purpose)&&(type==="all"||r.type===type)&&(status==="all"||r.status===status));
  $("wqTotal").textContent=`${rows.length} active`;
  $("wqWatch").textContent=`${legacy.length} watch service${legacy.length===1?"":"s"}`;
  $("wqGeneric").textContent=`${generic.length} other work record${generic.length===1?"":"s"}`;
- $("wqList").innerHTML=filtered.length?filtered.map(r=>{const itemName=r.item?itemDisplayName(r.item):r.title,purpose=purposeLabel(itemPurpose(r)),kind=r.kind==="watch"?"Watch service":workTypeLabel(r.type),href=r.kind==="watch"?"#":`work.html?id=${encodeURIComponent(r.id)}`;return `<a class="work-item" href="${href}" data-kind="${r.kind}" data-id="${esc(r.id)}"><div><strong>${esc(itemName)}</strong><div class="muted small">${esc(r.kind==="watch"?(r.job?.jobId||r.title):(r.title||kind))}</div><div class="work-item-meta"><span class="work-pill">${esc(kind)}</span><span class="work-pill purpose">${esc(purpose)}</span><span class="work-pill">${esc(r.status)}</span></div></div><span class="btn secondary">Open</span></a>`}).join(""):"<div class='work-empty'>No active work matches these filters.</div>";
- $("wqList").querySelectorAll('[data-kind="watch"]').forEach(a=>a.onclick=async e=>{e.preventDefault();state.currentId=a.dataset.id;await saveState(state);location.href="workbench.html?view=service";});
+ $("wqList").innerHTML=filtered.length?filtered.map(r=>{const itemName=r.item?itemDisplayName(r.item):r.title,purpose=purposeLabel(itemPurpose(r)),kind=r.kind==="watch"?"Watch service":workTypeLabel(r.type),href=r.kind==="watch"?"#":`work.html?id=${encodeURIComponent(r.id)}`,deleteButton=r.kind==="watch"?`<button class="btn secondary work-delete" type="button" data-delete-watch="${esc(r.id)}">Delete</button>`:"";return `<div class="work-item" data-kind="${r.kind}" data-id="${esc(r.id)}"><div><strong>${esc(itemName)}</strong><div class="muted small">${esc(r.kind==="watch"?(r.job?.jobId||r.title):(r.title||kind))}</div><div class="work-item-meta"><span class="work-pill">${esc(kind)}</span><span class="work-pill purpose">${esc(purpose)}</span><span class="work-pill">${esc(r.status)}</span></div></div><div class="work-item-actions"><a class="btn secondary work-open" href="${href}" data-open-kind="${r.kind}" data-open-id="${esc(r.id)}">Open</a>${deleteButton}</div></div>`}).join(""):"<div class='work-empty'>No active work matches these filters.</div>";
+ $("wqList").querySelectorAll('[data-open-kind="watch"]').forEach(a=>a.onclick=async e=>{e.preventDefault();state.currentId=a.dataset.openId;await saveState(state);location.href="workbench.html?view=service";});
+ $("wqList").querySelectorAll('[data-delete-watch]').forEach(b=>b.onclick=()=>deleteWatchJob(b.dataset.deleteWatch));
 }
 ["wqSearch","wqPurpose","wqType","wqStatus"].forEach(id=>$(id).addEventListener(id==="wqSearch"?"input":"change",render));
 render();
