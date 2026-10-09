@@ -159,8 +159,8 @@ export function legacyJobToWork(job = {}, itemId = "") {
 }
 
 export function allItems(state = {}) {
-  const explicit=(Array.isArray(state.items)?state.items:[]).map(normaliseItem), byLegacyJob=new Set(explicit.map(item=>item.legacyJobId).filter(Boolean));
-  const derived=(Array.isArray(state.jobs)?state.jobs:[]).filter(job=>!byLegacyJob.has(job.id)).map(legacyJobToItem);
+  const explicit=(Array.isArray(state.items)?state.items:[]).map(normaliseItem), byLegacyJob=new Set(explicit.map(item=>item.legacyJobId).filter(Boolean)), explicitIds=new Set(explicit.map(item=>String(item.id)));
+  const derived=(Array.isArray(state.jobs)?state.jobs:[]).filter(job=>!byLegacyJob.has(job.id)&&!(job.itemId&&explicitIds.has(String(job.itemId)))).map(legacyJobToItem);
   const list=[...explicit,...derived];
   if(typeof location!=="undefined" && /(^|\/)finance\.html$/.test(location.pathname)) return list.filter(isResaleItem);
   return list;
