@@ -3,9 +3,9 @@
   "short_name": "Calibre",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#f1f3ee",
-  "theme_color": "#607558",
+  "background_color": "#f5f6f6",
+  "theme_color": "#17191a",
   "icons": [
-    { "src": "assets/brand/calibre-mark-black.svg?v=1", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+    { "src": "assets/brand/calibre-mark-black.svg?v=4", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
   ]
 }
