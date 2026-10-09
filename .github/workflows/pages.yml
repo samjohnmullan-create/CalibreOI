@@ -39,6 +39,7 @@ jobs:
               text = re.sub(r'css/app\.css\?v=[^"\']+', f'css/app.css?v={sha}', text)
               text = re.sub(r'js/nav\.js\?v=[^"\']+', f'js/nav.js?v={sha}', text)
               text = re.sub(r'\./js/store\.js\?v=[^"\']+', f'./js/store.js?v={sha}', text)
+              text = re.sub(r'\./js/item-model\.js\?v=[^"\']+', f'./js/item-model.js?v={sha}', text)
               text = re.sub(r'href="([A-Za-z0-9_-]+\.html)"', rf'href="\1?v={sha}"', text)
               p.write_text(text, encoding='utf-8')
 
