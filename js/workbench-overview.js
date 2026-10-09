@@ -37,7 +37,7 @@ const byLegacy=new Map(items.filter(x=>x.legacyJobId).map(x=>[x.legacyJobId,x]))
 const byId=new Map(items.map(x=>[String(x.id),x]));
 
 const legacy=(state.jobs||[]).filter(j=>activeLegacyStatus(j.status)).map(j=>({
-  kind:"watch", id:j.id, item:byLegacy.get(j.id), title:j.watchName||j.passport?.maker||"Untitled watch",
+  kind:"watch", id:j.id, item:byId.get(String(j.itemId||""))||byLegacy.get(j.id), title:j.watchName||j.passport?.maker||"Untitled watch",
   type:"service", status:j.status||"On bench", opened:j.createdAt||"", job:j
 }));
 const generic=state.workRecords.map(normaliseWork).filter(w=>activeGenericStatus(w.status)).map(w=>({
