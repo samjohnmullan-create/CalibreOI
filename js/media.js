@@ -1,32 +1,8 @@
 import { session, supabaseClient } from './cloud.js?v=4';
+import { blankMediaAsset, MEDIA_CATEGORIES } from './media-model.js?v=1';
 
 export const MEDIA_BUCKET='calibre-research-media';
-export const MEDIA_CATEGORIES=['original','identity','movement','workshop','documents','sale'];
-
-export function blankMediaAsset(partial={}){
-  return {
-    id:partial.id||'',
-    watchId:partial.watchId||'',
-    jobId:partial.jobId||'',
-    stageId:partial.stageId||'',
-    category:MEDIA_CATEGORIES.includes(partial.category)?partial.category:'workshop',
-    storageKey:partial.storageKey||'',
-    url:partial.url||'',
-    thumbnailUrl:partial.thumbnailUrl||'',
-    originalName:partial.originalName||'',
-    mimeType:partial.mimeType||'',
-    bytes:Number(partial.bytes)||0,
-    width:partial.width==null?null:Number(partial.width)||null,
-    height:partial.height==null?null:Number(partial.height)||null,
-    createdAt:partial.createdAt||new Date().toISOString(),
-    caption:partial.caption||'',
-    evidenceNote:partial.evidenceNote||'',
-    checksum:partial.checksum||'',
-    visibility:'private',
-    isCover:!!partial.isCover,
-    updatedAt:partial.updatedAt||''
-  };
-}
+export { blankMediaAsset, MEDIA_CATEGORIES } from './media-model.js?v=1';
 
 function safePart(value,fallback='item'){
   const out=String(value||fallback).trim().toLowerCase().replace(/[^a-z0-9._-]+/g,'-').replace(/^-+|-+$/g,'');
@@ -39,19 +15,21 @@ async function authSession(){
   return s;
 }
 
-export async function uploadMedia(file,{watchId='',jobId='',stageId='',category='workshop'}={}){
+export async function uploadMedia(file,{itemId='',workId='',watchId='',jobId='',stageId='',role='',slot='',category='workshop'}={}){
   if(!(file instanceof File))throw new Error('Choose a file to upload.');
   if(!MEDIA_CATEGORIES.includes(category))throw new Error('Invalid media category.');
   if(!file.type?.startsWith('image/'))throw new Error('Calibre watch media accepts image files.');
   const s=await authSession();
   const id=crypto.randomUUID();
   const ext=(file.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,8)||'jpg';
-  const path=[s.user.id,safePart(watchId||'unassigned'),safePart(category),`${Date.now()}-${id}.${ext}`].join('/');
+  const owner=itemId||watchId||'unassigned';
+  const path=[s.user.id,safePart(owner),safePart(category),`${Date.now()}-${id}.${ext}`].join('/');
   const sb=supabaseClient();
   const {error}=await sb.storage.from(MEDIA_BUCKET).upload(path,file,{contentType:file.type||'image/jpeg',cacheControl:'3600',upsert:false});
   if(error)throw error;
   return blankMediaAsset({
-    id,watchId,jobId,stageId,category,storageKey:path,originalName:file.name,mimeType:file.type||'image/jpeg',bytes:file.size,createdAt:new Date().toISOString(),visibility:'private'
+    id,itemId,workId,legacyWatchId:watchId,legacyJobId:jobId,stageId,role:role||slot,category,
+    storageKey:path,originalName:file.name,mimeType:file.type||'image/jpeg',bytes:file.size,createdAt:new Date().toISOString(),visibility:'private'
   });
 }
 
