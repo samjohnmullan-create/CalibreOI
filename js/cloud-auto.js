@@ -14,6 +14,7 @@ if(here==="sales.html")laterImport("./publish-controls.js?v=1","Calibre public p
 if(here==="finance.html"||here==="index.html")laterImport("./available-cash.js?v=1","Calibre cash position unavailable");
 if(here==="suppliers.html")laterImport("./parts-intelligence-runtime.js?v=2","Calibre parts intelligence unavailable");
 if(here==="suppliers.html"||here==="inventory.html")laterImport("./parts-workflow.js?v=3","Calibre parts workflow unavailable");
+if(here==="settings.html")laterImport("./settings-media-health.js?v=1","Calibre media queue health unavailable");
 if(here==="inventory.html"){
   laterImport("./collection-dashboard.js?v=2","Calibre collection dashboard unavailable");
   laterImport("./purchase-review.js?v=2","Calibre purchase review unavailable");
