@@ -20,6 +20,7 @@ export function blankMediaAsset(partial={}){
     category:MEDIA_CATEGORIES.includes(partial.category)?partial.category:'workshop',
     role:text(partial.role||partial.slot),
     storageKey:text(partial.storageKey),
+    thumbnailStorageKey:text(partial.thumbnailStorageKey),
     url:text(partial.url),
     thumbnailUrl:text(partial.thumbnailUrl),
     originalName:text(partial.originalName),
@@ -38,7 +39,7 @@ export function blankMediaAsset(partial={}){
 }
 
 export function normaliseMediaAsset(raw={}){return blankMediaAsset(raw);}
-export function mediaAssetHasFile(asset={}){return !!(asset.storageKey||asset.url||asset.thumbnailUrl);}
+export function mediaAssetHasFile(asset={}){return !!(asset.storageKey||asset.thumbnailStorageKey||asset.url||asset.thumbnailUrl);}
 export function mediaAssetOwnerId(asset={}){return text(asset.itemId);}
 export function mediaForItem(assets=[],itemId=''){const key=text(itemId);return (Array.isArray(assets)?assets:[]).map(normaliseMediaAsset).filter(asset=>text(asset.itemId)===key);}
 export function mediaForLegacyWatch(assets=[],watchId=''){const key=text(watchId);return (Array.isArray(assets)?assets:[]).map(normaliseMediaAsset).filter(asset=>text(asset.legacyWatchId)===key);}
