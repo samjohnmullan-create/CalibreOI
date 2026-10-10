@@ -1,5 +1,5 @@
 import { compatibilitySummary } from './parts-intelligence.js?v=4';
-import { donorStoredPart } from './workshop-assets.js?v=2';
+import { donorPartStorage, storageLocationForAsset } from './donor-workshop.js?v=1';
 
 const text=v=>String(v||'').trim();
 const fold=v=>text(v).toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
@@ -21,8 +21,10 @@ export function partsNeedSummary(job={},state={}){
     const donors=[];
     for(const row of (base.donors||[]))for(const kept of (row.kept||[])){
       const bonus=donorPartRelevance(part,kept),matchScore=Math.min(100,(Number(row.score)||0)+bonus);if(!row.evidence&&matchScore<30)continue;
-      const stored=donorStoredPart(state,row.sourceType||'donor',row.sourceId||row.donor?.id,kept.id);
-      donors.push({...row,keptPart:kept,stored,matchScore});
+      const sourceType=row.sourceType||'donor',sourceId=row.sourceId||row.donor?.id;
+      const link=sourceType==='donorItem'?{donorItemId:sourceId,partId:kept.id}:{donorJobId:sourceId,partId:kept.id};
+      const stored=donorPartStorage(state,link),storageDisplay=stored?storageLocationForAsset(state,stored):'';
+      donors.push({...row,keptPart:kept,stored,storageDisplay,matchScore});
     }
     donors.sort((a,b)=>b.matchScore-a.matchScore);
     const best=[...stock.map(row=>({kind:'stock',row,score:row.matchScore})),...donors.map(row=>({kind:'donor',row,score:row.matchScore}))].sort((a,b)=>b.score-a.score)[0]||null;
