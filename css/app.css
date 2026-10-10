@@ -239,3 +239,45 @@ body .passport-legal{border-top-color:#aebca9!important}
   .metrics{grid-template-columns:1fr 1fr}
   .metric:nth-child(2){border-right:0}
 }
+
+/* Mobile-first polish */
+@media(max-width:640px){
+  html,body{max-width:100%;overflow-x:hidden}
+  body{padding-bottom:calc(88px + env(safe-area-inset-bottom))}
+  .shell{width:100%;max-width:100%;padding-left:10px;padding-right:10px;padding-bottom:14px}
+  .card{padding:10px;border-radius:10px;min-width:0}
+  .hero{margin-bottom:8px;padding-bottom:8px;gap:6px}
+  .hero h2{font-size:1.22rem}
+  .small{font-size:.72rem}
+  input,select,textarea,.btn{min-height:44px}
+  .row,.footer-actions{gap:7px}
+  .row>.btn,.footer-actions>.btn{flex:1 1 auto}
+
+  .mainnav{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:2px;left:6px;right:6px;bottom:max(6px,env(safe-area-inset-bottom));overflow:hidden;padding:5px;border-radius:14px}
+  .navbtn{min-width:0;width:100%;padding:5px 2px;min-height:54px;font-size:.61rem;line-height:1.05;white-space:nowrap}
+  .navbtn svg{width:19px;height:19px}
+
+  .brandbar{margin-left:-10px;margin-right:-10px;padding-left:10px;padding-right:10px}
+  .brandmark{width:min(170px,56vw)!important;min-width:0!important;height:42px!important}
+
+  .job-card{grid-template-columns:54px minmax(0,1fr);align-items:start;gap:9px;padding:10px;overflow:hidden}
+  .job-card .thumb{width:54px;height:54px;grid-row:1 / span 2}
+  .job-card>div{min-width:0}
+  .job-card>div:nth-of-type(1){overflow-wrap:anywhere}
+  .job-card>div:last-child{grid-column:2;display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+  .job-card strong{font-size:.9rem;line-height:1.22;overflow-wrap:anywhere}
+  .job-card .muted{line-height:1.3;overflow-wrap:anywhere}
+  .badge{font-size:.61rem;padding:3px 6px}
+
+  .photo-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .timeline-item{grid-template-columns:68px minmax(0,1fr)}
+  .kv{align-items:flex-start}
+  .kv>*{min-width:0;overflow-wrap:anywhere}
+}
+@media(max-width:380px){
+  .navbtn{font-size:.56rem;padding-inline:1px}
+  .navbtn svg{width:18px;height:18px}
+  .job-card{grid-template-columns:48px minmax(0,1fr)}
+  .job-card .thumb{width:48px;height:48px}
+  .photo-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
