@@ -28,7 +28,7 @@ export async function uploadMedia(file,{itemId='',workId='',watchId='',jobId='',
   const {error}=await sb.storage.from(MEDIA_BUCKET).upload(path,file,{contentType:file.type||'image/jpeg',cacheControl:'3600',upsert:false});
   if(error)throw error;
   return blankMediaAsset({
-    id,itemId:itemId||watchId,workId,legacyWatchId:watchId,legacyJobId:jobId,stageId,role:role||slot,category,
+    id,itemId,workId,legacyWatchId:watchId,legacyJobId:jobId,stageId,role:role||slot,category,
     storageKey:path,originalName:file.name,mimeType:file.type||'image/jpeg',bytes:file.size,createdAt:new Date().toISOString(),visibility:'private'
   });
 }
