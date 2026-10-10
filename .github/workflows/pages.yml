@@ -18,16 +18,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Bust deployed app caches
+      - name: Build clean app artifact
         shell: bash
         run: |
+          set -euo pipefail
           python - <<'PY'
           from pathlib import Path
-          import os, re
+          import os, re, shutil
 
           sha = os.environ['GITHUB_SHA']
 
-          # Root app pages: every deployment references the exact JS/CSS build.
+          # Make every app page reference one coherent build.
           for p in Path('.').glob('*.html'):
               text = p.read_text(encoding='utf-8')
               if 'http-equiv="Cache-Control"' not in text:
@@ -35,48 +36,46 @@ jobs:
                       '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">',
                       '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">'
                   )
-              # Cache-bust every local JS/CSS asset, regardless of its old hand-written ?v number.
               text = re.sub(
                   r'((?:src|href)=["\'](?:\./)?(?:js|css)/[^"\'?]+\.(?:js|css))(?:\?v=[^"\']+)?',
-                  rf'\1?v={sha}',
-                  text
+                  rf'\1?v={sha}', text
               )
-              # Keep direct module imports in inline scripts fresh as well.
               text = re.sub(
                   r'(["\'])(\./js/[^"\'?]+\.js)(?:\?v=[^"\']+)?\1',
-                  lambda m: f'{m.group(1)}{m.group(2)}?v={sha}{m.group(1)}',
-                  text
+                  lambda m: f'{m.group(1)}{m.group(2)}?v={sha}{m.group(1)}', text
               )
-              # Root-page navigation gets a fresh document after each deploy.
               text = re.sub(r'href="([A-Za-z0-9_-]+\.html)"', rf'href="\1?v={sha}"', text)
               p.write_text(text, encoding='utf-8')
 
-          # Internal ES-module imports were historically pinned to many different v= numbers.
-          # Rewrite them in the deployment artifact so the browser always loads one coherent build.
+          # Rewrite old hand-maintained module version numbers in the deployment copy.
           for p in Path('js').glob('*.js'):
               text = p.read_text(encoding='utf-8')
               text = re.sub(
                   r'(["\'])(\./[^"\'?]+\.js)(?:\?v=[^"\']+)?\1',
-                  lambda m: f'{m.group(1)}{m.group(2)}?v={sha}{m.group(1)}',
-                  text
+                  lambda m: f'{m.group(1)}{m.group(2)}?v={sha}{m.group(1)}', text
               )
               p.write_text(text, encoding='utf-8')
 
-          # Public catalogue cache busting.
-          for name in ('public-site/index.html', 'public-site/watch.html'):
-              p = Path(name)
-              if not p.exists():
-                  continue
-              text = p.read_text(encoding='utf-8')
-              text = re.sub(r'css/site\.css(?:\?v=[^"\']+)?', f'css/site.css?v={sha}', text)
-              text = re.sub(r'js/catalogue\.js(?:\?v=[^"\']+)?', f'js/catalogue.js?v={sha}', text)
-              p.write_text(text, encoding='utf-8')
+          site = Path('_site')
+          if site.exists(): shutil.rmtree(site)
+          site.mkdir()
+
+          # Internal Calibre app only. Repository docs, workflows, hosting files and
+          # the separately deployed public catalogue are deliberately excluded.
+          for p in Path('.').glob('*.html'):
+              shutil.copy2(p, site / p.name)
+          for name in ('CNAME','manifest.json'):
+              p=Path(name)
+              if p.exists(): shutil.copy2(p, site / name)
+          for name in ('assets','css','js','cards'):
+              src=Path(name)
+              if src.exists(): shutil.copytree(src, site/name)
           PY
       - uses: actions/configure-pages@v5
         with:
           enablement: true
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: .
+          path: _site
       - id: deployment
         uses: actions/deploy-pages@v4
