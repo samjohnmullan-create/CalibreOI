@@ -1,0 +1,13 @@
+import { loadState, saveState } from './store.js?v=26';
+import { qrPayloadForEntity } from './qr-inventory.js?v=1';
+import { labelSheetItems } from './qr-label-layout.js?v=1';
+const $=id=>document.getElementById(id),params=new URLSearchParams(location.search),requested=params.get('id')||'';
+let state=await loadState();state.items=Array.isArray(state.items)?state.items:[];
+const origin=location.origin+location.pathname.replace(/[^/]*$/,'').replace(/\/$/,'');
+const items=labelSheetItems(requested?state.items.filter(item=>String(item.id)===String(requested)):state.items);
+const esc=s=>String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function render(){const box=$('labels');box.innerHTML='';for(const row of items){const item=state.items.find(x=>String(x.id)===String(row.id));const selected=requested||items.length===1;const label=document.createElement('section');label.className='label'+(selected?' selected':'');label.dataset.id=row.id;const target=qrPayloadForEntity('item',row.id,{origin});label.innerHTML=`<div class="qrbox" data-qr></div><div><div class="label-brand">CALIBRE & CO.</div><div class="label-title">${esc(row.title)}</div><div class="label-meta">${esc(row.type.toUpperCase())} · ${esc(row.shortId)}</div><div class="label-meta">Permanent Item ID</div><input class="location-input" data-location value="${esc(row.location)}" placeholder="Storage location"><label class="checkline label-select"><input type="checkbox" data-select${selected?' checked':''}> Print this label</label></div>`;box.appendChild(label);const qr=label.querySelector('[data-qr]');if(globalThis.QRCode?.toCanvas){const canvas=document.createElement('canvas');qr.appendChild(canvas);globalThis.QRCode.toCanvas(canvas,target,{width:184,margin:1,errorCorrectionLevel:'M'},err=>{if(err){qr.textContent='QR unavailable';qr.title=target;}});}else{qr.textContent='QR unavailable';qr.title=target;}label.querySelector('[data-select]').onchange=e=>label.classList.toggle('selected',e.target.checked);label.querySelector('[data-location]').onchange=async e=>{if(!item)return;item.storageLocation=e.target.value.trim();item.updatedAt=new Date().toISOString();await saveState(state);$('msg').textContent='Storage location saved.';};}}
+render();
+$('selectAll').onclick=()=>document.querySelectorAll('[data-select]').forEach(input=>{input.checked=true;input.closest('.label')?.classList.add('selected');});
+$('clearAll').onclick=()=>document.querySelectorAll('[data-select]').forEach(input=>{input.checked=false;input.closest('.label')?.classList.remove('selected');});
+$('printSelected').onclick=()=>window.print();
