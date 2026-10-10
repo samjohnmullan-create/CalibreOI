@@ -27,8 +27,7 @@ jobs:
 
           sha = os.environ['GITHUB_SHA']
 
-          # Root workbench pages: make every deployment use fresh HTML navigation,
-          # CSS and JS URLs so mobile browsers/PWAs cannot remain on stale pages.
+          # Root app pages: every deployment references the exact JS/CSS build.
           for p in Path('.').glob('*.html'):
               text = p.read_text(encoding='utf-8')
               if 'http-equiv="Cache-Control"' not in text:
@@ -36,14 +35,34 @@ jobs:
                       '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">',
                       '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">'
                   )
-              text = re.sub(r'css/app\.css\?v=[^"\']+', f'css/app.css?v={sha}', text)
-              text = re.sub(r'js/nav\.js\?v=[^"\']+', f'js/nav.js?v={sha}', text)
-              text = re.sub(r'\./js/store\.js\?v=[^"\']+', f'./js/store.js?v={sha}', text)
-              text = re.sub(r'\./js/item-model\.js\?v=[^"\']+', f'./js/item-model.js?v={sha}', text)
+              # Cache-bust every local JS/CSS asset, regardless of its old hand-written ?v number.
+              text = re.sub(
+                  r'((?:src|href)=["\'](?:\./)?(?:js|css)/[^"\'?]+\.(?:js|css))(?:\?v=[^"\']+)?',
+                  rf'\1?v={sha}',
+                  text
+              )
+              # Keep direct module imports in inline scripts fresh as well.
+              text = re.sub(
+                  r'(["\'])(\./js/[^"\'?]+\.js)(?:\?v=[^"\']+)?\1',
+                  lambda m: f'{m.group(1)}{m.group(2)}?v={sha}{m.group(1)}',
+                  text
+              )
+              # Root-page navigation gets a fresh document after each deploy.
               text = re.sub(r'href="([A-Za-z0-9_-]+\.html)"', rf'href="\1?v={sha}"', text)
               p.write_text(text, encoding='utf-8')
 
-          # Existing public catalogue cache busting.
+          # Internal ES-module imports were historically pinned to many different v= numbers.
+          # Rewrite them in the deployment artifact so the browser always loads one coherent build.
+          for p in Path('js').glob('*.js'):
+              text = p.read_text(encoding='utf-8')
+              text = re.sub(
+                  r'(["\'])(\./[^"\'?]+\.js)(?:\?v=[^"\']+)?\1',
+                  lambda m: f'{m.group(1)}{m.group(2)}?v={sha}{m.group(1)}',
+                  text
+              )
+              p.write_text(text, encoding='utf-8')
+
+          # Public catalogue cache busting.
           for name in ('public-site/index.html', 'public-site/watch.html'):
               p = Path(name)
               if not p.exists():
