@@ -1,3 +1,2 @@
-// Calibre's public store entrypoint.
-// All pages keep importing store.js; the cloud-aware wrapper preserves IndexedDB as the local cache.
-export * from "./store-cloud.js?v=6";
+// Calibre's single public data entrypoint.
+export * from "./store-cloud.js?v=7";
