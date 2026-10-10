@@ -7,4 +7,5 @@ if(here==='suppliers.html'){
     const box=hero.querySelector('.row')||hero.firstElementChild||hero;box.appendChild(link);
   };
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mount,{once:true});else mount();
+  import('./donor-workshop-runtime.js?v=1').catch(err=>console.warn('Calibre donor storage controls unavailable',err));
 }

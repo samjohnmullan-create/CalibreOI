@@ -4,7 +4,7 @@ const makeId=type=>`${type}-${Math.random().toString(36).slice(2,8)}${Date.now()
 export function normaliseWorkshopAsset(raw={}){
   const type=WORKSHOP_ASSET_TYPES.includes(raw.type)?raw.type:'tray';
   const createdAt=text(raw.createdAt)||new Date().toISOString();
-  return {id:text(raw.id)||makeId(type),type,name:text(raw.name)||({tray:'Storage tray',tool:'Workshop tool',part:'Loose part'}[type]),location:text(raw.location),notes:text(raw.notes),calibre:text(raw.calibre),partName:text(raw.partName),quantity:Math.max(0,Number(raw.quantity)||0),status:text(raw.status)||'Active',createdAt,updatedAt:text(raw.updatedAt)||createdAt};
+  return {id:text(raw.id)||makeId(type),type,name:text(raw.name)||({tray:'Storage tray',tool:'Workshop tool',part:'Loose part'}[type]),location:text(raw.location),notes:text(raw.notes),calibre:text(raw.calibre),partName:text(raw.partName),quantity:Math.max(0,Number(raw.quantity)||0),status:text(raw.status)||'Active',trayId:text(raw.trayId),donorJobId:text(raw.donorJobId),donorItemId:text(raw.donorItemId),donorPartId:text(raw.donorPartId),createdAt,updatedAt:text(raw.updatedAt)||createdAt};
 }
 export function workshopAssets(state={}){return (Array.isArray(state.workshopAssets)?state.workshopAssets:[]).map(normaliseWorkshopAsset);}
 export function assetById(state={},id=''){return workshopAssets(state).find(asset=>asset.id===text(id))||null;}
