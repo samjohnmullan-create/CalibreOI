@@ -114,9 +114,6 @@ export function importCard(raw={}){
   return card;
 }
 
-// Critical path: opening a job is a read, not a migration. Select the requested job
-// in memory and only tidy that record. Collection-wide item migration/photo cleanup is
-// left to Items or to an actual save.
 export async function loadState(){
   const state=await base.loadState();
   state.jobs=Array.isArray(state.jobs)?state.jobs:[];
@@ -146,7 +143,7 @@ export async function importInboxItems(items){
     const key=String(raw.pushId||raw.jobId||""),job=(state.jobs||[]).find(j=>(raw.pushId&&j.pushId===raw.pushId)||(raw.jobId&&j.jobId===raw.jobId));if(!job)continue;
     const requested=explicitWorkbench(raw);
     if(requested!==null){if(job.workbenchHidden===requested){job.workbenchHidden=!requested;changed=true;}}
-    else if(!known.has(key){
+    else if(!known.has(key)){
       if(job.workbenchHidden!==true){job.workbenchHidden=true;changed=true;}
       if(!raw.status||String(raw.status).toLowerCase()==="on the bench"){if(job.status!=="Purchased"){job.status="Purchased";changed=true;}}
     }
