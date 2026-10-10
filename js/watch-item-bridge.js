@@ -1,5 +1,5 @@
 const SPECIALIST_TYPES=new Set(["watch","clock"]);
-const SPECIALIST_PAGES=new Set(["workbench.html","passport.html","timegrapher.html","business.html","sales.html","summary.html","suppliers.html","documents.html"]);
+const SPECIALIST_PAGES=new Set(["service.html","passport.html","timegrapher.html","business.html","sales.html","summary.html","suppliers.html","documents.html"]);
 const ITEM_TO_JOB_STATUS={Incoming:"Purchased",Acquired:"Purchased",Researching:"Awaiting inspection",Preparing:"Ready for photos","On bench":"On bench","Awaiting parts":"Awaiting parts","Ready to list":"Ready to list",Listed:"Listed",Sold:"Sold",Retained:"Spares"};
 const JOB_TO_ITEM_STATUS={Purchased:"Acquired","Awaiting inspection":"Researching","On bench":"On bench","Awaiting parts":"Awaiting parts","Ready for photos":"Preparing","Ready to list":"Ready to list",Listed:"Listed",Sold:"Sold",Spares:"Retained"};
 const COMMERCIAL_KEYS=["purchasePrice","buyerPremium","postage","partsCost","consumables","externalService","marketplaceFees","shippingToBuyer","otherCost","labourMinutes","labourRate","targetSale","minSale","actualSale"];
