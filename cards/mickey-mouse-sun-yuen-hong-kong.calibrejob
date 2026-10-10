@@ -1,0 +1,281 @@
+{
+  "type": "calibrejob",
+  "version": 5,
+  "pushId": "mickey-mouse-sun-yuen-hong-kong",
+  "jobId": "CCO-MICKEY-SYHK",
+  "watchName": "Vintage Mickey Mouse Hong Kong Character Watch",
+  "status": "Incoming / needs inspection",
+  "jobType": "wristwatch",
+  "decision": "Inspect, identify movement, service if viable",
+  "channel": "Not listed",
+  "importUrl": "https://samjohnmullan-create.github.io/CalibreOI/?card=mickey-mouse-sun-yuen-hong-kong",
+  "passport": {
+    "maker": "Unsigned watch; case manufactured by Sun Yuen Metal Case, Hong Kong",
+    "model": "Mickey Mouse animated-hands character wristwatch",
+    "country": "Hong Kong",
+    "year": "c. 1970s-1980s (provisional)",
+    "confidence": "Moderate",
+    "fieldConfidence": {
+      "maker": "Moderate - Sun Yuen Metal Case is explicitly stamped on the caseback, but this identifies the case manufacturer rather than necessarily the complete watch maker",
+      "model": "High - Mickey Mouse character dial with animated arms acting as hour/minute hands",
+      "country": "High - HONG KONG is printed on the dial and stamped on the caseback",
+      "year": "Low/Moderate - styling and comparable Hong Kong mechanical Mickey watches point broadly to the 1970s-1980s",
+      "movementType": "Provisional until case is opened",
+      "licensing": "Unconfirmed - no visible Walt Disney/Disney copyright or Bradley branding in supplied photos"
+    },
+    "dialMarkings": "White/cream dial; black stylised Arabic numerals; minute track; HONG KONG split either side of 6; Mickey Mouse figure in red shorts/yellow shoes; Mickey's arms form the hour and minute hands; slim red central seconds hand.",
+    "movementMaker": "Unknown - movement not yet photographed",
+    "calibre": "Unknown - open case and photograph movement",
+    "calibreFamily": "Unknown",
+    "beatRate": "Unknown",
+    "powerReserve": "Unknown",
+    "settingType": "Crown-set presumed; confirm at intake",
+    "jewels": "Unknown",
+    "movementType": "Likely mechanical hand-wound based on period/type; confirm after opening",
+    "movementMm": "Not measured",
+    "escapement": "Unknown",
+    "serial": "No serial visible in supplied photos",
+    "caseNumber": "No case number visible",
+    "reference": "Unsigned Hong Kong Mickey Mouse character watch / Sun Yuen case",
+    "caseMaterial": "Gold-tone base-metal case with stainless-steel back",
+    "caseStyle": "Round dress/novelty wristwatch case with straight tapered lugs",
+    "casebackType": "Snap/press back, stainless steel, perimeter notches visible",
+    "crystalType": "Likely acrylic; confirm during inspection",
+    "crownType": "Fluted gold-tone crown",
+    "lugWidth": "Not measured",
+    "width": "Not measured",
+    "height": "Not measured",
+    "thickness": "Not measured",
+    "complications": "Animated character hour/minute indication; central seconds",
+    "waterMark": "Caseback marked DUSTPROOF; do not treat as water resistant",
+    "strap": "No strap fitted in supplied photos; spring bars present",
+    "hallmarks": "STAINLESS STEEL BACK; BASE METAL CASE; DUSTPROOF; MANUFACTURED BY SUN YUEN METAL CASE; HONG KONG",
+    "engravings": "Caseback markings only; no visible serial/reference number",
+    "notes": "Three intake photos reviewed. Watch is unsigned on the visible dial and caseback apart from Hong Kong origin and Sun Yuen Metal Case manufacturing mark. Gold-tone case shows plating loss, scratches and age wear, especially around bezel/lugs. Dial has even yellowing/age tone around the perimeter and small marks. Crystal shows surface wear. No strap is installed. Mickey's articulated arms function as the hour and minute hands; a slim red central seconds hand is fitted. Because no Disney copyright, Bradley, Ingersoll, Timex or other brand mark is visible, do not market this as a licensed Disney/Bradley watch unless movement or inner-case evidence establishes that connection.",
+    "history": "Mechanical Mickey Mouse character watches were widely produced and sold from the mid-20th century onward, with Hong Kong-made examples especially common in the 1970s and 1980s. Comparable Bradley Time Division watches from this period use Mickey's arms as the time-indicating hands and are often Hong Kong-made. This example differs because the supplied photos show no Bradley or Walt Disney Productions branding; the only identified manufacturer is Sun Yuen Metal Case on the caseback. Treat it as an unsigned Hong Kong character watch pending movement inspection.",
+    "warnings": "Do not force the crown or repeatedly wind until movement condition is known. The animated arm hands can be delicate and easily bent or misaligned. Protect the painted character dial during hand removal. Do not polish the plated case aggressively; visible gold-tone plating is already thin/worn. 'DUSTPROOF' is not a water-resistance claim.",
+    "listingText": "Vintage Hong Kong Mickey Mouse character wristwatch, likely 1970s-1980s, with Mickey's articulated arms forming the hour and minute hands and a red centre seconds hand. Gold-tone base-metal case with stainless-steel back marked 'Manufactured by Sun Yuen Metal Case, Hong Kong'. Movement identity and service details to be confirmed after opening. No visible Disney/Bradley branding in the supplied views, so licensing is not claimed.",
+    "sources": [
+      "https://www.etsy.com/listing/4347511516/vintage-bradley-mickey-mouse-watch",
+      "https://www.icollector.com/Vintage-Bradley-Mickey-Mouse-Manual-Wind-Wristwatch-with-Original-Leather-Strap_i60388064",
+      "https://secondhandhorology.com/products/vintage-international-precision-time-ltd-mickey-mouse-wristwatch-novelty-complication"
+    ],
+    "photos": []
+  },
+  "business": {
+    "purchasePrice": "",
+    "buyerPremium": "",
+    "postage": "",
+    "strapCost": "",
+    "batteryCost": "",
+    "partsCost": "",
+    "consumables": "",
+    "externalService": "",
+    "marketplaceFees": "",
+    "shippingToBuyer": "",
+    "otherCost": "",
+    "labourMinutes": "",
+    "labourRate": "",
+    "minSale": "70",
+    "targetSale": "110",
+    "optimisticSale": "150",
+    "actualSale": "",
+    "title": "Vintage Mickey Mouse Animated Hands Mechanical Watch - Hong Kong - Sun Yuen Case",
+    "text": "Preliminary AUD valuation after service: quick-sale about $70, expected retail about $110, optimistic about $150 if movement is clean/running strongly, crystal presents well and a suitable strap is fitted. Confidence is low-to-moderate because this example is unsigned and licensing is unconfirmed. A branded Hong Kong Bradley mechanical Mickey watch was recently offered around US$65, while a branded Bradley manual-wind example sold at auction for US$90 plus buyer's premium in July 2026. An unsigned Sun Yuen-cased example should normally sit below equivalent clearly branded/licensed pieces. Revalue once the movement, jewel count, function and dimensions are known."
+  },
+  "faults": [],
+  "diagnosticFaults": [
+    {
+      "key": "unknown-running-condition",
+      "id": "unknown-running-condition",
+      "text": "Running/winding/setting condition not yet established",
+      "category": "Intake",
+      "severity": "Inspection required",
+      "sourceStage": "Intake",
+      "sourceCheck": "basic-function-test",
+      "sourceQuestion": "Does the crown wind normally, do the animated hands set correctly, and does the movement run without contact or abnormal resistance?",
+      "status": "possible"
+    },
+    {
+      "key": "animated-hand-clearance",
+      "id": "animated-hand-clearance",
+      "text": "Possible hand-to-hand, hand-to-dial or hand-to-crystal interference due to long articulated Mickey arm hands",
+      "category": "Hands & dial",
+      "severity": "Moderate",
+      "sourceStage": "Casing & function",
+      "sourceCheck": "check-hand-clearance",
+      "sourceQuestion": "Do both Mickey arm hands clear each other, the dial and the crystal through a full 12-hour cycle?",
+      "status": "possible"
+    },
+    {
+      "key": "case-plating-wear",
+      "id": "case-plating-wear",
+      "text": "Gold-tone plating worn/thin on case and lugs",
+      "category": "Case",
+      "severity": "Cosmetic",
+      "sourceStage": "Case & pendant",
+      "sourceCheck": "inspect-case-finish",
+      "sourceQuestion": "Is plating loss stable and best preserved without polishing?",
+      "status": "confirmed"
+    }
+  ],
+  "parts": [
+    {
+      "part": "Replacement strap - style/width to be selected after lug measurement",
+      "supplier": "",
+      "partNumber": "",
+      "quantity": "1",
+      "cost": "",
+      "ordered": "",
+      "received": false,
+      "fitted": false
+    }
+  ],
+  "timingRuns": [],
+  "photos": {
+    "intake": [],
+    "caseback": [],
+    "movement": [],
+    "dial": [],
+    "damage": [],
+    "progress": [],
+    "finished": [],
+    "hero": []
+  },
+  "stages": [
+    {
+      "name": "Intake",
+      "notes": "Three photos reviewed. Record case diameter, lug-to-lug, thickness and lug width. Test crown gently for wind/set function. Note whether watch starts with minimal wind. Do not force if crown is stiff or blocked.",
+      "condition": "Cosmetically aged; mechanical state unknown",
+      "complete": false
+    },
+    {
+      "name": "Pre-service timing",
+      "notes": "If it runs safely, take a short pre-service timing trace and note apparent beat rate. Low-grade Hong Kong movements may not produce a clean trace; do not overinterpret amplitude without correct lift angle.",
+      "condition": "Pending function test",
+      "complete": false
+    },
+    {
+      "name": "Case & pendant",
+      "notes": "Document plating wear before cleaning. Use mild cleaning only; avoid abrasive polishing. Inspect crown/stem, caseback fit, bezel and lug integrity. Caseback is stainless steel; main case is base metal.",
+      "condition": "Visible plating wear and scratches",
+      "complete": false
+    },
+    {
+      "name": "Uncasing",
+      "notes": "Open press back carefully at an existing notch. Photograph movement, any calibre/jewel markings, inside caseback and movement spacer before removal. Update maker/calibre immediately if markings are found.",
+      "condition": "Priority identification step",
+      "complete": false
+    },
+    {
+      "name": "Dismantling & inspection",
+      "notes": "Only dismantle if service is economically justified or required for reliable sale. Inspect balance pivots, train freedom, keyless works and mainspring condition. Pay particular attention to motion works because the oversized animated hands add load and are easily disturbed.",
+      "condition": "Pending movement ID",
+      "complete": false
+    },
+    {
+      "name": "Cleaning & parts inspection",
+      "notes": "Clean movement components according to calibre/material once identified. Keep dial and painted character artwork away from liquids. Inspect crystal separately for polishability versus replacement.",
+      "condition": "Pending",
+      "complete": false
+    },
+    {
+      "name": "Repairs & parts",
+      "notes": "Do not order movement parts before calibre identification. If movement is a common one-jewel Hong Kong type, donor movement replacement may be more economical than individual part sourcing. Fit a period-sympathetic strap after lug width is measured.",
+      "condition": "Pending movement ID",
+      "complete": false
+    },
+    {
+      "name": "Reassembly & lubrication",
+      "notes": "Use lubrication appropriate to the identified movement. Ensure motion works are free enough to drive the character hands without excessive friction but retain adequate hand-setting tension.",
+      "condition": "Pending",
+      "complete": false
+    },
+    {
+      "name": "Train & escapement",
+      "notes": "Verify free train and stable escapement under full wind after service. Record any limitations expected from a low-jewel economy movement rather than chasing modern chronometer performance.",
+      "condition": "Pending",
+      "complete": false
+    },
+    {
+      "name": "Balance & beat",
+      "notes": "Check balance endshake/sideshake and hairspring clearance once movement is identified. If timing trace is unstable, inspect pivots/jewels before regulation.",
+      "condition": "Pending",
+      "complete": false
+    },
+    {
+      "name": "Casing & function",
+      "notes": "Critical: rotate the hands through at least 12 hours and verify Mickey's arms never touch each other, the dial, seconds hand or crystal. Confirm crown winding/setting and caseback security.",
+      "condition": "Pending",
+      "complete": false
+    },
+    {
+      "name": "Regulation",
+      "notes": "Regulate only after the movement has settled. Record actual performance and avoid promising precision beyond what the movement type can reasonably deliver.",
+      "condition": "Pending",
+      "complete": false
+    },
+    {
+      "name": "Final QC",
+      "notes": "Check 24-hour running, hand clearance, winding/setting, power reserve, final timing, crystal presentation and strap fit. Photograph movement and finished watch. Update listing to state exact movement/calibre and whether any Disney licensing/branding evidence was found.",
+      "condition": "Pending",
+      "complete": false
+    }
+  ],
+  "diagnosis": "No mechanical fault reported yet. Primary intake tasks are to establish running/winding/setting condition and identify the movement. Case plating wear is confirmed cosmetically. Licensing/brand attribution remains unconfirmed.",
+  "repairPerformed": "",
+  "service": "Inspection first; full service if movement condition and resale economics justify it",
+  "serviceNotes": "Open case before parts decisions. Preserve the dial and animated hands. Generic Hong Kong character watches can use inexpensive low-jewel movements, making donor replacement more practical than component-level repair if major damage is found.",
+  "researchBrief": {
+    "summary": "Unsigned Hong Kong Mickey Mouse animated-hands wristwatch in a Sun Yuen Metal Case base-metal/gold-tone case with stainless-steel back. Likely 1970s-1980s. Movement and licensing are not yet confirmed. Best next step is careful uncasing and movement photography before service or valuation is locked in.",
+    "technicalNotes": "Mickey's long articulated arms are the hour/minute hands, so hand clearance and motion-work friction matter more than on a conventional dial. The caseback identifies Sun Yuen Metal Case but not necessarily the movement/watch maker. Comparable Hong Kong character watches are often simple manual-wind, low-jewel movements.",
+    "valuationConfidence": "Low",
+    "valuationBasis": "Branded Hong Kong Bradley mechanical Mickey watches provide the nearest market references: one recent working example was offered around US$65 and another branded manual-wind example sold for US$90 plus premium in July 2026. This watch lacks visible Bradley/Disney branding, so a lower AUD $70-$150 post-service range is more defensible until movement identity and licensing are known.",
+    "partsLeads": [
+      {
+        "part": "Period-style strap",
+        "reference": "Measure lug width first",
+        "compatibility": "Unknown until measured",
+        "confidence": "High",
+        "source": "Intake photos",
+        "notes": "Choose a simple black, brown or red leather strap that suits the novelty dial without overcapitalising the watch."
+      },
+      {
+        "part": "Movement/donor parts",
+        "reference": "Identify calibre after opening",
+        "compatibility": "Cannot determine from exterior photos",
+        "confidence": "Unknown",
+        "source": "Movement inspection required",
+        "notes": "Do not buy generic Hong Kong movement parts until plate layout, diameter, stem height and calibre markings are recorded."
+      }
+    ],
+    "repairPlan": [
+      "Gently test wind and hand-setting function",
+      "Open case and photograph movement, markings, spacer and inner caseback",
+      "Identify calibre, jewel count and movement maker",
+      "Decide whether full service or donor replacement is economically sensible",
+      "Inspect and correct animated-hand clearance",
+      "Polish or replace crystal only if this materially improves presentation",
+      "Fit a period-sympathetic strap and complete 24-hour final QC"
+    ],
+    "nextChecks": [
+      "Does the watch wind and run?",
+      "Does the crown set both Mickey arm hands smoothly?",
+      "Movement maker/calibre/jewel count",
+      "Case diameter and lug width",
+      "Hand-to-hand/dial/crystal clearance through 12 hours",
+      "Any hidden Walt Disney, Bradley or other licensing marks inside the case or on the movement"
+    ],
+    "risks": [
+      "Do not assume this is a licensed Disney/Bradley watch from the character alone",
+      "Do not force a stiff crown",
+      "Avoid aggressive case polishing because the gold-tone plating is visibly worn",
+      "Painted character dial and long arm hands are easy to damage during hand removal/refitting"
+    ],
+    "references": [
+      "https://www.etsy.com/listing/4347511516/vintage-bradley-mickey-mouse-watch",
+      "https://www.icollector.com/Vintage-Bradley-Mickey-Mouse-Manual-Wind-Wristwatch-with-Original-Leather-Strap_i60388064",
+      "https://secondhandhorology.com/products/vintage-international-precision-time-ltd-mickey-mouse-wristwatch-novelty-complication"
+    ]
+  }
+}
