@@ -42,16 +42,16 @@ async function authSession(){
 export async function uploadMedia(file,{watchId='',jobId='',stageId='',category='workshop'}={}){
   if(!(file instanceof File))throw new Error('Choose a file to upload.');
   if(!MEDIA_CATEGORIES.includes(category))throw new Error('Invalid media category.');
-  if(!file.type?.startsWith('image/')&&file.type!=='application/pdf')throw new Error('Calibre media accepts images or PDF files.');
+  if(!file.type?.startsWith('image/'))throw new Error('Calibre watch media accepts image files.');
   const s=await authSession();
   const id=crypto.randomUUID();
-  const ext=(file.name.split('.').pop()||'bin').toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,8)||'bin';
+  const ext=(file.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,8)||'jpg';
   const path=[s.user.id,safePart(watchId||'unassigned'),safePart(category),`${Date.now()}-${id}.${ext}`].join('/');
   const sb=supabaseClient();
-  const {error}=await sb.storage.from(MEDIA_BUCKET).upload(path,file,{contentType:file.type||'application/octet-stream',cacheControl:'3600',upsert:false});
+  const {error}=await sb.storage.from(MEDIA_BUCKET).upload(path,file,{contentType:file.type||'image/jpeg',cacheControl:'3600',upsert:false});
   if(error)throw error;
   return blankMediaAsset({
-    id,watchId,jobId,stageId,category,storageKey:path,originalName:file.name,mimeType:file.type||'application/octet-stream',bytes:file.size,createdAt:new Date().toISOString(),visibility:'private'
+    id,watchId,jobId,stageId,category,storageKey:path,originalName:file.name,mimeType:file.type||'image/jpeg',bytes:file.size,createdAt:new Date().toISOString(),visibility:'private'
   });
 }
 
