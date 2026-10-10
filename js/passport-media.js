@@ -13,7 +13,7 @@ const SLOT_LABEL=Object.fromEntries([...SLOT_META].map(([key,m])=>[key,m.label])
 const SALES_REQUIRED=["hero","salesleft","salesright","crownside","salescaseback","dialclose","flaws"];
 const inFlight=new Set(),optimisticUrls=new Map();
 const $=s=>document.querySelector(s);
-let renderTimer=0;
+let renderTimer=0,uploadQueue=Promise.resolve(),queuedUploads=0;
 
 function status(text){const el=$("#passportMediaStatus");if(el)el.textContent=text;}
 function keyFor(file,slot){return [slot,file.name,file.size,file.lastModified].join("|");}
@@ -42,6 +42,8 @@ function clearOptimistic(slot){
   const url=optimisticUrls.get(slot);if(url){URL.revokeObjectURL(url);optimisticUrls.delete(slot);}
 }
 
+function findJob(state,id){return state?.jobs?.find(j=>String(j?.id)===String(id))||current(state);}
+
 async function persistAsset(state,job,asset,{slot="",preview=""}={}){
   job.mediaAssets=Array.isArray(job.mediaAssets)?job.mediaAssets:[];
   if(asset&&!job.mediaAssets.some(a=>a?.id===asset.id||a?.storageKey===asset.storageKey))job.mediaAssets.push(asset);
@@ -57,22 +59,25 @@ async function persistAsset(state,job,asset,{slot="",preview=""}={}){
 async function archive(file,{slot="evidence",category="identity",stageId="",preview=""}={}){
   if(!file)return null;
   const key=keyFor(file,slot);if(inFlight.has(key))return null;inFlight.add(key);
-  let state=null,job=null;
+  let state=null,job=null,jobId="";
   try{
-    state=await loadState();job=current(state);if(!job)throw new Error("No watch is open.");
+    state=await loadState();job=current(state);if(!job)throw new Error("No watch is open.");jobId=job.id;
     if(isPhotoSlot(slot)&&!preview){try{preview=await compressImage(file);}catch(err){console.warn("Passport preview generation failed",err);}}
-    status(`Uploading ${SLOT_LABEL[slot]||slot} (${mb(file.size)})…`);
+    status(`Uploading ${SLOT_LABEL[slot]||slot} (${mb(file.size)})${queuedUploads>1?` · ${queuedUploads-1} queued`:""}…`);
     const asset=await uploadMedia(file,{watchId:job.id,jobId:job.jobId||"",stageId:stageId||slot,category});
+    // The Storage upload can take several seconds. Reload the latest state before merging
+    // so another edit/background sync cannot be overwritten by the snapshot from upload start.
+    state=await loadState();job=findJob(state,jobId);if(!job)throw new Error("This job changed while the photo was uploading.");
     const savedJob=await persistAsset(state,job,asset,{slot,preview});
     clearOptimistic(slot);
-    status(`${countAssets(savedJob)} private media item${countAssets(savedJob)===1?"":"s"} archived for this watch.`);
+    status(`${countAssets(savedJob)} private media item${countAssets(savedJob)===1?"":"s"} archived for this watch.${queuedUploads>1?` ${queuedUploads-1} upload${queuedUploads-1===1?"":"s"} still queued.`:""}`);
     paintSummary(savedJob);renderGroups(savedJob);
     return savedJob;
   }catch(err){
     console.warn("Passport media archive failed",err);
     // Preserve the lightweight preview even if Storage is temporarily unavailable.
-    if(state&&job&&isPhotoSlot(slot)&&preview){
-      try{await persistAsset(state,job,null,{slot,preview});renderGroups(job);}catch(saveErr){console.warn("Preview fallback save failed",saveErr);}
+    if(jobId&&isPhotoSlot(slot)&&preview){
+      try{state=await loadState();job=findJob(state,jobId);if(job){await persistAsset(state,job,null,{slot,preview});renderGroups(job);}}catch(saveErr){console.warn("Preview fallback save failed",saveErr);}
     }
     clearOptimistic(slot);
     status(`Photo preview saved, but full-resolution upload failed. Tap Upload to retry. ${err?.message||err}`);
@@ -101,13 +106,23 @@ function renderGroups(job){
 function scheduleRender(ms=80){clearTimeout(renderTimer);renderTimer=setTimeout(async()=>{try{const state=await loadState(),job=current(state);if(job)renderGroups(job);}catch(err){console.warn("Photo groups could not refresh",err);}},ms);}
 async function removePreview(slot){const state=await loadState(),job=current(state);if(!job)return;job.photos=job.photos&&typeof job.photos==="object"?job.photos:{};job.photos[slot]=Array.isArray(job.photos[slot])?job.photos[slot]:[];job.photos[slot].shift();await saveState(state);renderGroups(job);status("Photo preview removed. Full-resolution archive remains private.");}
 
-async function handleSlotFile(file,slot){
-  if(!file||!isPhotoSlot(slot))return;
-  showOptimistic(slot,file);
+async function processSlotFile(file,slot){
   status(`Preparing ${SLOT_LABEL[slot]} (${mb(file.size)})…`);
   let preview="";
   try{preview=await compressImage(file);}catch(err){console.warn("Local photo preview failed",err);}
-  await archive(file,{slot,category:SLOT_CATEGORY[slot]||"identity",stageId:SLOT_LABEL[slot]||slot,preview});
+  return archive(file,{slot,category:SLOT_CATEGORY[slot]||"identity",stageId:SLOT_LABEL[slot]||slot,preview});
+}
+
+function handleSlotFile(file,slot){
+  if(!file||!isPhotoSlot(slot))return Promise.resolve(null);
+  showOptimistic(slot,file);
+  queuedUploads+=1;
+  status(queuedUploads>1?`${SLOT_LABEL[slot]} queued · ${queuedUploads} photo uploads pending.`:`Preparing ${SLOT_LABEL[slot]} (${mb(file.size)})…`);
+  const run=()=>processSlotFile(file,slot).finally(()=>{queuedUploads=Math.max(0,queuedUploads-1);});
+  // Serialise media saves. This prevents two completed uploads from saving stale copies
+  // of the same job and accidentally dropping each other's mediaAssets entries.
+  uploadQueue=uploadQueue.then(run,run);
+  return uploadQueue;
 }
 
 function paintSummary(job){
@@ -119,7 +134,7 @@ function paintSummary(job){
 async function start(){
   installStyles();let state,job;try{state=await loadState();job=current(state);}catch{}if(job){paintSummary(job);renderGroups(job);}
   document.addEventListener("click",async e=>{const btn=e.target.closest("[data-photo-action]");if(!btn)return;const slot=btn.dataset.slot,action=btn.dataset.photoAction;if(!isPhotoSlot(slot))return;e.preventDefault();e.stopPropagation();if(action==="remove"){await removePreview(slot);return;}const input=document.getElementById(`file-${slot}`);if(!input)return;input.value="";if(action==="camera")input.setAttribute("capture","environment");else input.removeAttribute("capture");input.click();},true);
-  document.addEventListener("change",e=>{const input=e.target;if(!(input instanceof HTMLInputElement)||input.type!=="file")return;const file=input.files?.[0];if(!file)return;if(input.id==="invoiceFile"){setTimeout(()=>archive(file,{slot:"invoice",category:"documents",stageId:"Invoice / provenance"}),150);return;}if(input.dataset.guidedPhotoInput==="1"&&input.id?.startsWith("file-")){e.stopImmediatePropagation();const slot=input.id.slice(5);handleSlotFile(file,slot).finally(()=>{input.value="";});}},true);
+  document.addEventListener("change",e=>{const input=e.target;if(!(input instanceof HTMLInputElement)||input.type!=="file")return;const file=input.files?.[0];if(!file)return;if(input.id==="invoiceFile"){queuedUploads+=1;const run=()=>archive(file,{slot:"invoice",category:"documents",stageId:"Invoice / provenance"}).finally(()=>{queuedUploads=Math.max(0,queuedUploads-1);});uploadQueue=uploadQueue.then(run,run);return;}if(input.dataset.guidedPhotoInput==="1"&&input.id?.startsWith("file-")){e.stopImmediatePropagation();const slot=input.id.slice(5);handleSlotFile(file,slot).finally(()=>{input.value="";});}},true);
   const root=$("#slots");if(root)new MutationObserver(()=>{if(!root.querySelector(".photo-group"))scheduleRender(30);}).observe(root,{childList:true});
 }
 start();
