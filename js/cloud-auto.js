@@ -6,7 +6,6 @@ const EDIT_GRACE_MS=1800;
 let lastInteraction=0,checking=false,pending=false,timer=null;
 
 const here=(location.pathname.split("/").pop()||"index.html").split("?")[0];
-if(here==="service.html")import("./workbench-media.js?v=3").catch(err=>console.warn("Calibre stage media unavailable",err));
 if(here==="sales.html")import("./publish-controls.js?v=1").catch(err=>console.warn("Calibre public publishing controls unavailable",err));
 if(here==="finance.html"||here==="index.html")import("./available-cash.js?v=1").catch(err=>console.warn("Calibre cash position unavailable",err));
 if(here==="suppliers.html")import("./parts-intelligence-runtime.js?v=2").catch(err=>console.warn("Calibre parts intelligence unavailable",err));
