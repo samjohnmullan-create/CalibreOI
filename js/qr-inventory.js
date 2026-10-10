@@ -24,9 +24,7 @@ export function qrRouteForEntity(type,id){
   if(!key)return '';
   if(entity==='item')return `item.html?id=${encode(key)}&from=qr`;
   if(entity==='work')return `work.html?id=${encode(key)}&from=qr`;
-  if(entity==='part')return `suppliers.html?part=${encode(key)}&from=qr`;
-  if(entity==='tray')return `inventory.html?tray=${encode(key)}&from=qr`;
-  if(entity==='tool')return `tools.html?id=${encode(key)}&from=qr`;
+  if(['part','tray','tool'].includes(entity))return `workshop-assets.html?type=${entity}&id=${encode(key)}&from=qr`;
   return '';
 }
 
@@ -47,6 +45,7 @@ export function resolveQrPayload(raw,{origin=''}={}){
     const fromQr=url.searchParams.get('from')==='qr';
     if(page==='item.html'&&url.searchParams.get('id'))return {version:VERSION,type:'item',id:decode(url.searchParams.get('id')),route:`item.html?id=${encode(url.searchParams.get('id'))}&from=qr`,source:fromQr?'url':'link'};
     if(page==='work.html'&&url.searchParams.get('id'))return {version:VERSION,type:'work',id:decode(url.searchParams.get('id')),route:`work.html?id=${encode(url.searchParams.get('id'))}&from=qr`,source:fromQr?'url':'link'};
+    if(page==='workshop-assets.html'&&url.searchParams.get('id')){const type=url.searchParams.get('type');if(['part','tray','tool'].includes(type))return {version:VERSION,type,id:decode(url.searchParams.get('id')),route:qrRouteForEntity(type,url.searchParams.get('id')),source:fromQr?'url':'link'};}
   }catch{}
   return null;
 }
