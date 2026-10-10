@@ -1,6 +1,6 @@
-import { session } from './cloud.js?v=3';
+import { session, supabaseClient } from './cloud.js?v=4';
 
-export const MEDIA_API_BASE='https://media.calibreco.com.au';
+export const MEDIA_BUCKET='calibre-research-media';
 export const MEDIA_CATEGORIES=['original','identity','movement','workshop','documents','sale'];
 
 export function blankMediaAsset(partial={}){
@@ -22,55 +22,51 @@ export function blankMediaAsset(partial={}){
     caption:partial.caption||'',
     evidenceNote:partial.evidenceNote||'',
     checksum:partial.checksum||'',
-    visibility:partial.visibility==='public'?'public':'private',
+    visibility:'private',
     isCover:!!partial.isCover,
     updatedAt:partial.updatedAt||''
   };
 }
 
-async function authHeaders(){
+function safePart(value,fallback='item'){
+  const out=String(value||fallback).trim().toLowerCase().replace(/[^a-z0-9._-]+/g,'-').replace(/^-+|-+$/g,'');
+  return (out||fallback).slice(0,100);
+}
+
+async function authSession(){
   const s=await session();
-  if(!s?.access_token)throw new Error('Sign in to Calibre to access private media.');
-  return {Authorization:`Bearer ${s.access_token}`};
+  if(!s?.user?.id||s.localOnly||!s.access_token)throw new Error('Sign in to Calibre to use private media.');
+  return s;
 }
 
 export async function uploadMedia(file,{watchId='',jobId='',stageId='',category='workshop'}={}){
   if(!(file instanceof File))throw new Error('Choose a file to upload.');
   if(!MEDIA_CATEGORIES.includes(category))throw new Error('Invalid media category.');
-  const headers=await authHeaders();
-  const form=new FormData();
-  form.append('file',file,file.name);
-  form.append('watchId',watchId||'unassigned');
-  form.append('jobId',jobId||'');
-  form.append('stageId',stageId||'');
-  form.append('category',category);
-  const response=await fetch(`${MEDIA_API_BASE}/upload.php`,{method:'POST',headers,body:form});
-  let body=null;
-  try{body=await response.json();}catch{}
-  if(!response.ok||!body?.ok)throw new Error(body?.error||`Media upload failed (${response.status}).`);
-  return blankMediaAsset(body.asset||{});
+  if(!file.type?.startsWith('image/')&&file.type!=='application/pdf')throw new Error('Calibre media accepts images or PDF files.');
+  const s=await authSession();
+  const id=crypto.randomUUID();
+  const ext=(file.name.split('.').pop()||'bin').toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,8)||'bin';
+  const path=[s.user.id,safePart(watchId||'unassigned'),safePart(category),`${Date.now()}-${id}.${ext}`].join('/');
+  const sb=supabaseClient();
+  const {error}=await sb.storage.from(MEDIA_BUCKET).upload(path,file,{contentType:file.type||'application/octet-stream',cacheControl:'3600',upsert:false});
+  if(error)throw error;
+  return blankMediaAsset({
+    id,watchId,jobId,stageId,category,storageKey:path,originalName:file.name,mimeType:file.type||'application/octet-stream',bytes:file.size,createdAt:new Date().toISOString(),visibility:'private'
+  });
 }
 
-async function fetchBlobEndpoint(endpoint,asset,{cache='no-store'}={}){
+async function downloadAsset(asset){
   const a=blankMediaAsset(asset||{});
   if(!a.storageKey)throw new Error('This media record has no storage key.');
-  const headers=await authHeaders();
-  const response=await fetch(`${MEDIA_API_BASE}/${endpoint}?key=${encodeURIComponent(a.storageKey)}`,{headers,cache});
-  if(!response.ok){
-    let body=null;
-    try{body=await response.json();}catch{}
-    throw new Error(body?.error||`Could not load media (${response.status}).`);
-  }
-  return response.blob();
+  await authSession();
+  const {data,error}=await supabaseClient().storage.from(MEDIA_BUCKET).download(a.storageKey);
+  if(error)throw error;
+  if(!data)throw new Error('Media file is unavailable.');
+  return data;
 }
 
-export async function fetchPrivateMedia(asset){
-  return fetchBlobEndpoint('file.php',asset,{cache:'no-store'});
-}
-
-export async function fetchPrivateThumbnail(asset){
-  return fetchBlobEndpoint('thumb.php',asset,{cache:'force-cache'});
-}
+export async function fetchPrivateMedia(asset){return downloadAsset(asset);}
+export async function fetchPrivateThumbnail(asset){return downloadAsset(asset);}
 
 export async function privateMediaObjectUrl(asset){
   const blob=await fetchPrivateMedia(asset);
@@ -85,15 +81,10 @@ export async function privateMediaThumbnailObjectUrl(asset){
 export async function deletePrivateMedia(asset){
   const a=blankMediaAsset(asset||{});
   if(!a.storageKey)throw new Error('This media record has no storage key.');
-  const headers=await authHeaders();
-  headers['Content-Type']='application/json';
-  const response=await fetch(`${MEDIA_API_BASE}/delete.php`,{
-    method:'DELETE',headers,body:JSON.stringify({key:a.storageKey})
-  });
-  let body=null;
-  try{body=await response.json();}catch{}
-  if(!response.ok||!body?.ok)throw new Error(body?.error||`Could not delete media (${response.status}).`);
-  return body;
+  await authSession();
+  const {error}=await supabaseClient().storage.from(MEDIA_BUCKET).remove([a.storageKey]);
+  if(error)throw error;
+  return {ok:true};
 }
 
 export function formatMediaSize(bytes){
