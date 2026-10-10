@@ -14,7 +14,10 @@ if(here==="item.html")laterImport("./item-qr-runtime.js?v=1","Calibre Item QR to
 if(here==="passport.html")laterImport("./passport-media.js?v=5","Calibre Passport media unavailable");
 if(here==="sales.html")laterImport("./publish-controls.js?v=1","Calibre public publishing controls unavailable");
 if(here==="finance.html"||here==="index.html")laterImport("./available-cash.js?v=1","Calibre cash position unavailable");
-if(here==="suppliers.html")laterImport("./parts-intelligence-runtime.js?v=2","Calibre parts intelligence unavailable");
+if(here==="suppliers.html"){
+  laterImport("./parts-intelligence-runtime.js?v=2","Calibre parts intelligence unavailable");
+  laterImport("./workshop-assets-link.js?v=1","Calibre workshop IDs link unavailable");
+}
 if(here==="suppliers.html"||here==="inventory.html")laterImport("./parts-workflow.js?v=3","Calibre parts workflow unavailable");
 if(here==="settings.html")laterImport("./settings-media-health.js?v=1","Calibre media queue health unavailable");
 if(here==="inventory.html"){
