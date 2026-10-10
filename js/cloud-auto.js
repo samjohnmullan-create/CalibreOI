@@ -11,6 +11,7 @@ if(here==="sales.html")import("./publish-controls.js?v=1").catch(err=>console.wa
 if(here==="finance.html"||here==="index.html")import("./available-cash.js?v=1").catch(err=>console.warn("Calibre cash position unavailable",err));
 if(here==="suppliers.html")import("./parts-intelligence-runtime.js?v=2").catch(err=>console.warn("Calibre parts intelligence unavailable",err));
 if(here==="suppliers.html"||here==="inventory.html")import("./parts-workflow.js?v=3").catch(err=>console.warn("Calibre parts workflow unavailable",err));
+if(here==="item.html")import("./item-bench-control.js?v=1").catch(err=>console.warn("Calibre Workbench control unavailable",err));
 if(here==="inventory.html"){
   import("./collection-dashboard.js?v=2").catch(err=>console.warn("Calibre collection dashboard unavailable",err));
   import("./purchase-review.js?v=2").catch(err=>console.warn("Calibre purchase review unavailable",err));
