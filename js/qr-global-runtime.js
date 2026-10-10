@@ -1,4 +1,5 @@
 const here=(location.pathname.split('/').pop()||'index.html').split('?')[0]||'index.html';
+if(here==='passport.html')import('./passport-service-history.js?v=1').catch(err=>console.warn('Passport service history unavailable',err));
 if(here!=='qr-scan.html'&&here!=='settings.html'){
   const mount=()=>{
     if(document.getElementById('calibreScanFab'))return;
