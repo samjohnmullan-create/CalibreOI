@@ -38,7 +38,13 @@ export function blankMediaAsset(partial={}){
   };
 }
 
-export function normaliseMediaAsset(raw={}){return blankMediaAsset(raw);}
+export function normaliseMediaAsset(raw={}){
+  const asset=blankMediaAsset(raw);
+  // Normalising old records must not manufacture a new timestamp on every save.
+  // New uploads use blankMediaAsset directly and therefore still receive createdAt.
+  if(!raw.createdAt)asset.createdAt='';
+  return asset;
+}
 export function mediaAssetHasFile(asset={}){return !!(asset.storageKey||asset.thumbnailStorageKey||asset.url||asset.thumbnailUrl);}
 export function mediaAssetOwnerId(asset={}){return text(asset.itemId);}
 export function mediaForItem(assets=[],itemId=''){const key=text(itemId);return (Array.isArray(assets)?assets:[]).map(normaliseMediaAsset).filter(asset=>text(asset.itemId)===key);}
