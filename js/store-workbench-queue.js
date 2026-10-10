@@ -1,5 +1,5 @@
 import * as base from "./store-local-fast.js?v=1";
-import { legacyJobToItem } from "./item-model.js?v=4";
+import { ensureAllJobItemLinks, ensureItemForJob } from "./item-integrity.js?v=1";
 
 export * from "./store-local-fast.js?v=1";
 
@@ -25,40 +25,6 @@ function requestedJobId(){
 function pageName(){
   if(typeof location==="undefined")return "";
   return (location.pathname.split("/").pop()||"index.html").split("?")[0];
-}
-
-function materialiseLegacyItems(state){
-  state.items=Array.isArray(state.items)?state.items:[];
-  state.jobs=Array.isArray(state.jobs)?state.jobs:[];
-  let changed=false;
-  const itemIds=new Set(state.items.map(i=>String(i?.id||"")));
-  for(const job of state.jobs){
-    if(!job?.id)continue;
-    let item=null;
-    if(job.itemId)item=state.items.find(i=>String(i?.id)===String(job.itemId))||null;
-    if(!item)item=state.items.find(i=>String(i?.legacyJobId||"")===String(job.id)||String(i?.watch?.specialistJobId||"")===String(job.id))||null;
-    if(!item){
-      item=legacyJobToItem(job);
-      item.id=job.itemId||`item-${job.id}`;
-      item.legacyJobId="";
-      if(job.jobType==="inspect"){
-        item.type="accessory";
-        delete item.watch;
-      }else{
-        item.watch=item.watch&&typeof item.watch==="object"?item.watch:{};
-        item.watch.specialistJobId=job.id;
-      }
-      if(!itemIds.has(String(item.id))){state.items.push(item);itemIds.add(String(item.id));changed=true;}
-    }else{
-      if(item.legacyJobId){item.legacyJobId="";changed=true;}
-      if(item.type==="watch"||item.type==="clock"){
-        item.watch=item.watch&&typeof item.watch==="object"?item.watch:{};
-        if(String(item.watch.specialistJobId||"")!==String(job.id)){item.watch.specialistJobId=job.id;changed=true;}
-      }
-    }
-    if(item&&String(job.itemId||"")!==String(item.id)){job.itemId=item.id;changed=true;}
-  }
-  return changed;
 }
 
 function validPhotoRef(value){
@@ -124,17 +90,22 @@ export async function loadState(){
     try{state.jobs[index]=base.normalise(state.jobs[index]);}catch{}
     tidyJob(state.jobs[index]);
     sanitisePhotos(state.jobs[index]);
+    ensureItemForJob(state,state.jobs[index]);
   }
   const page=pageName();
-  if(page==="inventory.html"||page==="item.html")materialiseLegacyItems(state);
+  if(page==="inventory.html"||page==="item.html")ensureAllJobItemLinks(state);
   return state;
 }
 
 export async function saveState(state){
   const selected=(state?.jobs||[]).find(j=>String(j.id)===String(state.currentId||""));
-  if(selected){tidyJob(selected);sanitisePhotos(selected);}
+  if(selected){
+    tidyJob(selected);
+    sanitisePhotos(selected);
+    ensureItemForJob(state,selected);
+  }
   const page=pageName();
-  if(page==="inventory.html"||page==="item.html")materialiseLegacyItems(state);
+  if(page==="inventory.html"||page==="item.html")ensureAllJobItemLinks(state);
   return base.saveState(state);
 }
 
@@ -154,7 +125,7 @@ export async function importInboxItems(items){
   }
   if(previousCurrentId&&state.jobs.some(j=>j.id===previousCurrentId)&&state.currentId!==previousCurrentId){state.currentId=previousCurrentId;changed=true;}
   for(const job of (state.jobs||[])){const old=job.business?.soldDate;tidyJob(job);if(old!==job.business.soldDate)changed=true;if(sanitisePhotos(job))changed=true;}
-  if(materialiseLegacyItems(state))changed=true;
+  const integrity=ensureAllJobItemLinks(state);if(integrity.changed)changed=true;
   if(changed)await base.saveState(state);
   return {...result,state};
 }
