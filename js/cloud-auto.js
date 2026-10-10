@@ -10,6 +10,7 @@ const idle=fn=>{if("requestIdleCallback" in window)requestIdleCallback(fn,{timeo
 const laterImport=(path,label)=>idle(()=>import(path).catch(err=>console.warn(label,err)));
 
 laterImport("./qr-global-runtime.js?v=1","Calibre QR scanner entry unavailable");
+if(here==="workbench.html")laterImport("./workbench-parts-intel-runtime.js?v=1","Calibre Workbench parts intelligence unavailable");
 if(here==="item.html")laterImport("./item-qr-runtime.js?v=1","Calibre Item QR tools unavailable");
 if(here==="passport.html")laterImport("./passport-media.js?v=5","Calibre Passport media unavailable");
 if(here==="sales.html")laterImport("./publish-controls.js?v=1","Calibre public publishing controls unavailable");
