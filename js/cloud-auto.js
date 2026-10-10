@@ -1,23 +1,25 @@
 import { readCloudState, seenCloudAt, markCloudSeen, readInbox, markInboxImported } from "./cloud.js?v=4";
 import { forceCloudPull, importInboxItems, loadState, saveState } from "./store-cloud.js?v=7";
 
-const POLL_MS=15000;
+const POLL_MS=30000;
 const EDIT_GRACE_MS=1800;
 let lastInteraction=0,checking=false,pending=false,timer=null;
 
 const here=(location.pathname.split("/").pop()||"index.html").split("?")[0];
-if(here==="passport.html")import("./passport-media.js?v=5").catch(err=>console.warn("Calibre Passport media unavailable",err));
-if(here==="sales.html")import("./publish-controls.js?v=1").catch(err=>console.warn("Calibre public publishing controls unavailable",err));
-if(here==="finance.html"||here==="index.html")import("./available-cash.js?v=1").catch(err=>console.warn("Calibre cash position unavailable",err));
-if(here==="suppliers.html")import("./parts-intelligence-runtime.js?v=2").catch(err=>console.warn("Calibre parts intelligence unavailable",err));
-if(here==="suppliers.html"||here==="inventory.html")import("./parts-workflow.js?v=3").catch(err=>console.warn("Calibre parts workflow unavailable",err));
-if(here==="item.html")import("./item-bench-control.js?v=1").catch(err=>console.warn("Calibre Workbench control unavailable",err));
+const idle=fn=>{if("requestIdleCallback" in window)requestIdleCallback(fn,{timeout:1800});else setTimeout(fn,350);};
+const laterImport=(path,label)=>idle(()=>import(path).catch(err=>console.warn(label,err)));
+
+if(here==="passport.html")laterImport("./passport-media.js?v=5","Calibre Passport media unavailable");
+if(here==="sales.html")laterImport("./publish-controls.js?v=1","Calibre public publishing controls unavailable");
+if(here==="finance.html"||here==="index.html")laterImport("./available-cash.js?v=1","Calibre cash position unavailable");
+if(here==="suppliers.html")laterImport("./parts-intelligence-runtime.js?v=2","Calibre parts intelligence unavailable");
+if(here==="suppliers.html"||here==="inventory.html")laterImport("./parts-workflow.js?v=3","Calibre parts workflow unavailable");
 if(here==="inventory.html"){
-  import("./collection-dashboard.js?v=2").catch(err=>console.warn("Calibre collection dashboard unavailable",err));
-  import("./purchase-review.js?v=2").catch(err=>console.warn("Calibre purchase review unavailable",err));
+  laterImport("./collection-dashboard.js?v=2","Calibre collection dashboard unavailable");
+  laterImport("./purchase-review.js?v=2","Calibre purchase review unavailable");
 }
 if(new Set(["index.html","inventory.html","calibre.html","sales.html","service.html","passport.html","timegrapher.html","business.html","summary.html","suppliers.html","documents.html"]).has(here)){
-  import("./archive-cover-runtime.js?v=3").catch(err=>console.warn("Calibre archive covers unavailable",err));
+  laterImport("./archive-cover-runtime.js?v=3","Calibre archive covers unavailable");
 }
 
 function isEditing(){const el=document.activeElement;return !!el?.closest?.("input,textarea,select,[contenteditable='true']");}
@@ -66,7 +68,7 @@ async function check(){
   }catch(err){console.warn("Calibre automatic cloud/inbox refresh failed",err);}finally{checking=false;}
 }
 function schedule(){clearInterval(timer);timer=setInterval(check,POLL_MS);}
-document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")setTimeout(check,200);});
-window.addEventListener("focus",()=>setTimeout(check,200));
-setInterval(()=>{if(pending&&safeToRefresh())check();},1000);
-schedule();setTimeout(check,1200);
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")setTimeout(check,500);});
+window.addEventListener("focus",()=>setTimeout(check,500));
+setInterval(()=>{if(pending&&safeToRefresh())check();},1500);
+schedule();setTimeout(check,2500);
