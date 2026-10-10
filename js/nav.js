@@ -18,6 +18,19 @@ if(here!=='settings.html'){
 
 if(!document.querySelector('script[data-calibre-cloud-auto]')){const sync=document.createElement('script');sync.type='module';sync.src='js/cloud-auto.js?v=8';sync.dataset.calibreCloudAuto='1';document.head.appendChild(sync);}
 
+// Legacy watch rows inside Items used to navigate to plain summary.html while an async
+// currentId save was still in flight. That could open whatever job was current before
+// the click. Intercept those rows globally and carry the job id in the URL instead.
+document.addEventListener('click',event=>{
+  if(here!=='inventory.html')return;
+  const link=event.target.closest?.('.item-link[data-legacy]');
+  const id=link?.dataset?.legacy||'';
+  if(!link||!id)return;
+  event.preventDefault();
+  event.stopImmediatePropagation();
+  location.href=`summary.html?id=${encodeURIComponent(id)}`;
+},true);
+
 const savedTheme=localStorage.getItem('calibre-theme');
 if(savedTheme==='dark')document.documentElement.dataset.theme='dark';else document.documentElement.removeAttribute('data-theme');
 document.querySelectorAll('.brandbar').forEach(bar=>{if(bar.querySelector('.themebtn'))return;const button=document.createElement('button');button.className='themebtn';button.type='button';const label=()=>button.textContent=document.documentElement.dataset.theme==='dark'?'Light':'Dark';label();button.onclick=()=>{const dark=document.documentElement.dataset.theme!=='dark';document.documentElement.dataset.theme=dark?'dark':'';localStorage.setItem('calibre-theme',dark?'dark':'light');label();};bar.appendChild(button);});
