@@ -16,6 +16,11 @@ function tidyJob(job){
   return job;
 }
 
+function requestedJobId(){
+  if(typeof location==="undefined")return "";
+  try{return new URLSearchParams(location.search).get("id")||"";}catch{return "";}
+}
+
 function validPhotoRef(value){
   const s=String(value||"").trim();
   if(!s)return false;
@@ -75,6 +80,11 @@ export async function loadState(){
     tidyJob(job);
     if(beforeHidden!==job.workbenchHidden||beforeSold!==job.business.soldDate)changed=true;
     if(sanitisePhotos(job))changed=true;
+  }
+  const requested=requestedJobId();
+  if(requested&&state.jobs?.some(j=>String(j.id)===String(requested))&&String(state.currentId||"")!==String(requested)){
+    state.currentId=requested;
+    changed=true;
   }
   if(changed)await base.saveState(state);
   return state;
