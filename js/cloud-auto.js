@@ -1,11 +1,12 @@
 import { readCloudState, seenCloudAt, markCloudSeen, readInbox, markInboxImported } from "./cloud.js?v=4";
-import { forceCloudPull, importInboxItems, loadState, saveState } from "./store-cloud.js?v=6";
+import { forceCloudPull, importInboxItems, loadState, saveState } from "./store-cloud.js?v=7";
 
 const POLL_MS=15000;
 const EDIT_GRACE_MS=1800;
 let lastInteraction=0,checking=false,pending=false,timer=null;
 
 const here=(location.pathname.split("/").pop()||"index.html").split("?")[0];
+if(here==="passport.html")import("./passport-media.js?v=5").catch(err=>console.warn("Calibre Passport media unavailable",err));
 if(here==="sales.html")import("./publish-controls.js?v=1").catch(err=>console.warn("Calibre public publishing controls unavailable",err));
 if(here==="finance.html"||here==="index.html")import("./available-cash.js?v=1").catch(err=>console.warn("Calibre cash position unavailable",err));
 if(here==="suppliers.html")import("./parts-intelligence-runtime.js?v=2").catch(err=>console.warn("Calibre parts intelligence unavailable",err));
@@ -15,7 +16,7 @@ if(here==="inventory.html"){
   import("./purchase-review.js?v=2").catch(err=>console.warn("Calibre purchase review unavailable",err));
 }
 if(new Set(["index.html","inventory.html","calibre.html","sales.html","service.html","passport.html","timegrapher.html","business.html","summary.html","suppliers.html","documents.html"]).has(here)){
-  import("./archive-cover-runtime.js?v=2").catch(err=>console.warn("Calibre archive covers unavailable",err));
+  import("./archive-cover-runtime.js?v=3").catch(err=>console.warn("Calibre archive covers unavailable",err));
 }
 
 function isEditing(){const el=document.activeElement;return !!el?.closest?.("input,textarea,select,[contenteditable='true']");}
