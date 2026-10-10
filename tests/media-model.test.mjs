@@ -1,13 +1,19 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { blankMediaAsset, normaliseMediaAsset, mediaAssetHasFile, mediaForItem, mediaForWork, coverMedia, attachMediaToItem } from '../js/media-model.js';
+import { blankMediaAsset, normaliseMediaAsset, mediaAssetHasFile, mediaForItem, mediaForLegacyWatch, mediaForWork, coverMedia, attachMediaToItem } from '../js/media-model.js';
 
-test('legacy watch/job fields are preserved while canonical item ownership is added',()=>{
-  const asset=blankMediaAsset({id:'m1',watchId:'item-1',jobId:'JOB-1',category:'identity',storageKey:'u/item-1/identity/a.jpg'});
-  assert.equal(asset.itemId,'item-1');
-  assert.equal(asset.legacyWatchId,'item-1');
+test('legacy watch/job fields are preserved without inventing an Item link',()=>{
+  const asset=blankMediaAsset({id:'m1',watchId:'legacy-watch-1',jobId:'JOB-1',category:'identity',storageKey:'u/legacy-watch-1/identity/a.jpg'});
+  assert.equal(asset.itemId,'');
+  assert.equal(asset.legacyWatchId,'legacy-watch-1');
   assert.equal(asset.legacyJobId,'JOB-1');
   assert.equal(asset.visibility,'private');
+});
+
+test('explicit permanent Item ownership is retained',()=>{
+  const asset=blankMediaAsset({id:'m1',itemId:'item-1',watchId:'legacy-watch-1',storageKey:'a.jpg'});
+  assert.equal(asset.itemId,'item-1');
+  assert.equal(asset.legacyWatchId,'legacy-watch-1');
 });
 
 test('normalisation constrains category and visibility',()=>{
@@ -16,12 +22,13 @@ test('normalisation constrains category and visibility',()=>{
   assert.equal(asset.visibility,'private');
 });
 
-test('media queries use permanent item and work ids',()=>{
+test('media queries distinguish permanent Item, legacy watch and Work ids',()=>{
   const assets=[
-    {id:'a',itemId:'item-1',workId:'work-1',storageKey:'a.jpg'},
-    {id:'b',itemId:'item-2',workId:'work-2',storageKey:'b.jpg'}
+    {id:'a',itemId:'item-1',legacyWatchId:'legacy-1',workId:'work-1',storageKey:'a.jpg'},
+    {id:'b',itemId:'item-2',legacyWatchId:'legacy-2',workId:'work-2',storageKey:'b.jpg'}
   ];
   assert.deepEqual(mediaForItem(assets,'item-1').map(x=>x.id),['a']);
+  assert.deepEqual(mediaForLegacyWatch(assets,'legacy-2').map(x=>x.id),['b']);
   assert.deepEqual(mediaForWork(assets,'work-2').map(x=>x.id),['b']);
 });
 
