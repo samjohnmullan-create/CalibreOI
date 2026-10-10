@@ -8,18 +8,37 @@ const esc=escapeHtml;
 const RESEARCH_MEDIA_BUCKET="calibre-research-media";
 const RESEARCH_MEDIA_TTL_SECONDS=12*60*60;
 const RESEARCH_MEDIA_PROXY="https://jdeqnboljrgrpnvkfthx.supabase.co/functions/v1/research-media";
+const PHOTO_SLOT_LABELS={
+  intake:"Intake / as received",dial:"Dial straight-on",caseback:"Caseback exterior",insidecase:"Inside caseback",movement:"Movement full view",movementserial:"Movement serial",caseserial:"Case serial / reference",hallmarks:"Hallmarks / stamps",crown:"Crown",strapmarks:"Bracelet / strap markings",identityother:"Other identifying mark",
+  damage:"Damage / fault",predismantle:"Before dismantling",dismantled:"Movement dismantled",progress:"Repair progress",reassembly:"Reassembly",finalmovement:"Final movement",finished:"Finished watch",
+  hero:"Hero / front",salesleft:"Front ¾ left",salesright:"Front ¾ right",crownside:"Side — crown",oppositeside:"Side — opposite",salescaseback:"Caseback",wristscale:"Wrist / scale shot",dialclose:"Dial close-up",salesmovement:"Movement",claspstrap:"Clasp / buckle / strap",flaws:"Flaws / condition disclosure",accessories:"Packaging / accessories"
+};
 
+function activeMedia(job){return (job?.mediaAssets||[]).filter(a=>a&&!a.deletedAt&&a.storageKey);}
 function mediaRefs(job){
-  return (job?.mediaAssets||[]).filter(a=>a&&!a.deletedAt).map(a=>({
+  return activeMedia(job).map(a=>({
     id:raw(a.id),category:raw(a.category),storageKey:raw(a.storageKey),originalName:raw(a.originalName),
     mimeType:raw(a.mimeType),caption:raw(a.caption),evidenceNote:raw(a.evidenceNote),createdAt:raw(a.createdAt),
-    visibility:a.visibility==="public"?"public":"private",isCover:!!a.isCover
+    stageId:raw(a.stageId),previewSlot:raw(a.previewSlot),visibility:a.visibility==="public"?"public":"private",isCover:!!a.isCover
   })).filter(a=>a.id||a.storageKey);
+}
+function archivedPreviewCount(job,slot){
+  const label=PHOTO_SLOT_LABELS[slot]||slot;
+  return activeMedia(job).filter(a=>{
+    const previewSlot=raw(a.previewSlot),stageId=raw(a.stageId);
+    return previewSlot===slot||stageId===slot||stageId===label;
+  }).length;
 }
 function legacyPhotoSummary(job){
   const out=[];
   for(const [slot,items] of Object.entries(job?.photos||{})){
-    const count=Array.isArray(items)?items.length:0;if(count)out.push({slot,count});
+    const count=Array.isArray(items)?items.length:0;
+    if(!count)continue;
+    // Guided Passport uploads keep a compressed display preview in job.photos while
+    // the original is archived in Supabase Storage. Those previews are not legacy
+    // migration debt and must not be reported as such.
+    const legacy=Math.max(0,count-archivedPreviewCount(job,slot));
+    if(legacy)out.push({slot,count:legacy});
   }
   const passportCount=Array.isArray(job?.passport?.photos)?job.passport.photos.length:0;
   if(passportCount)out.push({slot:"passport",count:passportCount});
@@ -43,7 +62,7 @@ function mediaExtension(asset={},blob){
 }
 function safePart(v){return raw(v).replace(/[^a-zA-Z0-9._-]+/g,"-").replace(/^-+|-+$/g,"")||"asset";}
 async function temporaryResearchMedia(job,userId,requestId){
-  const assets=(job?.mediaAssets||[]).filter(a=>a&&!a.deletedAt&&a.storageKey);
+  const assets=activeMedia(job);
   if(!assets.length)return [];
   const client=supabaseClient(),bucket=client.storage.from(RESEARCH_MEDIA_BUCKET);
   const expiresAt=new Date(Date.now()+RESEARCH_MEDIA_TTL_SECONDS*1000).toISOString();
@@ -183,7 +202,7 @@ export async function mountResearchRequestCard(){
     const action=completed?"Request new research":pending?"Refresh research request":"Request research";
     const linkText=r.photoLinks?`${r.photoLinks} temporary link${r.photoLinks===1?"":"s"}${r.photoLinksExpireAt?` · expire ${new Date(r.photoLinksExpireAt).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}`:""}`:photos?"Temporary links not generated yet":"No archived photos";
     const statusText=completed?`Completed${r.completedAt?` · ${new Date(r.completedAt).toLocaleString()}`:""}`:pending?`Pending · ${r.requestedAt?new Date(r.requestedAt).toLocaleString():"sent"}`:"";
-    card.innerHTML=`<div class="row" style="justify-content:space-between;align-items:start"><div><div class="kicker">RESEARCH HANDOFF</div><h3 style="margin:.2rem 0">Send this watch for research</h3><p class="muted small" style="margin:.2rem 0">Packages the job plus temporary, token-gated photo access so the actual watch images can be inspected during research.</p></div><span class="badge">${badge}</span></div><div class="grid2" style="margin-top:9px"><div><span class="muted small">Archived media</span><strong style="display:block">${photos} file${photos===1?"":"s"}</strong></div><div><span class="muted small">Research photo access</span><strong style="display:block">${esc(linkText)}</strong></div></div>${legacy?`<p class="muted small" style="margin:.45rem 0 0">${legacy} legacy photo${legacy===1?"":"s"} still need migration to archived media before temporary sharing.</p>`:""}<div class="row" style="margin-top:10px"><button id="sendResearchRequest" class="btn" type="button">${action}</button><span id="researchRequestMsg" class="muted small">${esc(message||statusText)}</span></div>`;
+    card.innerHTML=`<div class="row" style="justify-content:space-between;align-items:start"><div><div class="kicker">RESEARCH HANDOFF</div><h3 style="margin:.2rem 0">Send this watch for research</h3><p class="muted small" style="margin:.2rem 0">Packages the job plus temporary, token-gated photo access so the actual watch images can be inspected during research.</p></div><span class="badge">${badge}</span></div><div class="grid2" style="margin-top:9px"><div><span class="muted small">Archived media</span><strong style="display:block">${photos} file${photos===1?"":"s"}</strong></div><div><span class="muted small">Research photo access</span><strong style="display:block">${esc(linkText)}</strong></div></div>${legacy?`<p class="muted small" style="margin:.45rem 0 0">${legacy} older photo${legacy===1?"":"s"} still need migration to archived media before temporary sharing.</p>`:""}<div class="row" style="margin-top:10px"><button id="sendResearchRequest" class="btn" type="button">${action}</button><span id="researchRequestMsg" class="muted small">${esc(message||statusText)}</span></div>`;
     card.querySelector("#sendResearchRequest").onclick=async()=>{
       const btn=card.querySelector("#sendResearchRequest"),msg=card.querySelector("#researchRequestMsg");btn.disabled=true;msg.textContent=photos?`Sending and preparing ${photos} temporary photo link${photos===1?"":"s"}…`:"Sending…";
       try{
