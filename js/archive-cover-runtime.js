@@ -1,7 +1,7 @@
-import { loadState,current } from './store.js?v=26';
-import { privateMediaThumbnailObjectUrl } from './media.js?v=3';
+import { loadState,current } from './store.js?v=8';
+import { privateMediaThumbnailObjectUrl } from './media.js?v=4';
 
-const pages=new Set(['index.html','inventory.html','calibre.html','sales.html','workbench.html','passport.html','timegrapher.html','business.html','summary.html','suppliers.html','documents.html','media.html']);
+const pages=new Set(['index.html','inventory.html','calibre.html','sales.html','workbench.html','service.html','passport.html','timegrapher.html','business.html','summary.html','suppliers.html','documents.html']);
 const here=(location.pathname.split('/').pop()||'index.html').split('?')[0]||'index.html';
 if(pages.has(here)){
   let state=null,busy=false;
@@ -16,18 +16,14 @@ if(pages.has(here)){
     const asset=choose(job);if(!asset){cache.set(job.id,'');return '';}
     try{const url=await privateMediaThumbnailObjectUrl(asset);cache.set(job.id,url);urls.push(url);return url;}catch{return '';}
   }
-  function replacePlaceholder(ph,url,className){
-    if(!ph||!url)return;
-    if(ph.tagName==='IMG'){ph.src=url;return;}
-    const img=document.createElement('img');img.alt='';img.src=url;if(className)img.className=className;ph.replaceWith(img);
-  }
+  function replacePlaceholder(ph,url,className){if(!ph||!url)return;if(ph.tagName==='IMG'){ph.src=url;return;}const img=document.createElement('img');img.alt='';img.src=url;if(className)img.className=className;ph.replaceWith(img);}
   async function paint(){
     if(busy)return;busy=true;
     try{
       state=state||await loadState();
-      for(const card of document.querySelectorAll('.job-card[data-id]')){
+      for(const card of document.querySelectorAll('.job-card[data-id],.hub-card[data-id]')){
         const job=state.jobs.find(j=>j.id===card.dataset.id);if(!job)continue;
-        const url=await getUrl(job);if(url)replacePlaceholder(card.querySelector('.thumb'),url,'thumb');
+        const url=await getUrl(job);if(url)replacePlaceholder(card.querySelector('.thumb,.hub-thumb'),url,card.classList.contains('hub-card')?'hub-thumb':'thumb');
       }
       const job=current(state);if(!job)return;const url=await getUrl(job);if(!url)return;
       const strip=document.querySelector('[data-watch-photo]');
@@ -41,6 +37,6 @@ if(pages.has(here)){
     }finally{busy=false;}
   }
   const style=document.createElement('style');style.textContent='.archive-sale-photo{width:78px;height:78px;border-radius:9px;overflow:hidden;background:var(--surface-2);flex:0 0 78px}.archive-sale-photo img{width:100%;height:100%;object-fit:cover;display:block}@media(max-width:640px){.sales-hero .price-main{flex-wrap:wrap}.archive-sale-photo{width:64px;height:64px;flex-basis:64px}}';document.head.appendChild(style);
-  const start=()=>{paint();const o=new MutationObserver(()=>setTimeout(paint,60));o.observe(document.body,{childList:true,subtree:true});window.addEventListener('beforeunload',()=>{o.disconnect();urls.forEach(url=>URL.revokeObjectURL(url));});};
+  const start=()=>{paint();const observer=new MutationObserver(()=>setTimeout(paint,60));observer.observe(document.body,{childList:true,subtree:true});window.addEventListener('beforeunload',()=>{observer.disconnect();urls.forEach(url=>URL.revokeObjectURL(url));});};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
 }
