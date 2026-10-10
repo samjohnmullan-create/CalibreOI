@@ -1,7 +1,7 @@
-import * as base from "./store-sync-safe.js?v=1";
+import * as base from "./store-local-fast.js?v=1";
 import { legacyJobToItem } from "./item-model.js?v=4";
 
-export * from "./store-sync-safe.js?v=1";
+export * from "./store-local-fast.js?v=1";
 
 function explicitWorkbench(raw={}){
   if(Object.prototype.hasOwnProperty.call(raw,"workbenchHidden"))return !raw.workbenchHidden;
@@ -119,8 +119,12 @@ export async function loadState(){
   state.jobs=Array.isArray(state.jobs)?state.jobs:[];
   const requested=requestedJobId();
   if(requested&&state.jobs.some(j=>String(j.id)===String(requested)))state.currentId=requested;
-  const selected=state.jobs.find(j=>String(j.id)===String(state.currentId||""));
-  if(selected){tidyJob(selected);sanitisePhotos(selected);}
+  const index=state.jobs.findIndex(j=>String(j.id)===String(state.currentId||""));
+  if(index>=0){
+    try{state.jobs[index]=base.normalise(state.jobs[index]);}catch{}
+    tidyJob(state.jobs[index]);
+    sanitisePhotos(state.jobs[index]);
+  }
   const page=pageName();
   if(page==="inventory.html"||page==="item.html")materialiseLegacyItems(state);
   return state;
