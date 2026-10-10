@@ -1,5 +1,6 @@
 import * as enhanced from "./store-enhanced.js?v=2";
-import { blankItem, legacyJobToItem, normaliseItem } from "./item-model.js?v=4";
+import { blankItem } from "./item-model.js?v=4";
+import { ensureItemForJob } from "./item-integrity.js?v=1";
 import { SPARE_PARTS } from "./match.js?v=6";
 
 export * from "./store-enhanced.js?v=2";
@@ -17,22 +18,8 @@ function appendWriteOffNote(item, job) {
 }
 
 function donorItemForJob(state, job) {
-  state.items = Array.isArray(state.items) ? state.items : [];
-  let item = state.items.find(x =>
-    (job.itemId && String(x.id) === String(job.itemId)) ||
-    (x.legacyJobId && String(x.legacyJobId) === String(job.id))
-  );
-
-  if (!item) {
-    item = legacyJobToItem(job);
-    state.items.push(item);
-    job.itemId = String(item.id);
-  } else {
-    item = normaliseItem(item);
-    const index = state.items.findIndex(x => String(x.id) === String(item.id));
-    if (index >= 0) state.items[index] = item;
-    job.itemId = String(item.id);
-  }
+  const { item } = ensureItemForJob(state, job);
+  if (!item) return null;
 
   item.purpose = "donor";
   item.status = "Retained";
@@ -103,7 +90,7 @@ function migrateWholeDonors(state) {
   return true;
 }
 
-function reconcileWriteOffs(state) {
+export function reconcileWriteOffs(state) {
   if (!state || !Array.isArray(state.jobs)) return false;
   let changed = migrateWholeDonors(state);
 
@@ -120,8 +107,8 @@ function reconcileWriteOffs(state) {
 
     const beforeItemId = String(job.itemId || "");
     const item = donorItemForJob(state, job);
-    const needsDonorState = item.purpose !== "donor" || item.status !== "Retained" || !item.tags?.includes("written-off");
-    if (needsDonorState || String(job.itemId || "") !== beforeItemId) changed = true;
+    if (!item) continue;
+    if (String(job.itemId || "") !== beforeItemId) changed = true;
 
     if (String(state.currentId || "") === String(job.id || "")) {
       const next = state.jobs.find(other => other && String(other.id) !== String(job.id) && !CLOSED_JOB_STATUSES.has(String(other.status || "")));
@@ -133,8 +120,6 @@ function reconcileWriteOffs(state) {
   return changed;
 }
 
-// Reads must stay read-only. Write-off/donor reconciliation belongs on save or the
-// explicit write-off action, not on every job opening.
 export async function loadState() {
   return enhanced.loadState();
 }
