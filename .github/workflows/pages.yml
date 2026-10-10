@@ -54,6 +54,14 @@ jobs:
                   r'(["\'])(\./[^"\'?]+\.js)(?:\?v=[^"\']+)?\1',
                   lambda m: f'{m.group(1)}{m.group(2)}?v={sha}{m.group(1)}', text
               )
+              # Also catch scripts loaded dynamically with paths such as
+              # sync.src='js/cloud-auto.js?v=8'. These were previously left with a
+              # stale fixed cache key, which meant newly deployed runtime features
+              # could remain invisible on phones even though Pages deployed cleanly.
+              text = re.sub(
+                  r'(["\'])(js/[^"\'?]+\.js)(?:\?v=[^"\']+)?\1',
+                  lambda m: f'{m.group(1)}{m.group(2)}?v={sha}{m.group(1)}', text
+              )
               p.write_text(text, encoding='utf-8')
 
           site = Path('_site')
