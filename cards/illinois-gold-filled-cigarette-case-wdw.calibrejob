@@ -1,0 +1,215 @@
+{
+  "type": "calibrejob",
+  "version": 5,
+  "pushId": "illinois-gold-filled-cigarette-case-wdw",
+  "jobId": "CCO-ILL-CIG-WDW",
+  "watchName": "Illinois U.S.A. Gold-Filled Cigarette Case – W.D.W. Monogram",
+  "status": "Incoming / assessment",
+  "jobType": "collectable",
+  "decision": "Clean, assess and prepare for resale",
+  "channel": "Not listed",
+  "importUrl": "https://samjohnmullan-create.github.io/CalibreOI/?card=illinois-gold-filled-cigarette-case-wdw",
+  "passport": {
+    "maker": "Likely Illinois Watch Case Co.",
+    "model": "Gold-filled hinged cigarette case / card case",
+    "country": "United States",
+    "year": "c. 1920s–1930s (provisional)",
+    "confidence": "Moderate",
+    "fieldConfidence": {
+      "maker": "Moderate – interior clip is stamped 'Illinois, U.S.A.' and 'GOLD FILLED / GUARANTEED 10 YEARS'; Illinois Watch Case Co. is documented as a major Illinois gold-filled case maker using 10-year guarantees",
+      "year": "Moderate-Low – Art Deco geometric/engine-turned decoration suggests interwar production, but no serial/date mark is visible",
+      "material": "High – explicitly stamped GOLD FILLED / GUARANTEED 10 YEARS",
+      "monogram": "Moderate – central cartouche appears to read W.D.W., but stylised script should be checked in person"
+    },
+    "dialMarkings": "N/A",
+    "movementMaker": "N/A",
+    "calibre": "N/A",
+    "calibreFamily": "N/A",
+    "beatRate": "",
+    "powerReserve": "",
+    "settingType": "N/A",
+    "jewels": "N/A",
+    "movementType": "N/A",
+    "movementMm": "",
+    "escapement": "N/A",
+    "serial": "Not visible in supplied photos",
+    "caseNumber": "Not visible in supplied photos",
+    "reference": "Illinois U.S.A. 10-year gold-filled personal accessory",
+    "caseMaterial": "Gold-filled base metal; exact karat layer not marked in supplied views",
+    "caseStyle": "Rectangular hinged cigarette case with sprung retaining arm",
+    "casebackType": "Hinged two-shell construction",
+    "crystalType": "N/A",
+    "crownType": "N/A",
+    "lugWidth": "",
+    "width": "",
+    "height": "",
+    "thickness": "",
+    "complications": "N/A",
+    "waterMark": "Not applicable; keep dry",
+    "strap": "N/A",
+    "hallmarks": "Interior retaining arm stamped 'Illinois, U.S.A.' / 'GOLD FILLED' / 'GUARANTEED 10 YEARS'",
+    "engravings": "Central exterior monogram cartouche appears to read 'W.D.W.'; exterior has engine-turned linear fields, floral/geometric bands and decorated borders",
+    "notes": "Four intake photos reviewed. Case is rectangular with a slightly bowed profile, full-width hinge, interior sprung retaining arm and decorative engine-turning. Exterior shows scattered spotting, scratches and handling wear. Interior shows tarnish, grime and some greenish corrosion/verdigris around hinge and edge areas. Retaining arm appears present and attached. No obvious major denting or split hinge is visible in the supplied photographs, but closure tension and hinge pin wear need physical inspection.",
+    "history": "Illinois Watch Case Co. operated from 1888 to 1956 and produced numerous gold-filled case grades with time guarantees. Pocket Watch Database documents a 10YR gold-filled grade and multiple Illinois 10-year gold-filled trademarks. The decoration on this accessory is consistent with interwar American Art Deco styling, though the exact maker attribution and date remain provisional until additional maker marks or catalog matches are found.",
+    "warnings": "Do not aggressively polish. Gold-filled surfaces can be worn through at corners, edges and raised decoration. Avoid ammonia-based or abrasive cleaners around worn plating and verdigris. Photograph all marks before cleaning.",
+    "listingText": "Vintage American gold-filled cigarette case, likely by Illinois Watch Case Co., with geometric Art Deco engine-turning, ornate border decoration and a central monogram cartouche appearing to read W.D.W. Interior retaining arm is stamped 'Illinois, U.S.A. – Gold Filled – Guaranteed 10 Years.' Condition and measurements to be finalised after cleaning and inspection.",
+    "sources": [
+      "https://pocketwatchdatabase.com/guide/case-companies/illinois-watch-case-co/grades/10YR",
+      "https://pocketwatchdatabase.com/guide/case-companies/illinois-watch-case-co/grades",
+      "https://pocketwatchdatabase.com/guide/case-trademarks/585",
+      "https://legacy.pocketwatchdatabase.com/guide/case-companies/illinois-watch-case-co/history"
+    ],
+    "photos": []
+  },
+  "business": {
+    "purchasePrice": "",
+    "buyerPremium": "",
+    "postage": "",
+    "strapCost": "",
+    "batteryCost": "",
+    "partsCost": "",
+    "consumables": "",
+    "externalService": "",
+    "marketplaceFees": "",
+    "shippingToBuyer": "",
+    "otherCost": "",
+    "labourMinutes": "",
+    "labourRate": "",
+    "minSale": "60",
+    "targetSale": "110",
+    "optimisticSale": "160",
+    "actualSale": "",
+    "title": "Vintage Illinois U.S.A. 10-Year Gold-Filled Art Deco Cigarette Case – Monogrammed",
+    "text": "Preliminary AU resale estimate only: approximately A$60 quick-sale, A$110 expected and A$160 optimistic if the hinge/closure is sound, the retaining arm is functional and careful cleaning presents well. Value is driven more by decorative quality, maker attribution, condition and usability than gold content; gold-filled is not solid gold. Reassess after measurements, weight, cleaned photos and confirmation of maker marks."
+  },
+  "faults": [
+    {
+      "text": "Surface tarnish, grime and spotting; possible verdigris around hinge/edges",
+      "severity": "Cosmetic"
+    }
+  ],
+  "diagnosticFaults": [
+    {
+      "key": "hinge-wear-check",
+      "id": "hinge-wear-check",
+      "text": "Possible hinge-pin wear or looseness",
+      "category": "Case hardware",
+      "severity": "Moderate",
+      "sourceStage": "Mechanical inspection",
+      "sourceCheck": "hinge-play",
+      "sourceQuestion": "Does the hinge open smoothly without lateral play or binding?",
+      "status": "possible"
+    },
+    {
+      "key": "closure-tension-check",
+      "id": "closure-tension-check",
+      "text": "Closure/spring tension unverified",
+      "category": "Case hardware",
+      "severity": "Minor",
+      "sourceStage": "Mechanical inspection",
+      "sourceCheck": "closure-function",
+      "sourceQuestion": "Does the case close securely and stay shut?",
+      "status": "possible"
+    },
+    {
+      "key": "gold-fill-wear-check",
+      "id": "gold-fill-wear-check",
+      "text": "Possible gold-fill wear-through on corners, edges and raised decoration",
+      "category": "Finish",
+      "severity": "Cosmetic",
+      "sourceStage": "Surface inspection",
+      "sourceCheck": "plating-wear",
+      "sourceQuestion": "Is base metal exposed through the gold-filled layer?",
+      "status": "possible"
+    }
+  ],
+  "parts": [],
+  "timingRuns": [],
+  "photos": {
+    "intake": [],
+    "caseback": [],
+    "movement": [],
+    "dial": [],
+    "damage": [],
+    "progress": [],
+    "finished": [],
+    "hero": []
+  },
+  "stages": [
+    {
+      "name": "Intake",
+      "notes": "Four intake photos reviewed. Record dimensions, weight and exact monogram reading. Photograph all marks before any cleaning.",
+      "condition": "Complete enough for initial identification",
+      "complete": false
+    },
+    {
+      "name": "Mechanical inspection",
+      "notes": "Check hinge pin, side play, opening angle, closure engagement and retaining-arm spring tension. Inspect for distorted shells or edge separation.",
+      "condition": "Pending",
+      "complete": false
+    },
+    {
+      "name": "Surface inspection",
+      "notes": "Under magnification inspect corners, borders and hinge areas for gold-fill wear-through, corrosion and stress cracking. Note any verdigris before cleaning.",
+      "condition": "Pending",
+      "complete": false
+    },
+    {
+      "name": "Cleaning",
+      "notes": "Start dry/low-risk: soft brush, cotton swabs and mild non-abrasive cleaning. Avoid aggressive polish on gold-filled surfaces. Treat verdigris locally and cautiously, then dry thoroughly.",
+      "condition": "Pending",
+      "complete": false
+    },
+    {
+      "name": "Conservation / repair",
+      "notes": "Only repair hinge or retaining arm if functionally necessary. Avoid re-plating or refinishing unless specifically justified, as original engine-turning and patina are value-relevant.",
+      "condition": "Pending",
+      "complete": false
+    },
+    {
+      "name": "Photography & listing",
+      "notes": "Photograph exterior front/back, monogram, interior, maker stamp, hinge and any wear areas. Include dimensions, weight, closure condition and material wording exactly as marked.",
+      "condition": "Pending",
+      "complete": false
+    },
+    {
+      "name": "Final QC",
+      "notes": "Confirm hinge operation, closure, retaining-arm spring, cleaned presentation and any exposed base metal. Update sale target from comparable decorative gold-filled cases/accessories.",
+      "condition": "Pending",
+      "complete": false
+    }
+  ],
+  "diagnosis": "Likely American interwar gold-filled cigarette case, probably associated with Illinois Watch Case Co. based on the Illinois U.S.A. / 10-year gold-filled marking. Exact model and date are not yet confirmed.",
+  "repairPerformed": "",
+  "service": "Conservation clean, hardware inspection and resale preparation",
+  "serviceNotes": "Preserve original engine-turning and monogram. Treat as gold-filled, not solid gold.",
+  "researchBrief": {
+    "summary": "Decorative Art Deco-style gold-filled cigarette case with Illinois U.S.A. 10-year guarantee marking and W.D.W.-appearing monogram. Likely interwar American manufacture; maker attribution to Illinois Watch Case Co. is plausible but not yet conclusive.",
+    "technicalNotes": "Construction is a hinged two-shell case with a sprung interior retaining arm. The arm carries the material/guarantee stamp. Gold-filled surfaces are mechanically bonded and can be damaged by aggressive polishing, especially at high points and edges.",
+    "valuationConfidence": "Low-Moderate",
+    "valuationBasis": "Few exact cigarette-case comparables were located. Illinois 10-year gold-filled watch-case material is well documented, but accessory values vary strongly with condition, decoration, maker attribution and usability. Preliminary targets are therefore conservative pending measurements and cleaned condition.",
+    "partsLeads": [],
+    "repairPlan": [
+      "Inspect hinge and retaining-arm spring before cleaning",
+      "Document all markings and monogram",
+      "Perform conservative surface clean only",
+      "Reassess value after final photos, dimensions and weight"
+    ],
+    "nextChecks": [
+      "Measure closed width, height and thickness",
+      "Weigh complete case",
+      "Confirm whether the monogram reads W.D.W.",
+      "Check for additional maker marks beneath the retaining arm or near hinge",
+      "Test closure and hinge play"
+    ],
+    "risks": [
+      "Over-polishing can cut through the gold-filled layer",
+      "Verdigris may indicate exposed base metal at worn areas",
+      "Do not market as solid gold"
+    ],
+    "references": [
+      "https://pocketwatchdatabase.com/guide/case-companies/illinois-watch-case-co/grades/10YR",
+      "https://pocketwatchdatabase.com/guide/case-trademarks/585"
+    ]
+  }
+}
