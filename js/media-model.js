@@ -6,7 +6,7 @@ const now=()=>new Date().toISOString();
 const id=()=>`media-${Math.random().toString(36).slice(2,9)}${Date.now().toString(36).slice(-4)}`;
 
 export function blankMediaAsset(partial={}){
-  const itemId=text(partial.itemId||partial.watchId);
+  const itemId=text(partial.itemId);
   const workId=text(partial.workId);
   const legacyWatchId=text(partial.legacyWatchId||partial.watchId);
   const legacyJobId=text(partial.legacyJobId||partial.jobId);
@@ -39,8 +39,9 @@ export function blankMediaAsset(partial={}){
 
 export function normaliseMediaAsset(raw={}){return blankMediaAsset(raw);}
 export function mediaAssetHasFile(asset={}){return !!(asset.storageKey||asset.url||asset.thumbnailUrl);}
-export function mediaAssetOwnerId(asset={}){return text(asset.itemId||asset.legacyWatchId);}
-export function mediaForItem(assets=[],itemId=''){const key=text(itemId);return (Array.isArray(assets)?assets:[]).map(normaliseMediaAsset).filter(asset=>mediaAssetOwnerId(asset)===key);}
+export function mediaAssetOwnerId(asset={}){return text(asset.itemId);}
+export function mediaForItem(assets=[],itemId=''){const key=text(itemId);return (Array.isArray(assets)?assets:[]).map(normaliseMediaAsset).filter(asset=>text(asset.itemId)===key);}
+export function mediaForLegacyWatch(assets=[],watchId=''){const key=text(watchId);return (Array.isArray(assets)?assets:[]).map(normaliseMediaAsset).filter(asset=>text(asset.legacyWatchId)===key);}
 export function mediaForWork(assets=[],workId=''){const key=text(workId);return (Array.isArray(assets)?assets:[]).map(normaliseMediaAsset).filter(asset=>text(asset.workId)===key);}
 export function coverMedia(assets=[]){const list=(Array.isArray(assets)?assets:[]).map(normaliseMediaAsset).filter(mediaAssetHasFile);return list.find(asset=>asset.isCover)||list.find(asset=>asset.category==='sale')||list[0]||null;}
 
