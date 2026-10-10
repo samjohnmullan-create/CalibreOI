@@ -1,0 +1,357 @@
+{
+  "type": "calibrejob",
+  "version": 5,
+  "pushId": "waltham-colonial-riverside-29390814",
+  "jobId": "CCO-WAL-29390814",
+  "watchName": "Waltham Colonial Riverside 21J Pocket Watch - Serial 29390814",
+  "status": "On bench",
+  "jobType": "pocket",
+  "decision": "Research / assess for restoration",
+  "channel": "Not listed",
+  "importUrl": "https://samjohnmullan-create.github.io/CalibreOI/?card=waltham-colonial-riverside-29390814",
+  "passport": {
+    "maker": "American Waltham Watch Co.",
+    "model": "Colonial Riverside",
+    "country": "United States - Waltham, Massachusetts",
+    "year": "c. 1936-1937",
+    "confidence": "High for maker/series; Moderate-High for exact grade/model assignment",
+    "fieldConfidence": {
+      "maker": "Confirmed by movement and dial markings",
+      "series": "Confirmed by movement engraving: Colonial Riverside",
+      "serial": "Confirmed from movement photograph: 29390814",
+      "jewels": "Confirmed: 21 JEWELS engraved on movement and WALTHAM 21 JEWELS printed on dial",
+      "grade": "Probable Grade No. 221 based on 12-size 1924 Colonial B / Colonial Riverside configuration and close serial comparables",
+      "model": "Probable Model 1924 Col.B / Colonial B family",
+      "year": "Estimated from close serial comparables and Grade 221 production records",
+      "caseMaker": "Confirmed Keystone from inside-case trademark",
+      "caseGrade": "Confirmed Victory",
+      "caseMaterial": "Confirmed 10K rolled gold plate from case stamp",
+      "caseSerial": "Read from photograph as 4986801; re-check under magnification before final listing",
+      "dialVariant": "Unresolved - dial is signed WALTHAM 21 JEWELS and BEAU MONDE, but reliable documentation tying 'Beau Monde' to this Waltham model was not located"
+    },
+    "dialMarkings": "Two-tone/silvered Art Deco dial; applied Arabic numerals; outer minute track; subsidiary seconds at 6; WALTHAM / 21 JEWELS near upper centre; BEAU MONDE above subsidiary seconds. Hour, minute and subsidiary seconds hands are absent in the intake photographs.",
+    "movementMaker": "American Waltham Watch Co.",
+    "calibre": "Probable Grade No. 221",
+    "calibreFamily": "Model 1924 Col.B / Colonial B, 12-size",
+    "beatRate": "Not yet confirmed",
+    "powerReserve": "Not yet measured",
+    "settingType": "Probable pendant set; confirm during functional check",
+    "jewels": "21",
+    "movementType": "Mechanical hand-wound pocket watch",
+    "movementMm": "12s; reference examples measure approximately 37 mm movement diameter",
+    "escapement": "Lever escapement; likely double roller for this grade/family - confirm during service",
+    "serial": "29390814",
+    "caseNumber": "4986801 (photographic reading; verify)",
+    "reference": "Waltham Colonial Riverside / probable Grade 221, Model 1924 Col.B",
+    "caseMaterial": "Keystone Victory 10K rolled gold plate",
+    "caseStyle": "Open-face slim pocket watch",
+    "casebackType": "Snap back",
+    "crystalType": "Present in intake photo; material not confirmed",
+    "crownType": "Fluted pendant crown",
+    "lugWidth": "N/A",
+    "width": "Not measured; comparable Colonial Riverside 12s examples are approximately 44-45 mm across the case",
+    "height": "Not measured",
+    "thickness": "Not measured; Colonial-series cases were marketed as relatively slim",
+    "complications": "Subsidiary seconds",
+    "waterMark": "Not water resistant - vintage pocket watch, keep dry",
+    "strap": "N/A",
+    "hallmarks": "Inside back: KEYSTONE / VICTORY / 10K ROLLED GOLD PLATE; case serial appears 4986801",
+    "engravings": "Movement: serial 29390814; 21 JEWELS; Colonial Riverside; Waltham, U.S.A.; ADJ. TEMP. Winding wheel also marked JEWELED MAIN WHEEL.",
+    "notes": "Three intake images reviewed. Movement architecture, 21-jewel count, bridge layout, Colonial Riverside engraving and serial range are consistent with Waltham's high-grade 12-size Colonial family, most plausibly Grade No. 221 / Model 1924 Col.B. The movement appears visually complete in the supplied rear photograph, but running condition is not established. The dial is in very poor cosmetic condition with extensive spotting, oxidation/finish loss and dark deterioration around much of the numeral ring. All visible hands are missing: hour, minute and subsidiary seconds. The gold-tone central dial area is heavily marked. The bow and crown are present. Case shows age-related wear and darkening but no obvious major deformation in the supplied views.",
+    "history": "Waltham's 12-size Model 1924 Colonial B family was part of the company's later slim pocket-watch production. Pocket Watch Database records Grade No. 221 examples as 12-size, 21-jewel, open-face, nickel-finished, pendant-set bridge movements with Breguet hairsprings. The database notes factory-record inconsistencies: some movements in Grade 221 runs are physically marked 'Riverside' and '#1271', so movement engraving and serial-run data do not always align perfectly. A documented Grade 221 run shows total production of 38,125 across nine runs. Comparable serials in the 28.8-29.3 million range are dated to the mid-1930s, supporting a circa 1936-1937 date for this example. The Keystone Victory case grade is documented as 10K rolled gold plate and appears in 1925 and 1932 catalog references, fitting the period of this movement.",
+    "warnings": "Do not polish the dial. Its printed/painted finish is already severely compromised and may be extremely fragile. Do not attempt to fit hands until the hand-setting train, hand-hole sizes and cannon pinion/hour wheel are inspected. Avoid aggressive polishing of the rolled-gold case because wear-through cannot be reversed. The 'Beau Monde' dial inscription is not yet explained; do not advertise this as a documented Waltham Beau Monde model without further evidence.",
+    "listingText": "Circa 1936-37 American Waltham Colonial Riverside 21-jewel slim open-face pocket watch, movement serial 29390814, in a Keystone Victory 10K rolled-gold-plate case. High-grade 12-size Waltham movement with jeweled main wheel and temperature adjustment. The unusual two-tone Art Deco dial is signed 'Waltham 21 Jewels' and 'Beau Monde'. This example requires restoration: the dial has substantial finish deterioration and the hour, minute and subsidiary-seconds hands are missing. Mechanical condition and timing to be confirmed after service.",
+    "sources": [
+      "https://pocketwatchdatabase.com/search/result/waltham/28856002",
+      "https://pocketwatchdatabase.com/search/result/waltham/28858146",
+      "https://pocketwatchdatabase.com/guide/case-companies/keystone-watch-case-co-cases/grades/Victory",
+      "https://live.jeffreysevans.com/online-auctions/jeffrey-evans/waltham-19--and-21-jewel-model-1908-pocket-watches-lot-of-two-8026946",
+      "https://www.proxibid.com/Daniel-Weaver-Auctions/Pocket-Watch-Auction/event-catalog/291889",
+      "https://bid.annexauctions.com/online-auctions/annex-auctions/14k-gold-waltham-riverside-pocket-watch-9368437",
+      "https://www.auctionzip.com/auction-catalog/unclaimed-safe-deposit-box-~-day-2_3G0J93DVL5",
+      "https://thepartspreserve.com/products/vintage-12s-waltham-colonial-riverside-premier-21j-pocket-watch-movement-no-221",
+      "https://empress.cc/products/1937-waltham-usa-colonial-riverside-slim-pocket-watch"
+    ],
+    "photos": []
+  },
+  "business": {
+    "purchasePrice": "",
+    "buyerPremium": "",
+    "postage": "",
+    "strapCost": "",
+    "batteryCost": "",
+    "partsCost": "",
+    "consumables": "",
+    "externalService": "",
+    "marketplaceFees": "",
+    "shippingToBuyer": "",
+    "otherCost": "",
+    "labourMinutes": "",
+    "labourRate": "",
+    "minSale": "90",
+    "targetSale": "220",
+    "optimisticSale": "320",
+    "actualSale": "",
+    "title": "c.1936 Waltham Colonial Riverside 21J 12s Pocket Watch - Keystone Victory 10K RGP",
+    "text": "AUD working targets. Current condition is materially below normal market examples because all hands are missing and the dial has severe finish deterioration. A close serial Waltham Colonial Riverside 21J in 10K gold-filled case sold at auction for US$50, while running Colonial Riverside/Riverside 21J 12-size examples have sold around US$225 and current asking prices for Grade 221 examples are commonly around US$180-250, with cleaner premium dealer examples higher. For this watch, treat A$90 as an as-is/quick-floor figure, around A$220 as a realistic target after successful mechanical restoration with sympathetically sourced hands but retaining the distressed original dial, and about A$320 as an optimistic result only if it runs strongly after service, the case presents well and the unusual dial attracts collector interest. A correct replacement/original dial could materially change value, but replacing the dial would sacrifice the unusual 'Beau Monde' provenance unless documented and preserved."
+  },
+  "faults": [
+    {
+      "text": "Hour and minute hands missing",
+      "severity": "Parts required"
+    },
+    {
+      "text": "Subsidiary seconds hand missing",
+      "severity": "Parts required"
+    },
+    {
+      "text": "Dial has severe spotting, oxidation and finish loss",
+      "severity": "Major cosmetic"
+    },
+    {
+      "text": "Running condition not yet established",
+      "severity": "Diagnosis required"
+    }
+  ],
+  "diagnosticFaults": [
+    {
+      "key": "missing-hour-minute-hands",
+      "id": "missing-hour-minute-hands",
+      "text": "Hour and minute hands absent",
+      "category": "Dial & hands",
+      "severity": "Parts required",
+      "sourceStage": "Intake",
+      "sourceCheck": "visual-intake",
+      "sourceQuestion": "Are the original hour/minute hands present separately with the lot, or must correct replacements be sourced?",
+      "status": "confirmed"
+    },
+    {
+      "key": "missing-seconds-hand",
+      "id": "missing-seconds-hand",
+      "text": "Subsidiary seconds hand absent",
+      "category": "Dial & hands",
+      "severity": "Parts required",
+      "sourceStage": "Intake",
+      "sourceCheck": "visual-intake",
+      "sourceQuestion": "Is the seconds pinion intact and suitable for a replacement hand?",
+      "status": "confirmed"
+    },
+    {
+      "key": "dial-finish-loss",
+      "id": "dial-finish-loss",
+      "text": "Severe dial finish loss/oxidation and spotting across chapter ring and centre",
+      "category": "Dial & hands",
+      "severity": "Major cosmetic",
+      "sourceStage": "Intake",
+      "sourceCheck": "visual-intake",
+      "sourceQuestion": "Is the dial structurally sound beneath the degraded surface and can it be safely dry-cleaned without lifting print?",
+      "status": "confirmed"
+    },
+    {
+      "key": "unknown-running-condition",
+      "id": "unknown-running-condition",
+      "text": "Mechanical running condition unknown",
+      "category": "Movement",
+      "severity": "Diagnosis required",
+      "sourceStage": "Pre-service assessment",
+      "sourceCheck": "safe-function-test",
+      "sourceQuestion": "Does the balance start freely and does the train run without abnormal resistance when minimal power is applied?",
+      "status": "possible"
+    },
+    {
+      "key": "hand-setting-train-check",
+      "id": "hand-setting-train-check",
+      "text": "Possible damage/wear to cannon pinion, hour wheel or hand-setting system associated with missing hands",
+      "category": "Keyless / motion works",
+      "severity": "Moderate",
+      "sourceStage": "Dial side inspection",
+      "sourceCheck": "inspect-motion-works",
+      "sourceQuestion": "Are the cannon pinion, hour wheel, minute arbor and setting train intact and correctly tensioned?",
+      "status": "possible"
+    }
+  ],
+  "parts": [
+    {
+      "part": "Hour hand - period-correct Waltham 12s Art Deco style",
+      "supplier": "",
+      "partNumber": "Measure hour-wheel pipe before ordering",
+      "quantity": "1",
+      "cost": "",
+      "ordered": "",
+      "received": false,
+      "fitted": false
+    },
+    {
+      "part": "Minute hand - period-correct Waltham 12s Art Deco style",
+      "supplier": "",
+      "partNumber": "Measure cannon-pinion square/pipe before ordering",
+      "quantity": "1",
+      "cost": "",
+      "ordered": "",
+      "received": false,
+      "fitted": false
+    },
+    {
+      "part": "Subsidiary seconds hand",
+      "supplier": "",
+      "partNumber": "Measure fourth-wheel/seconds pinion before ordering",
+      "quantity": "1",
+      "cost": "",
+      "ordered": "",
+      "received": false,
+      "fitted": false
+    }
+  ],
+  "timingRuns": [],
+  "photos": {
+    "intake": [],
+    "caseback": [],
+    "movement": [],
+    "dial": [],
+    "damage": [],
+    "progress": [],
+    "finished": [],
+    "hero": []
+  },
+  "stages": [
+    {
+      "name": "Intake",
+      "notes": "Identity established as Waltham Colonial Riverside, movement serial 29390814, 21 jewels. Probable Grade 221 / Model 1924 Col.B. Keystone Victory 10K rolled-gold-plate case, serial appears 4986801. Record unusual 'Beau Monde' dial inscription as unresolved rather than assuming it is an official Waltham model name.",
+      "condition": "Incomplete / restoration candidate",
+      "complete": false
+    },
+    {
+      "name": "Pre-service timing",
+      "notes": "Do not place on timegrapher until safe running is confirmed. With all hands absent, first confirm winding, escapement freedom and that no loose hand fragments or dial debris can foul the movement.",
+      "condition": "Not yet testable",
+      "complete": false
+    },
+    {
+      "name": "Case & pendant",
+      "notes": "Inspect Keystone Victory rolled-gold case for wear-through at pendant, bow, bezel lip and back edge. Check crown, stem, bow security and snap-back fit. Clean gently; avoid aggressive polishing of the rolled-gold surface.",
+      "condition": "Age wear visible; detailed grading pending",
+      "complete": false
+    },
+    {
+      "name": "Uncasing",
+      "notes": "Photograph dial feet, dial underside and movement spacer before removal. Verify case serial 4986801 and all case marks under magnification. Check whether any hand fragments remain under the dial/crystal edge.",
+      "condition": "Pending",
+      "complete": false
+    },
+    {
+      "name": "Dial & hands",
+      "notes": "Critical preservation stage. Dial is heavily deteriorated. Do not wet-clean or rub printed areas. Start only with gentle air/soft dry assessment away from loose print. Measure hour, minute and seconds hand fittings before sourcing replacements. Preserve the original dial even if a replacement is eventually fitted because the 'Beau Monde' inscription may be historically significant.",
+      "condition": "Severe cosmetic deterioration / all hands missing",
+      "complete": false
+    },
+    {
+      "name": "Dismantling & inspection",
+      "notes": "Check balance staff pivots, jewels, roller jewel, hairspring, train pivots, jeweled main wheel, barrel, mainspring and motion works. Verify whether the Grade 221/1924 Col.B identification matches plate dimensions and component architecture before buying movement parts.",
+      "condition": "Pending",
+      "complete": false
+    },
+    {
+      "name": "Cleaning & parts inspection",
+      "notes": "Movement can be conventionally serviced once dial is safely removed and protected. Keep dial completely out of ultrasonic/solvent workflow. Inspect gold train wheels and jewel settings carefully for corrosion or old oil residue.",
+      "condition": "Pending",
+      "complete": false
+    },
+    {
+      "name": "Repairs & parts",
+      "notes": "Primary known parts requirement is a complete hand set or individually matched hour/minute/seconds hands. Source by measured hole sizes and length, not merely by model name. Preserve any original loose hands if later found.",
+      "condition": "Hands required; additional movement parts unknown",
+      "complete": false
+    },
+    {
+      "name": "Reassembly & lubrication",
+      "notes": "Reassemble only after confirming train freedom and barrel condition. Use appropriate watch oils rather than clock oil. Confirm cannon pinion friction before fitting hands.",
+      "condition": "Pending",
+      "complete": false
+    },
+    {
+      "name": "Train & escapement",
+      "notes": "Check free train, pallet lock/drop and roller action. Grade 221 references describe a 21-jewel high-grade movement; inspect all jewel settings, including the jeweled main wheel arrangement specifically engraved on this movement.",
+      "condition": "Pending",
+      "complete": false
+    },
+    {
+      "name": "Balance & beat",
+      "notes": "Inspect Breguet/overcoil hairspring configuration, balance true/flat, endshake, sideshake and jewel condition. Movement engraving states ADJ. TEMP.; do not claim multi-position adjustment unless confirmed from factory data for this exact run or observed markings.",
+      "condition": "Pending",
+      "complete": false
+    },
+    {
+      "name": "Casing & function",
+      "notes": "After hand fitting, verify hand clearance over applied numerals and each other, subsidiary seconds clearance, winding, setting, crown engagement, crystal clearance and case closure.",
+      "condition": "Pending",
+      "complete": false
+    },
+    {
+      "name": "Regulation",
+      "notes": "Record rate, beat error and stability in several positions after service. Do not chase modern chronometer performance; prioritise stable amplitude, safe escapement action and practical vintage performance.",
+      "condition": "Pending",
+      "complete": false
+    },
+    {
+      "name": "Final QC",
+      "notes": "Measure actual case diameter/thickness, photograph all markings, document final timing and power reserve, and clearly disclose dial deterioration and replacement hands in sale listing. Reassess value after mechanical results and hand sourcing.",
+      "condition": "Pending",
+      "complete": false
+    }
+  ],
+  "diagnosis": "Known faults are missing hour, minute and subsidiary seconds hands plus severe dial deterioration. The movement itself appears visually complete but has not yet been function-tested. Identification is strongly consistent with Waltham Colonial Riverside, probable Grade No. 221 / Model 1924 Col.B, circa 1936-37. The 'Beau Monde' dial signature remains unresolved and should be treated as a research question rather than a confirmed Waltham model designation.",
+  "repairPerformed": "",
+  "service": "Full mechanical service recommended if the balance/train prove fundamentally sound; sympathetic cosmetic conservation rather than dial refinishing",
+  "serviceNotes": "Preserve the original dial. Source hands only after measuring all three fittings. Verify case serial and Grade 221 identification during uncasing.",
+  "researchBrief": {
+    "summary": "High-grade later Waltham 12-size Colonial Riverside with 21-jewel movement serial 29390814, probably Grade 221 / Model 1924 Col.B, c.1936-37, cased in Keystone Victory 10K rolled gold plate. It is a worthwhile restoration candidate mechanically, but the dial is severely deteriorated and all hands are missing. The unusual 'Beau Monde' dial inscription could add interest but is not yet documented as a Waltham factory model name.",
+    "technicalNotes": "Pocket Watch Database records Grade 221 as 12s, 21j, open-face, nickel, pendant-set, bridge plate and Breguet hairspring, with total production of 38,125 across nine runs. Factory serial records for this family are known to be inconsistent with physical Riverside/#1271 markings, so the visible movement engraving should be retained as primary evidence. Keystone Victory is documented as a 10K rolled-gold-plate case grade. Movement engraving on this example additionally states JEWELED MAIN WHEEL and ADJ. TEMP.",
+    "valuationConfidence": "Moderate",
+    "valuationBasis": "Condition drives the value sharply downward compared with clean running examples. Recent/visible market evidence ranges from a close-serial Colonial Riverside 21J in 10K gold-filled case sold for US$50 to running 21J Colonial Riverside/Riverside examples around US$225, with current asking prices around US$180-250 and premium dealer examples higher. Missing hands and a badly degraded dial mean the watch should not be valued like a complete example until restored.",
+    "partsLeads": [
+      {
+        "part": "Hour/minute/seconds hands",
+        "reference": "Waltham 12-size Colonial family - exact hole sizes must be measured",
+        "compatibility": "Do not buy by Grade 221 name alone; measure hand holes and lengths first",
+        "confidence": "High that hands are required; low for any unmeasured listing",
+        "source": "https://thepartspreserve.com/products/vintage-12s-waltham-colonial-riverside-premier-21j-pocket-watch-movement-no-221",
+        "notes": "Aim for period-correct dark/blued or matching Art Deco hands appropriate to the dial; preserve any originals if discovered"
+      }
+    ],
+    "repairPlan": [
+      "Verify whether the movement will safely start with minimal power",
+      "Uncase and protect the fragile dial before any mechanical cleaning",
+      "Measure hour, minute and seconds hand fittings",
+      "Inspect motion works and seconds pinion for damage before sourcing hands",
+      "Perform full service if balance/train/barrel condition is viable",
+      "Fit sympathetic replacement hands and regulate",
+      "Retain original dial and document the unresolved 'Beau Monde' signature"
+    ],
+    "nextChecks": [
+      "Confirm exact case serial under magnification",
+      "Measure case diameter, thickness and movement diameter",
+      "Test crown winding and pendant setting",
+      "Check balance freedom, endshake and sideshake",
+      "Inspect dial feet and dial substrate condition",
+      "Measure all hand-hole sizes",
+      "Check cannon pinion friction and seconds pinion integrity",
+      "Search period Waltham catalogues/advertising specifically for the 'Beau Monde' dial wording"
+    ],
+    "risks": [
+      "Dial print/finish may lift with even mild wet cleaning",
+      "Rolled-gold case can be polished through to base metal",
+      "Incorrect hand sizes can split pipes or damage motion-work arbors",
+      "Grade/model attribution should remain 'probable' until dimensions/architecture are cross-checked because Waltham Colonial serial records are known to contain inconsistencies",
+      "Do not market 'Beau Monde' as an official Waltham model without documentary evidence"
+    ],
+    "references": [
+      "https://pocketwatchdatabase.com/search/result/waltham/28856002",
+      "https://pocketwatchdatabase.com/search/result/waltham/28858146",
+      "https://pocketwatchdatabase.com/guide/case-companies/keystone-watch-case-co-cases/grades/Victory",
+      "https://www.proxibid.com/Daniel-Weaver-Auctions/Pocket-Watch-Auction/event-catalog/291889",
+      "https://www.auctionzip.com/auction-catalog/unclaimed-safe-deposit-box-~-day-2_3G0J93DVL5",
+      "https://empress.cc/products/1937-waltham-usa-colonial-riverside-slim-pocket-watch",
+      "https://thepartspreserve.com/products/vintage-12s-waltham-colonial-riverside-premier-21j-pocket-watch-movement-no-221"
+    ]
+  }
+}
