@@ -6,6 +6,7 @@ export const CLOUD_SEEN_KEY = "calibre-cloud-seen-at";
 
 const LOCAL_SESSION={user:{id:"__calibre_local__",email:""},localOnly:true};
 let client;
+let recoveryPromise=null;
 
 export function supabaseClient(){
   if(!client){
@@ -25,23 +26,58 @@ function cachedSession(){
       if(!raw)continue;
       const parsed=JSON.parse(raw);
       const value=parsed?.currentSession||parsed;
-      if(value?.user?.id)return value;
+      if(value?.user?.id&&value?.access_token&&value?.refresh_token)return value;
     }
   }catch{}
   return null;
 }
 
-export async function session(){
-  try{
-    const {data,error}=await supabaseClient().auth.getSession();
-    if(error)throw error;
-    if(data?.session?.user)return data.session;
-  }catch{}
+function sessionUsable(value){
+  if(!value?.user?.id||!value?.access_token)return false;
+  const expiresAt=Number(value.expires_at)||0;
+  return !expiresAt||expiresAt*1000>Date.now()+30000;
+}
 
-  // A bench app must remain usable if auth refresh/CDN/network is temporarily
-  // unavailable. Preserve a cached real session when possible, otherwise use
-  // an explicit local-only session so navigation never locks or redirects.
-  return cachedSession()||LOCAL_SESSION;
+async function recoverCachedSession(){
+  if(recoveryPromise)return recoveryPromise;
+  recoveryPromise=(async()=>{
+    const cached=cachedSession();
+    if(!cached)return null;
+    const sb=supabaseClient();
+    try{
+      const {data,error}=await sb.auth.setSession({access_token:cached.access_token,refresh_token:cached.refresh_token});
+      if(error)throw error;
+      if(sessionUsable(data?.session))return data.session;
+      const refreshed=await sb.auth.refreshSession(data?.session||cached);
+      if(refreshed.error)throw refreshed.error;
+      return sessionUsable(refreshed.data?.session)?refreshed.data.session:null;
+    }catch(err){
+      console.warn("Calibre cloud session recovery failed",err);
+      return null;
+    }
+  })();
+  try{return await recoveryPromise;}finally{recoveryPromise=null;}
+}
+
+export async function session(){
+  const sb=supabaseClient();
+  try{
+    const {data,error}=await sb.auth.getSession();
+    if(error)throw error;
+    if(sessionUsable(data?.session))return data.session;
+    if(data?.session?.refresh_token){
+      const refreshed=await sb.auth.refreshSession(data.session);
+      if(!refreshed.error&&sessionUsable(refreshed.data?.session))return refreshed.data.session;
+    }
+  }catch(err){
+    console.warn("Calibre cloud session check failed",err);
+  }
+
+  // Never return a cached user object unless its tokens have first been
+  // installed into the Supabase client. Otherwise database calls are sent as
+  // anon while the UI incorrectly believes it is signed in, causing RLS
+  // permission failures and intermittent empty reads.
+  return (await recoverCachedSession())||LOCAL_SESSION;
 }
 
 export async function signUp(email,password){
