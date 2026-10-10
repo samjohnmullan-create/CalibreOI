@@ -4,7 +4,7 @@ import { shortItemId, labelRecord, labelSheetItems } from '../js/qr-label-layout
 
 test('short Item IDs stay readable on small labels',()=>{
   assert.equal(shortItemId('item-123'),'item-123');
-  assert.equal(shortItemId('item-abcdefghijklmnopqrstuvwxyz'),'…qrstuvwxyz');
+  assert.equal(shortItemId('item-abcdefghijklmnopqrstuvwxyz'),'…pqrstuvwxyz');
 });
 
 test('label records preserve title and storage location',()=>{
