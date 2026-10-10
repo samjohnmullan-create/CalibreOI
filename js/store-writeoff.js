@@ -37,7 +37,6 @@ function donorItemForJob(state, job) {
   item.purpose = "donor";
   item.status = "Retained";
   item.legacyJobId = "";
-  item.updatedAt = now();
   item.tags = Array.isArray(item.tags) ? item.tags : [];
   for (const tag of ["donor", "spares", "written-off"]) if (!item.tags.includes(tag)) item.tags.push(tag);
   item.watch = item.watch && typeof item.watch === "object" ? item.watch : {};
@@ -95,7 +94,6 @@ function migrateWholeDonors(state) {
       item.watch = item.watch || {};
       item.watch.storageLocation = item.watch.storageLocation || part.location || "";
       item.watch.sparesParts = Array.isArray(item.watch.sparesParts) && item.watch.sparesParts.length ? item.watch.sparesParts : defaultSpares();
-      item.updatedAt = now();
     }
   }
 
@@ -120,8 +118,10 @@ function reconcileWriteOffs(state) {
       changed = true;
     }
 
-    donorItemForJob(state, job);
-    changed = true;
+    const beforeItemId = String(job.itemId || "");
+    const item = donorItemForJob(state, job);
+    const needsDonorState = item.purpose !== "donor" || item.status !== "Retained" || !item.tags?.includes("written-off");
+    if (needsDonorState || String(job.itemId || "") !== beforeItemId) changed = true;
 
     if (String(state.currentId || "") === String(job.id || "")) {
       const next = state.jobs.find(other => other && String(other.id) !== String(job.id) && !CLOSED_JOB_STATUSES.has(String(other.status || "")));
@@ -133,10 +133,10 @@ function reconcileWriteOffs(state) {
   return changed;
 }
 
+// Reads must stay read-only. Write-off/donor reconciliation belongs on save or the
+// explicit write-off action, not on every job opening.
 export async function loadState() {
-  const state = await enhanced.loadState();
-  if (reconcileWriteOffs(state)) await enhanced.saveState(state);
-  return state;
+  return enhanced.loadState();
 }
 
 export async function saveState(state) {
