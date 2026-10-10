@@ -13,6 +13,12 @@ test('Item and Work QR routes preserve full IDs',()=>{
   assert.equal(qrRouteForEntity('work','work/2'),'work.html?id=work%2F2&from=qr');
 });
 
+test('workshop entities route through the workshop asset registry',()=>{
+  assert.equal(qrRouteForEntity('tray','tray-1'),'workshop-assets.html?type=tray&id=tray-1&from=qr');
+  assert.equal(qrRouteForEntity('tool','tool/2'),'workshop-assets.html?type=tool&id=tool%2F2&from=qr');
+  assert.equal(qrRouteForEntity('part','part 3'),'workshop-assets.html?type=part&id=part%203&from=qr');
+});
+
 test('absolute QR payloads remain app routes',()=>{
   assert.equal(qrPayloadForEntity('item','item-1',{origin:'https://calibre.example/'}),'https://calibre.example/item.html?id=item-1&from=qr');
 });
@@ -22,6 +28,13 @@ test('QR resolver accepts codes and item URLs',()=>{
   const resolved=resolveQrPayload('https://calibre.example/item.html?id=item-7&from=qr');
   assert.equal(resolved.type,'item');
   assert.equal(resolved.id,'item-7');
+});
+
+test('QR resolver accepts workshop asset URLs',()=>{
+  const resolved=resolveQrPayload('https://calibre.example/workshop-assets.html?type=tray&id=tray-7&from=qr');
+  assert.equal(resolved.type,'tray');
+  assert.equal(resolved.id,'tray-7');
+  assert.equal(resolved.route,'workshop-assets.html?type=tray&id=tray-7&from=qr');
 });
 
 test('Item QR identity is deterministic',()=>{
