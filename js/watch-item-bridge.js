@@ -6,6 +6,7 @@ const COMMERCIAL_KEYS=["purchasePrice","buyerPremium","postage","partsCost","con
 const clone=v=>v==null?v:structuredClone(v);
 const present=v=>v!==undefined&&v!==null&&String(v).trim()!=="";
 const mergeMedia=(a=[],b=[])=>{const map=new Map();for(const x of [...a,...b]){if(!x||typeof x!=="object")continue;const k=String(x.id||x.storageKey||x.checksum||Math.random());map.set(k,{...(map.get(k)||{}),...clone(x)});}return [...map.values()];};
+const itemStatusFromJob=job=>job?.status==="On bench"&&job?.workbenchHidden===true?"Acquired":(JOB_TO_ITEM_STATUS[job?.status]||"Acquired");
 
 export function isSpecialistItem(item){return SPECIALIST_TYPES.has(item?.type);}
 export function isSpecialistPage(page=""){return SPECIALIST_PAGES.has(page);}
@@ -25,7 +26,10 @@ export function syncJobFromItem(job,item){
  job.business=job.business&&typeof job.business==="object"?job.business:{};COMMERCIAL_KEYS.forEach(k=>{if(c[k]!==undefined&&c[k]!==null&&c[k]!=="")job.business[k]=String(c[k]);});
  if(c.saleChannel&&c.saleChannel!=="Not listed")job.channel=c.saleChannel;
  job.sale=job.sale&&typeof job.sale==="object"?job.sale:{};if(c.listedAt)job.sale.listedDate=c.listedAt;if(c.soldAt)job.soldAt=c.soldAt;
- if(item.status!=="Archived"&&ITEM_TO_JOB_STATUS[item.status])job.status=ITEM_TO_JOB_STATUS[item.status];
+ if(item.status!=="Archived"&&ITEM_TO_JOB_STATUS[item.status]){
+   job.status=ITEM_TO_JOB_STATUS[item.status];
+   if(item.status==="On bench")job.workbenchHidden=false;
+ }
  if(Array.isArray(watch.timingHistory)&&watch.timingHistory.length&&(!Array.isArray(job.timingRuns)||job.timingRuns.length===0))job.timingRuns=clone(watch.timingHistory);
  job.mediaAssets=mergeMedia(job.mediaAssets,item.mediaAssets);watch.specialistJobId=job.id;
  return job;
@@ -40,7 +44,7 @@ export function syncItemFromJob(item,job){
  watch.movement={...(watch.movement||{}),maker:p.movementMaker||watch.movement?.maker||"",calibre:p.calibre||watch.movement?.calibre||"",calibreFamily:p.calibreFamily||watch.movement?.calibreFamily||"",jewels:p.jewels||watch.movement?.jewels||"",beatRate:p.beatRate||watch.movement?.beatRate||"",movementType:p.movementType||watch.movement?.movementType||"",movementMm:p.movementMm||watch.movement?.movementMm||"",escapement:p.escapement||watch.movement?.escapement||""};
  const service={jobId:job.id,jobNumber:job.jobId||"",status:job.status||"",updatedAt:job.updatedAt||new Date().toISOString()};const si=watch.serviceHistory.findIndex(x=>x.jobId===job.id);if(si>=0)watch.serviceHistory[si]={...watch.serviceHistory[si],...service};else watch.serviceHistory.push(service);
  COMMERCIAL_KEYS.forEach(k=>{if(b[k]!==undefined&&b[k]!==null&&b[k]!=="")c[k]=String(b[k]);});if(job.channel)c.saleChannel=job.channel;if(job.sale?.listedDate)c.listedAt=job.sale.listedDate;if(job.soldAt)c.soldAt=job.soldAt;
- if(item.status!=="Archived"&&JOB_TO_ITEM_STATUS[job.status])item.status=JOB_TO_ITEM_STATUS[job.status];if(job.status==="Spares")item.purpose="donor";
+ if(item.status!=="Archived")item.status=itemStatusFromJob(job);if(job.status==="Spares")item.purpose="donor";
  item.mediaAssets=mergeMedia(item.mediaAssets,job.mediaAssets);item.updatedAt=new Date().toISOString();job.itemSyncAt=item.updatedAt;
  return item;
 }
