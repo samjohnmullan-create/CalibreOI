@@ -11,6 +11,7 @@ import("./workbench-runtime-core.js?v=5")
   .catch(err=>report("diagnostics",err));
 
 import("./checklist-fast-runtime.js?v=1").catch(err=>report("fast checklist",err));
+import("./bench-measurements-runtime.js?v=1").catch(err=>report("bench measurements",err));
 import("./diagnostic-intelligence-runtime.js?v=1").catch(err=>report("diagnostic intelligence",err));
 import("./research-link.js?v=1").catch(err=>report("research link",err));
 import("./research-brief.js?v=4").catch(err=>report("research brief",err));
