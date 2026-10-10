@@ -22,6 +22,11 @@ function requestedJobId(){
   try{return new URLSearchParams(location.search).get("id")||"";}catch{return "";}
 }
 
+function pageName(){
+  if(typeof location==="undefined")return "";
+  return (location.pathname.split("/").pop()||"index.html").split("?")[0];
+}
+
 function materialiseLegacyItems(state){
   state.items=Array.isArray(state.items)?state.items:[];
   state.jobs=Array.isArray(state.jobs)?state.jobs:[];
@@ -65,11 +70,7 @@ function validPhotoRef(value){
   if(marker<10)return false;
   const payloadStart=marker+8,payloadLength=s.length-payloadStart;
   if(payloadLength<64||payloadLength%4!==0)return false;
-  // Do not atob() multi-megabyte images during every page navigation. Checking the
-  // header, length and tail catches the broken/truncated records we care about while
-  // keeping list/workbench loads cheap on mobile.
-  const tail=s.slice(-12);
-  return /^[A-Za-z0-9+/]*={0,2}$/.test(tail);
+  return /^[A-Za-z0-9+/]*={0,2}$/.test(s.slice(-12));
 }
 
 function sanitisePhotos(job){
@@ -113,27 +114,26 @@ export function importCard(raw={}){
   return card;
 }
 
+// Critical path: opening a job is a read, not a migration. Select the requested job
+// in memory and only tidy that record. Collection-wide item migration/photo cleanup is
+// left to Items or to an actual save.
 export async function loadState(){
-  const state=await base.loadState();let changed=false;
-  for(const job of (state.jobs||[])){
-    const beforeHidden=job.workbenchHidden,beforeSold=job.business?.soldDate;
-    tidyJob(job);
-    if(beforeHidden!==job.workbenchHidden||beforeSold!==job.business.soldDate)changed=true;
-    if(sanitisePhotos(job))changed=true;
-  }
-  if(materialiseLegacyItems(state))changed=true;
+  const state=await base.loadState();
+  state.jobs=Array.isArray(state.jobs)?state.jobs:[];
   const requested=requestedJobId();
-  if(requested&&state.jobs?.some(j=>String(j.id)===String(requested))&&String(state.currentId||"")!==String(requested)){
-    state.currentId=requested;
-    changed=true;
-  }
-  if(changed)await base.saveState(state);
+  if(requested&&state.jobs.some(j=>String(j.id)===String(requested)))state.currentId=requested;
+  const selected=state.jobs.find(j=>String(j.id)===String(state.currentId||""));
+  if(selected){tidyJob(selected);sanitisePhotos(selected);}
+  const page=pageName();
+  if(page==="inventory.html"||page==="item.html")materialiseLegacyItems(state);
   return state;
 }
 
 export async function saveState(state){
-  for(const job of (state?.jobs||[])){tidyJob(job);sanitisePhotos(job);}
-  materialiseLegacyItems(state);
+  const selected=(state?.jobs||[]).find(j=>String(j.id)===String(state.currentId||""));
+  if(selected){tidyJob(selected);sanitisePhotos(selected);}
+  const page=pageName();
+  if(page==="inventory.html"||page==="item.html")materialiseLegacyItems(state);
   return base.saveState(state);
 }
 
@@ -146,7 +146,7 @@ export async function importInboxItems(items){
     const key=String(raw.pushId||raw.jobId||""),job=(state.jobs||[]).find(j=>(raw.pushId&&j.pushId===raw.pushId)||(raw.jobId&&j.jobId===raw.jobId));if(!job)continue;
     const requested=explicitWorkbench(raw);
     if(requested!==null){if(job.workbenchHidden===requested){job.workbenchHidden=!requested;changed=true;}}
-    else if(!known.has(key)){
+    else if(!known.has(key){
       if(job.workbenchHidden!==true){job.workbenchHidden=true;changed=true;}
       if(!raw.status||String(raw.status).toLowerCase()==="on the bench"){if(job.status!=="Purchased"){job.status="Purchased";changed=true;}}
     }
