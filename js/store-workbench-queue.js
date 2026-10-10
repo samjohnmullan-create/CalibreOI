@@ -27,21 +27,15 @@ function materialiseLegacyItems(state){
   state.jobs=Array.isArray(state.jobs)?state.jobs:[];
   let changed=false;
   const itemIds=new Set(state.items.map(i=>String(i?.id||"")));
-
   for(const job of state.jobs){
     if(!job?.id)continue;
-
     let item=null;
     if(job.itemId)item=state.items.find(i=>String(i?.id)===String(job.itemId))||null;
     if(!item)item=state.items.find(i=>String(i?.legacyJobId||"")===String(job.id)||String(i?.watch?.specialistJobId||"")===String(job.id))||null;
-
     if(!item){
       item=legacyJobToItem(job);
       item.id=job.itemId||`item-${job.id}`;
       item.legacyJobId="";
-
-      // Old non-watch records were historically stored as inspection jobs.
-      // Keep those as normal Items rather than pretending they are watches.
       if(job.jobType==="inspect"){
         item.type="accessory";
         delete item.watch;
@@ -49,25 +43,15 @@ function materialiseLegacyItems(state){
         item.watch=item.watch&&typeof item.watch==="object"?item.watch:{};
         item.watch.specialistJobId=job.id;
       }
-
-      if(!itemIds.has(String(item.id))){
-        state.items.push(item);
-        itemIds.add(String(item.id));
-        changed=true;
-      }
+      if(!itemIds.has(String(item.id))){state.items.push(item);itemIds.add(String(item.id));changed=true;}
     }else{
-      // Once materialised, an Item must behave as an Item, never as a legacy shortcut.
       if(item.legacyJobId){item.legacyJobId="";changed=true;}
       if(item.type==="watch"||item.type==="clock"){
         item.watch=item.watch&&typeof item.watch==="object"?item.watch:{};
         if(String(item.watch.specialistJobId||"")!==String(job.id)){item.watch.specialistJobId=job.id;changed=true;}
       }
     }
-
-    if(item&&String(job.itemId||"")!==String(item.id)){
-      job.itemId=item.id;
-      changed=true;
-    }
+    if(item&&String(job.itemId||"")!==String(item.id)){job.itemId=item.id;changed=true;}
   }
   return changed;
 }
@@ -76,11 +60,16 @@ function validPhotoRef(value){
   const s=String(value||"").trim();
   if(!s)return false;
   if(/^https?:\/\//i.test(s)||s.startsWith("blob:")||s.startsWith("/"))return true;
-  const m=s.match(/^data:image\/[a-z0-9.+-]+;base64,(.+)$/i);
-  if(!m)return false;
-  const payload=m[1].replace(/\s+/g,"");
-  if(!payload||payload.length%4!==0||!/^[A-Za-z0-9+/]*={0,2}$/.test(payload))return false;
-  try{if(typeof atob==="function")atob(payload);return true;}catch{return false;}
+  if(!s.startsWith("data:image/"))return false;
+  const marker=s.indexOf(";base64,");
+  if(marker<10)return false;
+  const payloadStart=marker+8,payloadLength=s.length-payloadStart;
+  if(payloadLength<64||payloadLength%4!==0)return false;
+  // Do not atob() multi-megabyte images during every page navigation. Checking the
+  // header, length and tail catches the broken/truncated records we care about while
+  // keeping list/workbench loads cheap on mobile.
+  const tail=s.slice(-12);
+  return /^[A-Za-z0-9+/]*={0,2}$/.test(tail);
 }
 
 function sanitisePhotos(job){
