@@ -44,93 +44,70 @@ A backup contains:
 - corruption-detection checksum
 - canonical Core state only
 
-The portable state includes:
-
-- Items
-- Work
-- MediaAsset metadata/references
-- Inventory resources and locations
-- Compatibility evidence
-- Incoming
-- Knowledge
-- Ledger
-- Settings
-- current Item / Work selection
+The portable state includes Items, Work, MediaAsset metadata/references, Inventory resources/locations, Compatibility evidence, Incoming, Knowledge, Ledger, Settings and current Item/Work selection.
 
 It does not duplicate private full-resolution media files, authentication credentials or browser upload-queue blobs.
 
 Restore validates the file before replacing local state. A newer unsupported schema is rejected rather than guessed at.
 
-## Cloud overwrite protection
+## Atomic cloud overwrite protection
 
-Normal `writeCloudState()` calls first inspect the cloud record timestamp.
+`public.calibre_state` now carries a monotonically increasing `revision` column.
 
-If the cloud record changed after the timestamp this device last marked as seen, Calibre throws `CALIBRE_SYNC_CONFLICT` instead of overwriting it.
+Normal browser writes call the authenticated database function `public.calibre_write_state(expected_revision, new_data)` rather than performing a direct upsert.
 
-Normal `saveState()` still keeps the local save and stores the conflict/error status locally.
+The function:
 
-Resolution paths are explicit:
+- runs as **SECURITY INVOKER**
+- remains subject to the existing owner-only RLS policies
+- is executable by `authenticated` only, not `anon` or `public`
+- inserts a first row at revision 1
+- updates an existing row only when its current revision equals the caller's expected revision
+- increments revision atomically inside the same database statement
+- returns no row when the expected revision is stale
 
-- **Safe cloud pull** — creates a local safety point, reads cloud state and merges canonical collections.
-- **Safe cloud push** — creates a local safety point and intentionally force-writes the current local state.
+A stale browser therefore receives `CALIBRE_SYNC_CONFLICT` and keeps its local save instead of overwriting a newer cloud copy.
 
-### Known limitation
+Timestamps remain useful for display and fallback change detection, but **revision is authoritative for write concurrency**.
 
-The current check and write are two separate remote operations. Another device could theoretically update the cloud row in the very small interval between them. Full atomic compare-and-swap requires a database-side revision/version guard and is future reliability hardening.
+Resolution paths remain explicit:
+
+- **Safe cloud pull** — creates a local safety point, reads cloud state, merges canonical collections and records the cloud revision now seen.
+- **Safe cloud push** — creates a local safety point, reads the current remote revision and intentionally performs an atomic force-write against that revision. If another write races it, the operation fails safely and can be retried deliberately.
+
+The database guard was verified inside a rolled-back authenticated transaction: a matching revision write succeeded and returned the incremented revision; a repeated stale revision write returned zero rows.
 
 ## System health
 
-`js/system-health.js` checks:
-
-- current schema version
-- duplicate Item IDs
-- duplicate Work IDs
-- duplicate MediaAsset IDs
-- orphan Work records
-- orphan MediaAsset ownership
-- MediaAssets with no storage reference
-- stale current Item selection
-- stale current Work selection
-- canonical Item / Work / Media / Inventory / Knowledge counts
+`js/system-health.js` checks current schema version, duplicate Item/Work/MediaAsset IDs, orphan Work, orphan MediaAsset ownership, MediaAssets with no storage reference, stale current Item/Work selection, and canonical record counts.
 
 Health is diagnostic. It does not silently delete or rewrite suspect records.
 
 ## Audit trail
 
-Meaningful reliability events are stored under `settings.reliability.auditTrail` and capped at 150 records.
-
-Examples:
-
-- portable backup downloaded
-- local safety point created
-- backup restored
-- safe cloud pull completed
-- safe cloud push completed
-
-Routine autosaves are deliberately excluded to keep the history useful.
+Meaningful reliability events are stored under `settings.reliability.auditTrail` and capped at 150 records. Routine autosaves are deliberately excluded.
 
 ## Recovery UI
 
-`backup.html` is now the canonical **Recovery & health** screen.
+`backup.html` is the canonical **Recovery & health** screen. It provides system health, record counts, portable checked backup, local safety snapshots/restore, checked JSON restore, safe cloud pull/push, exports and recent reliability audit events.
 
-It provides:
+## Reliability status
 
-- system health summary
-- canonical record counts
-- portable checked backup
-- local safety snapshots and restore
-- checked JSON restore
-- safe cloud pull/push
-- Item and Business CSV exports
-- current Item export
-- recent reliability audit events
+The practical reliability foundation is now complete:
 
-The old Job-era backup/migration workflow is retired from the active Recovery screen.
+- canonical backup and checked restore
+- local safety snapshot ring
+- canonical integrity checks
+- explicit safe pull/push
+- lightweight audit trail
+- atomic cloud revision guard
+- conflict-safe local persistence
 
-## Next hardening
+Further hardening can be added when needed rather than blocking intelligence work.
 
-1. Add database-side atomic revision/compare-and-swap for cloud writes.
-2. Add optional encrypted off-device scheduled backup destination.
-3. Surface unresolved sync conflict prominently in Home/Calibre status.
-4. Add recovery drill tests for intentionally corrupted and partial states.
-5. Add a safe repair assistant for non-destructive integrity fixes.
+## Later hardening
+
+1. Optional encrypted off-device scheduled backup destination.
+2. Surface unresolved sync conflict more prominently in Home/Calibre status.
+3. Recovery drill tests for intentionally partial/corrupt states.
+4. Safe repair assistant for non-destructive integrity fixes.
