@@ -6,7 +6,7 @@ test('Workbench exposes current Work stage and completion progress',()=>{
   const state={
     items:[{id:'item-1',type:'watch',title:'Test Watch',status:'On bench',commercial:{},mediaAssets:[]}],
     workRecords:[{
-      id:'work-1',itemId:'item-1',type:'service',title:'Full service',status:'In progress',stageIndex:1,
+      id:'work-1',itemId:'item-1',type:'service',title:'Full service',status:'Waiting',stageIndex:1,
       stages:[
         {name:'Intake',complete:true},
         {name:'Dismantling & inspection',complete:false},
