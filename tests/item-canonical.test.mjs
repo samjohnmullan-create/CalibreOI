@@ -35,6 +35,6 @@ test('canonical save path does not invoke Job reconciliation',()=>{
 test('fast local state validity is based on Item and Work',()=>{
   const source=fs.readFileSync(new URL('../js/store-local-fast.js',import.meta.url),'utf8');
   assert.match(source,/Array\.isArray\(state\.items\)/);
-  assert.match(source,/Array\.isArray\(state\.workRecords\)/);
+  assert.match(source,/Array\.isArray\(state\.work\)/);
   assert.doesNotMatch(source,/Array\.isArray\(state\.jobs\)\)return state/);
 });
