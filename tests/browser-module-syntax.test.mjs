@@ -7,7 +7,8 @@ const modules=[
   'js/research-brief.js',
   'js/parts-intelligence.js',
   'js/qr-global-runtime.js',
-  'js/workbench-runtime.js'
+  'js/workbench-runtime.js',
+  'js/work-ui-runtime.js'
 ];
 
 for(const file of modules){
