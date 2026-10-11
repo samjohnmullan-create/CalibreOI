@@ -107,8 +107,8 @@ document.querySelectorAll('.brandbar').forEach(bar=>{
 
 import('./navigation-shell.js?v=2').then(({renderPrimaryNavigation})=>renderPrimaryNavigation(document,here)).catch(err=>console.warn('Navigation unavailable',err));
 
-if(['calibre.html','assistant.html','news.html','settings.html'].includes(here)){
-  const tabs=[['calibre.html','Assistant'],['assistant.html','Inbox'],['news.html','Activity'],['settings.html','Settings']];
+if(['calibre.html','assistant.html','news.html','reference-library.html','settings.html'].includes(here)){
+  const tabs=[['calibre.html','Assistant'],['assistant.html','Inbox'],['news.html','Activity'],['reference-library.html','Library'],['settings.html','Settings']];
   const sub=document.createElement('nav');
   sub.className='contextnav calibre-contextnav';
   sub.setAttribute('aria-label','Calibre');
