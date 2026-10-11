@@ -23,13 +23,29 @@ test('Core rejects legacy fields anywhere in state',()=>{
   assert.match(report.errors.join('\n'),/Forbidden legacy field/);
 });
 
+test('Core rejects retired workRecords after migration boundary',()=>{
+  const state=createCoreState();
+  state.workRecords=[];
+  const report=validateCoreState(state);
+  assert.equal(report.healthy,false);
+  assert.match(report.errors.join('\n'),/workRecords/);
+});
+
 test('Core rejects unknown top-level junk drawers',()=>{
   const state=createCoreState();
   state.randomFeatureBucket=[];
   assert.equal(validateCoreState(state).healthy,false);
 });
 
-test('schema migration is separate from Core generation',()=>{
+test('schema 1 workRecords migrates forward to schema 2 work',()=>{
+  const old={schemaVersion:1,currentItemId:null,currentWorkId:null,items:[],workRecords:[{id:'work-old',itemId:'item-old'}],mediaAssets:[],inventory:{parts:[],tools:[],consumables:[],donors:[]},compatibilityEvidence:[],incoming:[],knowledge:[],settings:{},updatedAt:'2026-10-11T00:00:00.000Z'};
+  const migrated=migrateCoreState(old);
+  assert.equal(migrated.schemaVersion,CURRENT_SCHEMA_VERSION);
+  assert.deepEqual(migrated.work,old.workRecords);
+  assert.equal('workRecords' in migrated,false);
+});
+
+test('current schema remains stable through migration',()=>{
   const state=createCoreState();
   assert.deepEqual(migrateCoreState(state),state);
 });

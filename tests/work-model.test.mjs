@@ -25,7 +25,7 @@ test('legacy Work aliases normalise into canonical fields',()=>{
 });
 
 test('currentWork resolves explicit work route before stored current work',()=>{
-  const state={currentWorkId:'work-old',workRecords:[{id:'work-old',itemId:'item-1'},{id:'work-new',itemId:'item-1'}]};
+  const state={currentWorkId:'work-old',work:[{id:'work-old',itemId:'item-1'},{id:'work-new',itemId:'item-1'}]};
   const loc={search:'?work=work-new'};
   assert.equal(currentWork(state,loc).id,'work-new');
 });

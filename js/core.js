@@ -1,7 +1,7 @@
 // Calibre Core is a stable domain contract. The Core itself is not versioned by product generation.
 // Only persisted schema data is versioned, and future changes must use explicit migrations.
 
-export const CURRENT_SCHEMA_VERSION = 1;
+export const CURRENT_SCHEMA_VERSION = 2;
 
 export const ITEM_TYPES = ['watch','clock','jewellery','accessory','collectible','other'];
 export const ITEM_PURPOSES = ['resale','personal','customer','donor','reference'];
@@ -10,7 +10,7 @@ export const WORK_TYPES = ['service','repair','inspection','cleaning','restorati
 export const WORK_STATUSES = ['Planned','In progress','Waiting','Complete','Cancelled'];
 
 const TOP_LEVEL_KEYS = new Set(['schemaVersion','currentItemId','currentWorkId','items','work','mediaAssets','inventory','compatibilityEvidence','incoming','knowledge','settings','updatedAt']);
-const FORBIDDEN_LEGACY_KEYS = new Set(['jobs','jobId','legacyJobId','specialistJobId','sourceJobId','currentId']);
+const FORBIDDEN_LEGACY_KEYS = new Set(['jobs','jobId','legacyJobId','specialistJobId','sourceJobId','currentId','workRecords']);
 const now=()=>new Date().toISOString();
 const uid=prefix=>`${prefix}-${Math.random().toString(36).slice(2,9)}${Date.now().toString(36).slice(-4)}`;
 const list=v=>Array.isArray(v)?v:[];
@@ -49,6 +49,12 @@ export function registerSchemaMigration(fromVersion,migrate){
   if(MIGRATIONS.has(fromVersion))throw new Error(`Migration from schema ${fromVersion} already registered`);
   MIGRATIONS.set(fromVersion,migrate);
 }
+registerSchemaMigration(1,state=>{
+  const next=structuredClone(state||{});
+  if(!Array.isArray(next.work)&&Array.isArray(next.workRecords))next.work=next.workRecords;
+  delete next.workRecords;
+  return next;
+});
 export function migrateCoreState(raw={}){
   let state=structuredClone(raw||{}),version=Number(state.schemaVersion)||1;
   if(version>CURRENT_SCHEMA_VERSION)throw new Error(`Schema ${version} is newer than this Calibre build supports`);

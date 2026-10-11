@@ -1,7 +1,7 @@
-import * as base from "./store-writeoff.js?v=1";
+import * as base from "./store-writeoff.js?v=2";
 import { readCloudState } from "./cloud.js?v=3";
 
-export * from "./store-writeoff.js?v=1";
+export * from "./store-writeoff.js?v=2";
 
 const stamp = value => {
   const n = Date.parse(value || "");
@@ -30,10 +30,11 @@ function mergeFitEvidence(local = [], cloud = []) {
 function rescueCloudCollections(state, cloudState) {
   if (!state || !cloudState) return false;
   let changed = false;
-  const collections = [["items", mergeById],["workRecords", mergeById],["partFitEvidence", mergeFitEvidence]];
-  for (const [key, merge] of collections) {
+  const remoteWork = Array.isArray(cloudState.work) ? cloudState.work : (Array.isArray(cloudState.workRecords) ? cloudState.workRecords : []);
+  const collections = [["items", mergeById, cloudState.items],["work", mergeById, remoteWork],["partFitEvidence", mergeFitEvidence, cloudState.partFitEvidence]];
+  for (const [key, merge, remoteRaw] of collections) {
     const before = Array.isArray(state[key]) ? state[key] : [];
-    const remote = Array.isArray(cloudState[key]) ? cloudState[key] : [];
+    const remote = Array.isArray(remoteRaw) ? remoteRaw : [];
     const merged = merge(before, remote);
     if (merged.length !== before.length || merged.some((x, i) => x?.id !== before[i]?.id || stamp(x?.updatedAt || x?.at) !== stamp(before[i]?.updatedAt || before[i]?.at))) changed = true;
     state[key] = merged;

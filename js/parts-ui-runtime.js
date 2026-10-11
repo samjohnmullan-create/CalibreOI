@@ -1,5 +1,5 @@
 import {loadState,saveState,escapeHtml} from './store.js?v=26';
-import {currentWork} from './work-model.js';
+import {currentWork} from './work-model.js?v=2';
 import {itemDisplayName} from './item-model.js?v=4';
 import {partMatchSummary,recordPartMatchEvidence} from './parts-match-model.js';
 
@@ -11,7 +11,7 @@ async function enhanceParts(){
   if(!stockHost||!donorHost)return;
   let state=await loadState();
   state.items=Array.isArray(state.items)?state.items:[];
-  state.workRecords=Array.isArray(state.workRecords)?state.workRecords:[];
+  state.work=Array.isArray(state.work)?state.work:[];
   let work=currentWork(state);
   if(!work)return;
 

@@ -7,6 +7,7 @@ export const SEVERITIES=['Minor','Moderate','Critical','Parts required'];
 export const STATUSES=['Planned','In progress','Waiting','Complete','Cancelled'];
 export const CHANNELS=['Not listed','eBay','Facebook Marketplace','Instagram','Shopify','Etsy','Auction','Private sale','Other'];
 export const PHOTO_SLOTS=[['intake','Intake'],['caseback','Caseback'],['movement','Movement'],['dial','Dial'],['damage','Damage'],['progress','Repair progress'],['finished','Finished'],['hero','Sales hero']];
+export const STORE_SCHEMA_VERSION=2;
 const DB='calibre-co-v1',STORE='kv';let dbp;
 function openDB(){if(dbp)return dbp;dbp=new Promise((resolve,reject)=>{const req=indexedDB.open(DB,1);req.onupgradeneeded=()=>{if(!req.result.objectStoreNames.contains(STORE))req.result.createObjectStore(STORE);};req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);});return dbp;}
 function get(key){return openDB().then(db=>new Promise((resolve,reject)=>{const req=db.transaction(STORE).objectStore(STORE).get(key);req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);}));}
@@ -29,7 +30,23 @@ export function labourCost(b={}){return (Number(b.labourMinutes)||0)/60*(Number(
 export function cashOut(b={}){return ['purchasePrice','buyerPremium','postage','preparationCost','repairCost','partsCost','consumables','externalService','marketplaceFees','shippingToBuyer','otherCost'].reduce((n,k)=>n+(Number(b[k])||0),0);}
 export function investment(b){return cashOut(b);} export function salePrice(b={}){return Number(b.actualSale)||Number(b.targetSale)||0;} export function cashProfit(b={}){const sale=salePrice(b);return sale?sale-cashOut(b):0;} export function profitAfterLabour(b={}){return cashProfit(b)-labourCost(b);} export function roi(b={}){const out=cashOut(b);return out?cashProfit(b)/out:0;}
 export function markSpares(item={}){item.purpose='donor';item.status='Archived';item.updatedAt=new Date().toISOString();return item;}
-export function canonicalState(raw={}){const state=raw&&typeof raw==='object'?raw:{};return {...state,items:Array.isArray(state.items)?state.items:[],workRecords:Array.isArray(state.workRecords)?state.workRecords:[],ledger:Array.isArray(state.ledger)?state.ledger:[],incoming:Array.isArray(state.incoming)?state.incoming:[],tools:Array.isArray(state.tools)?state.tools:[],partsStock:Array.isArray(state.partsStock)?state.partsStock:[],purchaseReview:Array.isArray(state.purchaseReview)?state.purchaseReview:[],partFitEvidence:Array.isArray(state.partFitEvidence)?state.partFitEvidence:[],referenceFacts:Array.isArray(state.referenceFacts)?state.referenceFacts:[],referenceDocuments:Array.isArray(state.referenceDocuments)?state.referenceDocuments:[],currentItemId:String(state.currentItemId||''),currentWorkId:String(state.currentWorkId||'')};}
-export async function loadState(){const stored=await get('state');const state=canonicalState(stored||{});if(!stored)await put('state',state);return state;}
+
+export function migratePersistedState(raw={}){
+  const state=structuredClone(raw&&typeof raw==='object'?raw:{});
+  const version=Number(state.schemaVersion)||1;
+  if(version>STORE_SCHEMA_VERSION)throw new Error(`Schema ${version} is newer than this Calibre build supports`);
+  if(version<2||(!Array.isArray(state.work)&&Array.isArray(state.workRecords))){
+    if(!Array.isArray(state.work))state.work=Array.isArray(state.workRecords)?state.workRecords:[];
+    delete state.workRecords;
+    state.schemaVersion=2;
+  }
+  return state;
+}
+export function canonicalState(raw={}){
+  const migrated=migratePersistedState(raw);
+  const {workRecords:_retiredWorkRecords,...state}=migrated;
+  return {...state,schemaVersion:STORE_SCHEMA_VERSION,items:Array.isArray(state.items)?state.items:[],work:Array.isArray(state.work)?state.work:[],ledger:Array.isArray(state.ledger)?state.ledger:[],incoming:Array.isArray(state.incoming)?state.incoming:[],tools:Array.isArray(state.tools)?state.tools:[],partsStock:Array.isArray(state.partsStock)?state.partsStock:[],purchaseReview:Array.isArray(state.purchaseReview)?state.purchaseReview:[],partFitEvidence:Array.isArray(state.partFitEvidence)?state.partFitEvidence:[],referenceFacts:Array.isArray(state.referenceFacts)?state.referenceFacts:[],referenceDocuments:Array.isArray(state.referenceDocuments)?state.referenceDocuments:[],currentItemId:String(state.currentItemId||''),currentWorkId:String(state.currentWorkId||'')};
+}
+export async function loadState(){const stored=await get('state');const state=canonicalState(stored||{});if(!stored||Number(stored.schemaVersion)!==STORE_SCHEMA_VERSION||Array.isArray(stored.workRecords))await put('state',state);return state;}
 export async function saveState(raw){const state=canonicalState(raw);state._syncUpdatedAt=new Date().toISOString();await put('state',state);return state;}
-export function current(state){const s=canonicalState(state);return s.workRecords.find(w=>String(w.id)===s.currentWorkId)||s.workRecords.find(w=>!['Complete','Cancelled'].includes(w.status))||s.workRecords[0]||null;}
+export function current(state){const s=canonicalState(state);return s.work.find(w=>String(w.id)===s.currentWorkId)||s.work.find(w=>!['Complete','Cancelled'].includes(w.status))||s.work[0]||null;}

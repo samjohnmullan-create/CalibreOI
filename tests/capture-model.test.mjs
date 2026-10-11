@@ -10,7 +10,7 @@ test('capture roles map to media categories',()=>{
 
 test('capture targets include active work for explicit Items',()=>{
   const item=blankItem({id:'item-1',title:'Test watch',type:'watch'});
-  const state={items:[item],jobs:[],workRecords:[{id:'work-1',itemId:'item-1',title:'Crystal replacement',status:'In progress'},{id:'work-2',itemId:'item-1',title:'Old clean',status:'Complete'}]};
+  const state={items:[item],jobs:[],work:[{id:'work-1',itemId:'item-1',title:'Crystal replacement',status:'In progress'},{id:'work-2',itemId:'item-1',title:'Old clean',status:'Complete'}]};
   const targets=captureTargets(state,allItems);
   assert.equal(targets.length,1);
   assert.equal(targets[0].works.length,1);
@@ -18,13 +18,13 @@ test('capture targets include active work for explicit Items',()=>{
 });
 
 test('capture attaches media to explicit Item',()=>{
-  const item=blankItem({id:'item-1',title:'Brooch'}),state={items:[item],jobs:[],workRecords:[]};
+  const item=blankItem({id:'item-1',title:'Brooch'}),state={items:[item],jobs:[],work:[]};
   assert.equal(captureAttachment({state,itemId:'item-1',asset:{id:'media-1',role:'hallmark'}}),true);
   assert.equal(state.items[0].mediaAssets[0].role,'hallmark');
 });
 
 test('legacy Jobs are not capture targets or media owners',()=>{
-  const state={items:[],jobs:[{id:'job-1',watchName:'Legacy watch',passport:{},business:{}}],workRecords:[]};
+  const state={items:[],jobs:[{id:'job-1',watchName:'Legacy watch',passport:{},business:{}}],work:[]};
   assert.equal(captureTargets(state,allItems).length,0);
   assert.equal(captureAttachment({state,itemId:'item-job-1',asset:{id:'media-2',role:'movement'}}),false);
   assert.equal(state.jobs[0].mediaAssets,undefined);

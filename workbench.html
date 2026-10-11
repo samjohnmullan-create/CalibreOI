@@ -36,5 +36,5 @@ function paint(){
   $('content').innerHTML=order.map(group=>groups[group]?.length?`<section class="wb-section"><h3>${group} <span class="count">${groups[group].length}</span></h3><div class="wb-list">${groups[group].map(card).join('')}</div></section>`:'').join('')||'<div class="empty">Nothing matches this view.</div>';
   document.querySelectorAll('.hub-card').forEach(el=>{el.onclick=async event=>{const entry=workbenchEntries(state).find(row=>row.key===el.dataset.key);if(!entry)return;const action=event.target?.dataset?.act;if(!action){openEntry(entry);return;}event.preventDefault();event.stopPropagation();if(action==='open'){openEntry(entry);return;}if(mutateWorkbenchEntry(state,entry,action)){await saveState(state);paint();}};});
 }
-try{state=await loadState();state.workRecords=Array.isArray(state.workRecords)?state.workRecords:[];paint();}catch(err){$('content').innerHTML=`<div class="empty">Workbench could not load: ${esc(err?.message||'Unknown error')}</div>`;}
+try{state=await loadState();state.work=Array.isArray(state.work)?state.work:[];paint();}catch(err){$('content').innerHTML=`<div class="empty">Workbench could not load: ${esc(err?.message||'Unknown error')}</div>`;}
 </script></body></html>

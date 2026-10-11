@@ -1,6 +1,6 @@
 const text=value=>value==null?'':String(value);
 export function itemIntegrityReport(state={}){
-  const items=Array.isArray(state.items)?state.items:[],work=Array.isArray(state.workRecords)?state.workRecords:[];
+  const items=Array.isArray(state.items)?state.items:[],work=Array.isArray(state.work)?state.work:[];
   const itemIds=new Set(items.map(item=>text(item?.id)).filter(Boolean));
   const duplicateItemIds=[...items.reduce((map,item)=>{const key=text(item?.id);if(key)map.set(key,(map.get(key)||0)+1);return map;},new Map()).entries()].filter(([,count])=>count>1).map(([id])=>id);
   const duplicateWorkIds=[...work.reduce((map,record)=>{const key=text(record?.id);if(key)map.set(key,(map.get(key)||0)+1);return map;},new Map()).entries()].filter(([,count])=>count>1).map(([id])=>id);

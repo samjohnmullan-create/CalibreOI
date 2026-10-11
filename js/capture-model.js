@@ -4,7 +4,7 @@ export const CAPTURE_ROLES=[
 export function captureRoleConfig(role='movement'){return CAPTURE_ROLES.find(([key])=>key===role)||CAPTURE_ROLES[0];}
 export function captureTargets(state={},allItemsFn){
   const items=typeof allItemsFn==='function'?allItemsFn(state):[];
-  const works=Array.isArray(state.workRecords)?state.workRecords:[];
+  const works=Array.isArray(state.work)?state.work:[];
   return items.map(item=>({
     id:String(item.id||''),
     title:item.title||item.identity?.title||[item.identity?.maker,item.identity?.model].filter(Boolean).join(' ')||'Untitled item',
