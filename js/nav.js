@@ -85,6 +85,14 @@ if(here==='suppliers.html'){
   }
 }
 
+if(['index.html','calibre.html'].includes(here)&&!document.querySelector('script[data-calibre-visibility-ui]')){
+  const visibilityUi=document.createElement('script');
+  visibilityUi.type='module';
+  visibilityUi.src='js/visibility-ui-runtime.js?v=1';
+  visibilityUi.dataset.calibreVisibilityUi='1';
+  document.head.appendChild(visibilityUi);
+}
+
 const savedTheme=localStorage.getItem('calibre-theme');
 if(savedTheme==='dark')document.documentElement.dataset.theme='dark';
 else document.documentElement.removeAttribute('data-theme');
