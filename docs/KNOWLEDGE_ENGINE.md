@@ -1,6 +1,6 @@
 # Calibre Knowledge Engine
 
-_Last revised: 11 October 2026_
+_Last revised: 12 October 2026_
 
 The Calibre Knowledge Engine is the shared horology reference layer used by Passport, Timegrapher, Movement Finder, Workbench, donor intelligence, parts inventory, Capture, Auction Triage, Business and Listings.
 
@@ -151,7 +151,7 @@ watch: {
   movement: {
     maker: 'ETA',
     calibre: '2824-2',
-    knowledgeKey: 'eta:2824-2',
+    knowledgeId: 24,
     confidence: 0.98,
     confirmed: true
   },
@@ -164,18 +164,49 @@ Do not copy the full movement knowledge record into every Item.
 
 ## Runtime foundation
 
-`js/knowledge-engine.js` exposes:
-- `findMovementSpec()`
-- `getTimegrapherDefaults()`
-- `passportPatchForMovement()`
-- `identifyMovementCandidates()`
-- `rankCompatibilityEvidence()`
+`js/knowledge-engine.js` exposes synchronous workshop lookups backed by the compact verified pack and hydrates the 18 rich verified profiles from Supabase when signed in. Movement Finder uses a separate server-side search against the full catalogue so phone/DeX startup does not download thousands of reference rows.
 
-The current runtime contains a small verified seed. The larger research database can later be loaded from Supabase or a static data bundle without changing the public API.
+The full production database currently contains:
+- 3,458 calibre records
+- 736 normalized part references
+- 1,172 calibre-part links
+- 9,165 compatibility edges
+- additional source, family, application, dimensional, brand, identification and document evidence
 
-## Research database
+## Incremental research workflow
 
-The research build currently contains hundreds of calibre records, movement families, normalized part references, compatibility relationships, serial-aware material applications, dimensional candidates and source records. It should be treated as an import source for production Knowledge, not placed wholesale inside Core local state.
+Production Knowledge is no longer updated by replacing one giant JSON blob.
+
+`knowledge-admin.html` provides an allow-listed **Knowledge Editor / Research Inbox**. Ordinary authenticated accounts remain read-only.
+
+Supported submission types:
+- Source
+- Family
+- Calibre
+- Part
+- Calibre↔Part link
+- Compatibility evidence
+
+The workflow is:
+
+1. Enter structured research and provenance.
+2. Label its evidence level as **Confirmed**, **Supported** or **Candidate**.
+3. Save it as **Draft** or **Ready**.
+4. Review the staged submission.
+5. Explicitly **Apply** it to shared Knowledge.
+6. Store before/after data in the Knowledge change log.
+
+Core Knowledge tables now have database-managed ID sequences, so a single new source, calibre, part or compatibility edge can be added safely without a bulk version import.
+
+Corrections use the canonical Knowledge ID rather than maker/calibre text alone. This is important because some legitimate source records share the same maker/calibre label.
+
+The apply operation is a `SECURITY INVOKER` database function and therefore does not bypass Row Level Security. Write policies require membership in the Knowledge editor allow-list.
+
+## Research database and bulk releases
+
+The original v25 research JSON remains useful as a provenance-rich bulk research snapshot and disaster-recovery/import source. A future v26-style bulk release can still be produced when substantial research warrants it, but routine additions and corrections should go through the incremental Research Inbox instead.
+
+Owned-watch research remains separate from shared global reference data.
 
 ## Safety / quality rules
 
@@ -187,3 +218,5 @@ The research build currently contains hundreds of calibre records, movement fami
 - dimensional candidates require measurement
 - missing lift angle remains missing
 - do not sacrifice a valuable complete donor for a cheap readily available part without an economics comparison
+- do not silently overwrite reference truth from an Item or Work record
+- bench-confirmed findings should be recorded as evidence with date/source context, not used to erase contradictory historical evidence
