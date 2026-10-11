@@ -51,7 +51,10 @@ export function ensureWorkForJob(state={},job=null,item=null){
     job.workId=text(work.id);
     changed=true;
   }
-  const nextWorkIds=uniq([...(linked.workIds||[]),work.id]);
+  // Older derived Items used the legacy Job ID as a pseudo Work ID. Replace that
+  // compatibility value with the canonical Work ID rather than leaving a ghost link.
+  const existingWorkIds=(linked.workIds||[]).filter(value=>text(value)!==text(job.id));
+  const nextWorkIds=uniq([...existingWorkIds,work.id]);
   if(JSON.stringify(linked.workIds||[])!==JSON.stringify(nextWorkIds)){
     linked.workIds=nextWorkIds;
     changed=true;
