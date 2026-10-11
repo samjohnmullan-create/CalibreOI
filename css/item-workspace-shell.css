@@ -4,12 +4,21 @@
 .item-area-tab{display:inline-flex;align-items:center;justify-content:center;min-height:34px;padding:7px 12px;border-radius:7px;color:var(--muted);text-decoration:none;font-size:.72rem;font-weight:800;letter-spacing:.01em;white-space:nowrap}
 .item-area-tab:hover{color:var(--ink);background:var(--surface-2)}
 .item-area-tab.active{color:var(--ink);background:color-mix(in srgb,var(--accent) 10%,var(--surface))}
-.item-section-links{display:flex;align-items:center;gap:2px;overflow-x:auto;scrollbar-width:none;padding:0 0 0}
+.item-section-links{display:flex;align-items:center;gap:2px;overflow-x:auto;scrollbar-width:none;padding:0}
 .item-section-links::-webkit-scrollbar{display:none}
 .item-section-link{display:inline-flex;align-items:center;min-height:34px;padding:7px 10px 8px;border-bottom:2px solid transparent;color:var(--muted);text-decoration:none;font-size:.71rem;font-weight:700;white-space:nowrap}
 .item-section-link:hover{color:var(--ink)}
 .item-section-link.active{color:var(--accent);border-bottom-color:var(--accent)}
 .watch-contextnav{display:none!important}
+
+/* Service is now a Work view, not a second navigation hub. */
+.service-work-ui .service-top{margin:6px 0 9px}
+.service-work-ui .service-top h2{font-size:1.32rem;line-height:1.12;margin:2px 0 3px}
+.service-work-ui .stage-list{gap:6px;margin-bottom:9px;padding-bottom:4px}
+.service-work-ui .stage-btn{min-width:126px;min-height:60px;padding:8px 9px}
+.service-work-ui .stage-btn strong{font-size:.72rem}
+.service-work-ui .section-block{margin-top:11px;padding-top:11px}
+.service-work-ui .service-actions{margin-top:11px}
 
 @media(min-width:900px){
   .watch-page .watch-strip{margin-bottom:0}
@@ -17,6 +26,11 @@
   .item-area-tabs{padding-top:7px}
   .item-area-tab{min-width:92px}
   .item-section-links{border-top:1px solid color-mix(in srgb,var(--line) 70%,transparent)}
+  .service-work-ui .bench-measure-card{padding:16px 18px;margin:10px 0}
+  .service-work-ui .bench-measure-card h3{margin:3px 0 5px;font-size:1.05rem}
+  .service-work-ui .bench-measure-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px 12px;margin-top:8px}
+  .service-work-ui .bench-measure-pair{grid-template-columns:minmax(0,1fr) minmax(108px,.7fr);gap:6px}
+  .service-work-ui .bench-measure-grid input,.service-work-ui .bench-measure-grid select,.service-work-ui .bench-measure-grid textarea{margin-top:3px}
 }
 
 @media(max-width:640px){
@@ -27,4 +41,6 @@
   .item-section-links{padding:0 0 2px;gap:4px}
   .item-section-link{min-height:34px;padding:6px 9px;border:0;border-radius:999px;background:transparent;font-size:.68rem}
   .item-section-link.active{background:var(--surface-2);color:var(--ink)}
+  .service-work-ui .service-top h2{font-size:1.15rem}
+  .service-work-ui .stage-btn{min-width:118px;min-height:58px}
 }
