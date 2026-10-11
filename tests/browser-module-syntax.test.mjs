@@ -8,7 +8,8 @@ const modules=[
   'js/parts-intelligence.js',
   'js/qr-global-runtime.js',
   'js/workbench-runtime.js',
-  'js/work-ui-runtime.js'
+  'js/work-ui-runtime.js',
+  'js/item-ui-runtime.js'
 ];
 
 for(const file of modules){
