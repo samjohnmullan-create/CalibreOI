@@ -3,11 +3,11 @@ import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 export const SUPABASE_URL = "https://jdeqnboljrgrpnvkfthx.supabase.co";
 export const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_fWijlFfBeTw4Ku8EPkno7w_BgOARn0j";
 export const CLOUD_SEEN_KEY = "calibre-cloud-seen-at";
+export const CLOUD_REVISION_KEY = "calibre-cloud-seen-revision";
 
 const LOCAL_SESSION={user:{id:"__calibre_local__",email:""},localOnly:true};
 let client;
 let recoveryPromise=null;
-const stamp=value=>{const n=Date.parse(value||"");return Number.isFinite(n)?n:0;};
 
 export function supabaseClient(){
   if(!client){
@@ -73,11 +73,6 @@ export async function session(){
   }catch(err){
     console.warn("Calibre cloud session check failed",err);
   }
-
-  // Never return a cached user object unless its tokens have first been
-  // installed into the Supabase client. Otherwise database calls are sent as
-  // anon while the UI incorrectly believes it is signed in, causing RLS
-  // permission failures and intermittent empty reads.
   return (await recoverCachedSession())||LOCAL_SESSION;
 }
 
@@ -85,84 +80,58 @@ export async function signUp(email,password){
   const redirect=new URL("settings.html",location.href).href;
   return supabaseClient().auth.signUp({email,password,options:{emailRedirectTo:redirect}});
 }
+export async function signIn(email,password){return supabaseClient().auth.signInWithPassword({email,password});}
+export async function requestPasswordReset(email){const redirect=new URL("settings.html?reset=1",location.href).href;return supabaseClient().auth.resetPasswordForEmail(email,{redirectTo:redirect});}
+export async function updatePassword(password){return supabaseClient().auth.updateUser({password});}
+export async function signOut(){return supabaseClient().auth.signOut();}
 
-export async function signIn(email,password){
-  return supabaseClient().auth.signInWithPassword({email,password});
-}
-
-export async function requestPasswordReset(email){
-  const redirect=new URL("settings.html?reset=1",location.href).href;
-  return supabaseClient().auth.resetPasswordForEmail(email,{redirectTo:redirect});
-}
-
-export async function updatePassword(password){
-  return supabaseClient().auth.updateUser({password});
-}
-
-export async function signOut(){ return supabaseClient().auth.signOut(); }
-
-function cleanState(state){
-  const copy=structuredClone(state||{});
-  delete copy._cloud;
-  return copy;
-}
-
-export function seenCloudAt(){ return localStorage.getItem(CLOUD_SEEN_KEY)||""; }
-export function markCloudSeen(updatedAt){ if(updatedAt)localStorage.setItem(CLOUD_SEEN_KEY,updatedAt); }
+function cleanState(state){const copy=structuredClone(state||{});delete copy._cloud;return copy;}
+export function seenCloudAt(){return localStorage.getItem(CLOUD_SEEN_KEY)||"";}
+export function seenCloudRevision(){const value=Number(localStorage.getItem(CLOUD_REVISION_KEY));return Number.isInteger(value)&&value>=0?value:null;}
+export function markCloudSeen(updatedAt,revision=null){if(updatedAt)localStorage.setItem(CLOUD_SEEN_KEY,updatedAt);if(Number.isInteger(Number(revision))&&Number(revision)>=0)localStorage.setItem(CLOUD_REVISION_KEY,String(Number(revision)));}
 export function isCloudConflict(error){return error?.code==='CALIBRE_SYNC_CONFLICT';}
+function conflictError(remoteRevision=null){const conflict=new Error('Cloud data changed since this device last saw it. Use Safe cloud pull to merge, or Safe cloud push only if you intend to overwrite the cloud copy.');conflict.code='CALIBRE_SYNC_CONFLICT';conflict.remoteRevision=remoteRevision;conflict.seenRevision=seenCloudRevision();return conflict;}
 
 export async function readCloudState(){
   const s=await session();
-  if(!s?.user||s.localOnly)return {signedIn:false,state:null,updatedAt:null};
-  const {data,error}=await supabaseClient().from("calibre_state").select("data,updated_at").eq("user_id",s.user.id).maybeSingle();
+  if(!s?.user||s.localOnly)return {signedIn:false,state:null,updatedAt:null,revision:null};
+  const {data,error}=await supabaseClient().from("calibre_state").select("data,updated_at,revision").eq("user_id",s.user.id).maybeSingle();
   if(error)throw error;
-  return {signedIn:true,user:s.user,state:data?.data||null,updatedAt:data?.updated_at||null};
+  return {signedIn:true,user:s.user,state:data?.data||null,updatedAt:data?.updated_at||null,revision:data?.revision==null?null:Number(data.revision)};
+}
+
+async function currentRemoteRevision(userId){
+  const {data,error}=await supabaseClient().from('calibre_state').select('revision,updated_at').eq('user_id',userId).maybeSingle();
+  if(error)throw error;
+  return {revision:data?.revision==null?0:Number(data.revision),updatedAt:data?.updated_at||''};
 }
 
 export async function writeCloudState(state,{force=false}={}){
   const s=await session();
-  if(!s?.user||s.localOnly)return {signedIn:false,updatedAt:null};
-  if(!force){
-    const {data:remote,error:readError}=await supabaseClient().from("calibre_state").select("updated_at").eq("user_id",s.user.id).maybeSingle();
-    if(readError)throw readError;
-    const remoteAt=remote?.updated_at||'',seenAt=seenCloudAt();
-    if(remoteAt&&(!seenAt||stamp(remoteAt)>stamp(seenAt))){
-      const conflict=new Error('Cloud data changed since this device last saw it. Use Safe cloud pull to merge, or Safe cloud push only if you intend to overwrite the cloud copy.');
-      conflict.code='CALIBRE_SYNC_CONFLICT';conflict.remoteUpdatedAt=remoteAt;conflict.seenUpdatedAt=seenAt;throw conflict;
-    }
+  if(!s?.user||s.localOnly)return {signedIn:false,updatedAt:null,revision:null};
+  let expectedRevision=seenCloudRevision();
+  if(force){
+    const remote=await currentRemoteRevision(s.user.id);expectedRevision=remote.revision;
+  }else if(expectedRevision==null){
+    const remote=await currentRemoteRevision(s.user.id);
+    if(remote.revision>0)throw conflictError(remote.revision);
+    expectedRevision=0;
   }
-  const updatedAt=new Date().toISOString();
-  const payload={user_id:s.user.id,data:cleanState(state),updated_at:updatedAt};
-  const {error}=await supabaseClient().from("calibre_state").upsert(payload,{onConflict:"user_id"});
+  const {data,error}=await supabaseClient().rpc('calibre_write_state',{expected_revision:expectedRevision,new_data:cleanState(state)});
   if(error)throw error;
-  markCloudSeen(updatedAt);
-  return {signedIn:true,user:s.user,updatedAt};
+  const row=Array.isArray(data)?data[0]:data;
+  if(!row||row.revision==null)throw conflictError(null);
+  const revision=Number(row.revision),updatedAt=row.updated_at||new Date().toISOString();
+  markCloudSeen(updatedAt,revision);
+  return {signedIn:true,user:s.user,updatedAt,revision};
 }
 
 export async function readInbox(){
   const s=await session();
   if(!s?.user||s.localOnly)return {signedIn:false,items:[]};
-  const {data,error}=await supabaseClient()
-    .from("calibre_inbox")
-    .select("id,push_id,job_data,created_at")
-    .is("imported_at",null)
-    .order("created_at",{ascending:true});
+  const {data,error}=await supabaseClient().from("calibre_inbox").select("id,push_id,job_data,created_at").is("imported_at",null).order("created_at",{ascending:true});
   if(error)throw error;
   return {signedIn:true,user:s.user,items:Array.isArray(data)?data:[]};
 }
-
-export async function markInboxImported(id){
-  const s=await session();
-  if(!s?.user||s.localOnly)throw new Error("Cloud session unavailable");
-  const {error}=await supabaseClient()
-    .from("calibre_inbox")
-    .update({imported_at:new Date().toISOString()})
-    .eq("id",id);
-  if(error)throw error;
-  return true;
-}
-
-export async function cloudStatus(){
-  const s=await session();
-  return {configured:true,signedIn:!!s?.user&&!s.localOnly,email:s?.localOnly?"":(s?.user?.email||"")};
-}
+export async function markInboxImported(id){const s=await session();if(!s?.user||s.localOnly)throw new Error("Cloud session unavailable");const {error}=await supabaseClient().from("calibre_inbox").update({imported_at:new Date().toISOString()}).eq("id",id);if(error)throw error;return true;}
+export async function cloudStatus(){const s=await session();return {configured:true,signedIn:!!s?.user&&!s.localOnly,email:s?.localOnly?"":(s?.user?.email||"")};}
