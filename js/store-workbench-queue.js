@@ -1,6 +1,4 @@
 import * as base from "./store-local-fast.js?v=1";
-import { ensureAllJobItemLinks, ensureItemForJob } from "./item-integrity.js?v=1";
-import { ensureWorkForJob, reconcileItemWorkPassportLinks } from "./item-work-passport-links.js?v=1";
 
 export * from "./store-local-fast.js?v=1";
 
@@ -21,11 +19,6 @@ function tidyJob(job){
 function requestedJobId(){
   if(typeof location==="undefined")return "";
   try{return new URLSearchParams(location.search).get("id")||"";}catch{return "";}
-}
-
-function pageName(){
-  if(typeof location==="undefined")return "";
-  return (location.pathname.split("/").pop()||"index.html").split("?")[0];
 }
 
 function validPhotoRef(value){
@@ -69,6 +62,8 @@ export function coverPhoto(job){
   return "";
 }
 
+// Legacy Job helpers remain import-only during the cutover. They do not participate
+// in normal Item/Work persistence and must never recreate or overwrite canonical Work.
 export function blankJob(partial={}){
   const requested=explicitWorkbench(partial),job=tidyJob(base.blankJob({status:"Purchased",...partial}));
   job.workbenchHidden=requested===null?true:!requested;
@@ -83,7 +78,12 @@ export function importCard(raw={}){
 
 export async function loadState(){
   const state=await base.loadState();
+  state.items=Array.isArray(state.items)?state.items:[];
+  state.workRecords=Array.isArray(state.workRecords)?state.workRecords:[];
   state.jobs=Array.isArray(state.jobs)?state.jobs:[];
+
+  // Legacy pages may still request a Job while they are being retired. Supporting
+  // that route is intentionally read-only with respect to canonical Item/Work links.
   const requested=requestedJobId();
   if(requested&&state.jobs.some(j=>String(j.id)===String(requested)))state.currentId=requested;
   const index=state.jobs.findIndex(j=>String(j.id)===String(state.currentId||""));
@@ -91,44 +91,28 @@ export async function loadState(){
     try{state.jobs[index]=base.normalise(state.jobs[index]);}catch{}
     tidyJob(state.jobs[index]);
     sanitisePhotos(state.jobs[index]);
-    const linked=ensureItemForJob(state,state.jobs[index]);
-    ensureWorkForJob(state,state.jobs[index],linked.item);
   }
-  const page=pageName();
-  if(page==="inventory.html"||page==="item.html")reconcileItemWorkPassportLinks(state);
   return state;
 }
 
 export async function saveState(state){
-  const selected=(state?.jobs||[]).find(j=>String(j.id)===String(state.currentId||""));
-  if(selected){
-    tidyJob(selected);
-    sanitisePhotos(selected);
-    const linked=ensureItemForJob(state,selected);
-    ensureWorkForJob(state,selected,linked.item);
-  }
-  reconcileItemWorkPassportLinks(state);
+  // Canonical Work is authoritative. Never derive Work from legacy Jobs here.
+  state.items=Array.isArray(state.items)?state.items:[];
+  state.workRecords=Array.isArray(state.workRecords)?state.workRecords:[];
   return base.saveState(state);
 }
 
 export async function importInboxItems(items){
-  const before=await base.loadState(),previousCurrentId=before.currentId||null;
-  const known=new Set((before.jobs||[]).map(j=>String(j.pushId||j.jobId||j.id||"")));
-  const result=await base.importInboxItems(items),state=await base.loadState();let changed=false;
-  for(const item of (Array.isArray(items)?items:[])){
-    const raw=item?.job_data;if(!raw||raw.type!=="calibrejob")continue;
-    const key=String(raw.pushId||raw.jobId||""),job=(state.jobs||[]).find(j=>(raw.pushId&&j.pushId===raw.pushId)||(raw.jobId&&j.jobId===raw.jobId));if(!job)continue;
-    const requested=explicitWorkbench(raw);
-    if(requested!==null){if(job.workbenchHidden===requested){job.workbenchHidden=!requested;changed=true;}}
-    else if(!known.has(key)){
-      if(job.workbenchHidden!==true){job.workbenchHidden=true;changed=true;}
-      if(!raw.status||String(raw.status).toLowerCase()==="on the bench"){if(job.status!=="Purchased"){job.status="Purchased";changed=true;}}
-    }
+  // Keep old calibrejob ingestion isolated until Incoming is rebuilt around Items.
+  // Importing a legacy card must not create, mirror, or overwrite canonical Work.
+  const result=await base.importInboxItems(items),state=await base.loadState();
+  let changed=false;
+  for(const job of (Array.isArray(state.jobs)?state.jobs:[])){
+    const old=job.business?.soldDate;
+    tidyJob(job);
+    if(old!==job.business.soldDate)changed=true;
+    if(sanitisePhotos(job))changed=true;
   }
-  if(previousCurrentId&&state.jobs.some(j=>j.id===previousCurrentId)&&state.currentId!==previousCurrentId){state.currentId=previousCurrentId;changed=true;}
-  for(const job of (state.jobs||[])){const old=job.business?.soldDate;tidyJob(job);if(old!==job.business.soldDate)changed=true;if(sanitisePhotos(job))changed=true;}
-  const integrity=ensureAllJobItemLinks(state);if(integrity.changed)changed=true;
-  const relationships=reconcileItemWorkPassportLinks(state);if(relationships.changed)changed=true;
   if(changed)await base.saveState(state);
   return {...result,state};
 }
