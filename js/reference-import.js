@@ -1,6 +1,6 @@
 import {normaliseReferenceFact} from './reference-intelligence.js';
 
-const fields=['source','sourceName','sourceUrl','sourceRef','relation','calibre','relatedCalibre','partName','partReference','confidence','notes'];
+const fields=['documentId','source','sourceName','sourceUrl','sourceRef','relation','calibre','relatedCalibre','partName','partReference','confidence','notes'];
 const sourceSet=new Set(['factory','ranfft','cousins','catalogue','manual','other']);
 const relationSet=new Set(['fits','equivalent','donor','family','dimension','note']);
 const cleanKey=v=>String(v??'').trim();
@@ -70,4 +70,4 @@ export function importReferenceFacts(state={},report={}){
   return {imported:facts.length,duplicates:(report.duplicates||[]).length,rejected:(report.rejected||[]).length};
 }
 
-export function referenceCsvTemplate(){return 'source,sourceName,sourceUrl,sourceRef,relation,calibre,relatedCalibre,partName,partReference,confidence,notes\nfactory,,,,fits,AS 1130,,Balance staff,1234,95,Factory parts sheet\n';}
+export function referenceCsvTemplate(){return 'documentId,source,sourceName,sourceUrl,sourceRef,relation,calibre,relatedCalibre,partName,partReference,confidence,notes\n,factory,,,,fits,AS 1130,,Balance staff,1234,95,Factory parts sheet\n';}
