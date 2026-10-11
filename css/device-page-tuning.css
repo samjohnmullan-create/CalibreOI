@@ -1,0 +1,98 @@
+/* Device-aware tuning for the core workshop surfaces. The shared device engine sets
+   data-device-mode and data-page on <html>. Keep page-specific behaviour here so
+   responsive intent is explicit rather than duplicated as viewport-only breakpoints. */
+
+/* WORKBENCH — workstation: dense command-centre view */
+html[data-device-mode="workstation"][data-page="workbench"] .shell{max-width:1540px}
+html[data-device-mode="workstation"][data-page="workbench"] .wb-hero{margin-top:4px;margin-bottom:10px}
+html[data-device-mode="workstation"][data-page="workbench"] .wb-summary{gap:6px;margin-bottom:9px}
+html[data-device-mode="workstation"][data-page="workbench"] .wb-stat{padding:8px 10px}
+html[data-device-mode="workstation"][data-page="workbench"] .wb-toolbar{margin-bottom:10px}
+html[data-device-mode="workstation"][data-page="workbench"] .hub-card{grid-template-columns:52px minmax(210px,1.15fr) minmax(170px,.85fr) minmax(190px,1fr) minmax(165px,.8fr) auto;padding:8px 10px;gap:10px}
+html[data-device-mode="workstation"][data-page="workbench"] .hub-thumb{width:52px;height:52px}
+html[data-device-mode="workstation"][data-page="workbench"] .hub-actions button{padding:5px 7px}
+
+/* WORKBENCH — touch: scan, tap, resume. Avoid a tall dashboard before the actual work. */
+html[data-device-mode="touch"][data-page="workbench"] .wb-hero{margin:4px 0 8px}
+html[data-device-mode="touch"][data-page="workbench"] .wb-hero p{display:none}
+html[data-device-mode="touch"][data-page="workbench"] .wb-summary{display:flex;overflow-x:auto;gap:6px;margin:0 -2px 8px;padding:0 2px 3px;scrollbar-width:none;scroll-snap-type:x proximity}
+html[data-device-mode="touch"][data-page="workbench"] .wb-summary::-webkit-scrollbar{display:none}
+html[data-device-mode="touch"][data-page="workbench"] .wb-stat{flex:0 0 112px;scroll-snap-align:start;min-height:58px;padding:8px 9px}
+html[data-device-mode="touch"][data-page="workbench"] .wb-stat strong{font-size:1rem}
+html[data-device-mode="touch"][data-page="workbench"] .wb-toolbar{margin-bottom:9px}
+html[data-device-mode="touch"][data-page="workbench"] .hub-card{border-radius:11px;padding:10px;gap:8px}
+html[data-device-mode="touch"][data-page="workbench"] .hub-stage{padding-top:8px}
+html[data-device-mode="touch"][data-page="workbench"] .hub-next{padding-top:7px}
+html[data-device-mode="touch"][data-page="workbench"] .hub-card:not(.has-blocker) .hub-state{display:none}
+html[data-device-mode="touch"][data-page="workbench"] .hub-actions{gap:6px}
+html[data-device-mode="touch"][data-page="workbench"] .hub-actions button{min-height:44px}
+html[data-device-mode="touch"][data-page="workbench"] .hub-actions .primary{order:-1;flex-basis:100%;font-size:.72rem}
+html[data-device-mode="touch"][data-page="workbench"] .wb-section{margin-bottom:14px}
+
+/* WORK — workstation: use the monitor width, keep reference/evidence visible. */
+html[data-device-mode="workstation"][data-page="work"] .shell{max-width:1540px}
+html[data-device-mode="workstation"][data-page="work"] .work-menu{position:sticky;top:0;z-index:10;background:var(--bg)}
+html[data-device-mode="workstation"][data-page="work"] .stage-strip{padding-bottom:7px}
+html[data-device-mode="workstation"][data-page="work"] .work-layout{grid-template-columns:minmax(0,1fr) 360px;gap:14px}
+html[data-device-mode="workstation"][data-page="work"] .work-layout>aside{position:sticky;top:48px;align-self:start}
+html[data-device-mode="workstation"][data-page="work"] #stage-work{min-height:500px}
+html[data-device-mode="workstation"][data-page="work"] #work-record .field-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+
+/* WORK — touch: stage-first bench workflow with horizontally scannable context. */
+html[data-device-mode="touch"][data-page="work"] .work-context{grid-template-columns:50px minmax(0,1fr);gap:9px;padding:6px 0}
+html[data-device-mode="touch"][data-page="work"] .work-photo{width:50px;height:50px}
+html[data-device-mode="touch"][data-page="work"] #workBadge{display:none}
+html[data-device-mode="touch"][data-page="work"] .work-menu{position:sticky;top:0;z-index:12;background:var(--bg);margin-bottom:7px}
+html[data-device-mode="touch"][data-page="work"] .work-menu a{min-height:44px;padding:8px 12px}
+html[data-device-mode="touch"][data-page="work"] .stage-strip{margin:0 -2px 8px;padding:0 2px 7px;scroll-snap-type:x mandatory}
+html[data-device-mode="touch"][data-page="work"] .stage-btn{flex-basis:116px;min-height:58px;scroll-snap-align:start}
+html[data-device-mode="touch"][data-page="work"] .work-status-row{display:flex;overflow-x:auto;gap:6px;margin-bottom:9px;padding-bottom:2px;scrollbar-width:none;scroll-snap-type:x proximity}
+html[data-device-mode="touch"][data-page="work"] .work-status-row::-webkit-scrollbar{display:none}
+html[data-device-mode="touch"][data-page="work"] .work-status-row>div{flex:0 0 148px;padding:8px;scroll-snap-align:start}
+html[data-device-mode="touch"][data-page="work"] .work-layout{display:flex;flex-direction:column;gap:9px}
+html[data-device-mode="touch"][data-page="work"] #stage-work{order:1}
+html[data-device-mode="touch"][data-page="work"] .work-layout>aside{order:2;display:grid;grid-template-columns:1fr;gap:9px}
+html[data-device-mode="touch"][data-page="work"] #work-record{order:3;margin-top:0!important}
+html[data-device-mode="touch"][data-page="work"] .work-card{padding:12px}
+html[data-device-mode="touch"][data-page="work"] .yn{padding:9px 0}
+html[data-device-mode="touch"][data-page="work"] .yn-btns button{min-height:44px}
+html[data-device-mode="touch"][data-page="work"] .stage-actions{position:sticky;bottom:0;z-index:15;background:var(--surface);margin:10px -12px -2px;padding:9px 12px calc(7px + env(safe-area-inset-bottom));border-top:1px solid var(--line)}
+html[data-device-mode="touch"][data-page="work"] .stage-actions .btn{min-height:44px;flex:1}
+html[data-device-mode="touch"][data-page="work"] #work-record textarea{min-height:88px}
+
+/* PARTS — workstation: evidence and candidates side by side, with the Knowledge card visible while scanning. */
+html[data-device-mode="workstation"][data-page="suppliers"] .shell{max-width:1500px}
+html[data-device-mode="workstation"][data-page="suppliers"] .parts-grid{grid-template-columns:minmax(0,1.25fr) 380px;gap:14px}
+html[data-device-mode="workstation"][data-page="suppliers"] .parts-grid>aside{position:sticky;top:12px;align-self:start}
+html[data-device-mode="workstation"][data-page="suppliers"] .knowledge-parts-card{position:sticky;top:12px;z-index:4}
+html[data-device-mode="workstation"][data-page="suppliers"] .part-row,
+html[data-device-mode="workstation"][data-page="suppliers"] .parts-intel-row{padding:10px 0}
+html[data-device-mode="workstation"][data-page="suppliers"] .parts-intel-actions .btn{min-height:30px}
+
+/* PARTS — touch: requirement/search first, then owned stock and donors with thumb-friendly evidence actions. */
+html[data-device-mode="touch"][data-page="suppliers"] .parts-head{align-items:center;margin-bottom:8px}
+html[data-device-mode="touch"][data-page="suppliers"] .parts-head .kicker{display:none}
+html[data-device-mode="touch"][data-page="suppliers"] .parts-head h2{font-size:1.08rem;margin:0}
+html[data-device-mode="touch"][data-page="suppliers"] .parts-grid{grid-template-columns:1fr;gap:9px}
+html[data-device-mode="touch"][data-page="suppliers"] .card{padding:12px}
+html[data-device-mode="touch"][data-page="suppliers"] .knowledge-parts-card{margin-bottom:9px}
+html[data-device-mode="touch"][data-page="suppliers"] .knowledge-parts-head{align-items:center}
+html[data-device-mode="touch"][data-page="suppliers"] .knowledge-parts-controls{position:sticky;top:0;z-index:6;background:var(--surface);padding:7px 0 5px}
+html[data-device-mode="touch"][data-page="suppliers"] .knowledge-parts-controls select,
+html[data-device-mode="touch"][data-page="suppliers"] .knowledge-parts-controls .btn{min-height:44px}
+html[data-device-mode="touch"][data-page="suppliers"] .knowledge-evidence-row{padding:8px 0}
+html[data-device-mode="touch"][data-page="suppliers"] .parts-intel-row{padding:11px 0}
+html[data-device-mode="touch"][data-page="suppliers"] .parts-intel-reasons{overflow-x:auto;flex-wrap:nowrap;padding-bottom:3px;scrollbar-width:none}
+html[data-device-mode="touch"][data-page="suppliers"] .parts-intel-reasons::-webkit-scrollbar{display:none}
+html[data-device-mode="touch"][data-page="suppliers"] .parts-intel-reasons span{flex:0 0 auto;white-space:nowrap}
+html[data-device-mode="touch"][data-page="suppliers"] .parts-intel-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+html[data-device-mode="touch"][data-page="suppliers"] .parts-intel-actions .btn{min-height:44px;padding:7px 5px}
+html[data-device-mode="touch"][data-page="suppliers"] .donor-decision{padding:9px}
+html[data-device-mode="touch"][data-page="suppliers"] .add-grid{grid-template-columns:1fr 90px}
+html[data-device-mode="touch"][data-page="suppliers"] .add-grid label:last-child{grid-column:1/-1}
+
+@media(max-width:430px){
+  html[data-device-mode="touch"][data-page="workbench"] .wb-stat{flex-basis:104px}
+  html[data-device-mode="touch"][data-page="suppliers"] .parts-intel-actions{grid-template-columns:1fr 1fr}
+  html[data-device-mode="touch"][data-page="suppliers"] .parts-intel-actions [data-fit-result="used"]{grid-column:1/-1}
+}
