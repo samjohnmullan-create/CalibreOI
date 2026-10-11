@@ -51,8 +51,40 @@ export const CALIBRE_SECTIONS = [
   {id:'settings',label:'Settings'}
 ];
 
+// One canonical ownership map for every existing route during the UI cutover.
+// A page may move or disappear later, but it must always have one primary home.
+export const PAGE_HOME = Object.freeze({
+  'index.html':'home',
+  'inventory.html':'items',
+  'item.html':'items',
+  'workbench.html':'workbench',
+  'work.html':'workbench',
+  'service.html':'workbench',
+  'passport.html':'items',
+  'timegrapher.html':'workbench',
+  'suppliers.html':'workbench',
+  'business.html':'business',
+  'sales.html':'items',
+  'summary.html':'items',
+  'documents.html':'items',
+  'finance.html':'business',
+  'calibre.html':'calibre',
+  'assistant.html':'calibre',
+  'capture.html':'calibre',
+  'news.html':'calibre',
+  'settings.html':'calibre'
+});
+
 export function sectionsForItem(type='other'){
   return ITEM_SECTIONS[type]||ITEM_SECTIONS.default;
+}
+
+export function primaryHomeForPage(page='index.html'){
+  return PAGE_HOME[page]||'home';
+}
+
+export function primaryDestination(id='home'){
+  return PRIMARY_NAV.find(entry=>entry.id===id)||PRIMARY_NAV[0];
 }
 
 export function breadcrumb(parts=[]){
