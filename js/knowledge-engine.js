@@ -1,25 +1,100 @@
 // Calibre Knowledge Engine: read-only workshop reference layer.
 // Core Items reference knowledge; this module never copies reference datasets into Core state.
+// The compact v25 pack is the offline/instant fallback; Supabase can hydrate the same public API.
 import {V25_MOVEMENTS,V25_TECHNICAL_DOCUMENTS} from './knowledge-v25-pack.js?v=1';
 
 const normalise=v=>String(v??'').trim().toLowerCase().replace(/[\s._/]+/g,'-');
 const movementKey=(maker,calibre)=>`${normalise(maker)}:${normalise(calibre)}`;
 const cloneMovement=m=>m?{...m,aliases:(m.aliases||[]).map(a=>Array.isArray(a)?[...a]:structuredClone(a)),parts:(m.parts||[]).map(p=>Array.isArray(p)?[...p]:structuredClone(p))}:null;
-const aliasTuple=a=>Array.isArray(a)?a:[a?.alias_maker,a?.alias_calibre,a?.relationship,a?.confidence];
+const aliasTuple=a=>Array.isArray(a)?a:[a?.alias_maker??a?.maker,a?.alias_calibre??a?.calibre,a?.relationship,a?.confidence];
 
-const index=new Map();
-for(const movement of V25_MOVEMENTS){
-  index.set(movementKey(movement.maker,movement.calibre),movement);
-  for(const raw of movement.aliases||[]){const [maker,calibre,relationship,confidence]=aliasTuple(raw);if(maker&&calibre&&(!confidence||Number(confidence)>=.9)&&String(relationship||'').includes('also_known_as'))index.set(movementKey(maker,calibre),movement);}
+let liveMovements=V25_MOVEMENTS.map(cloneMovement);
+let liveDocuments=V25_TECHNICAL_DOCUMENTS.map(doc=>({...doc,calibres:[...(doc.calibres||[])]}));
+let knowledgeStatus={source:'static-v25',hydrated:false,count:liveMovements.length,error:''};
+let index=new Map();
+
+function rebuildIndex(){
+  index=new Map();
+  for(const movement of liveMovements){
+    index.set(movementKey(movement.maker,movement.calibre),movement);
+    for(const raw of movement.aliases||[]){
+      const [maker,calibre,relationship,confidence]=aliasTuple(raw);
+      if(maker&&calibre&&(!confidence||Number(confidence)>=.9)&&String(relationship||'').includes('also_known_as'))index.set(movementKey(maker,calibre),movement);
+    }
+  }
+}
+rebuildIndex();
+
+function profileToMovement(row={}){
+  return {
+    maker:row.maker||'',
+    calibre:row.calibre||'',
+    year:row.launch_year??null,
+    diameter:row.diameter_mm==null?null:Number(row.diameter_mm),
+    height:row.height_mm==null?null:Number(row.height_mm),
+    jewels:row.jewels??null,
+    powerReserve:row.power_reserve_h==null?null:Number(row.power_reserve_h),
+    bph:row.beat_rate_bph??null,
+    frequency:row.frequency_hz==null?null:Number(row.frequency_hz),
+    liftAngle:row.lift_angle_deg==null?null:Number(row.lift_angle_deg),
+    movementType:row.movement_type||row.winding_type||'',
+    windingType:row.winding_type||'',
+    settingType:row.setting_type||null,
+    handCount:row.hand_count??null,
+    family:row.family_name||'',
+    layout:row.layout||'',
+    source:row.source_url||'',
+    notes:row.notes||'',
+    aliases:(row.aliases||[]).map(aliasTuple),
+    parts:(row.parts||[]).map(p=>[p.part_type,p.reference,p.confidence||'candidate',p.notes||''])
+  };
 }
 
-export function listSeedMovements(){return V25_MOVEMENTS.map(cloneMovement);}
+function documentFromRow(row={}){
+  const calibres=String(row.calibre_scope||'').split(',').map(v=>v.trim()).filter(Boolean);
+  // Cousins commonly writes ETA variants as 2824.2 while the movement identity is 2824-2.
+  for(const value of [...calibres])if(/^\d+\.\d+$/.test(value))calibres.push(value.replace(/\.(\d+)$/,'-$1'));
+  return {provider:row.provider||'',maker:row.maker||'',calibres,type:row.document_type||'',title:row.title||'',url:row.landing_url||'',notes:row.notes||''};
+}
+
+export function getKnowledgeStatus(){return {...knowledgeStatus};}
+
+export async function hydrateKnowledgeFromCloud({force=false}={}){
+  if(knowledgeStatus.hydrated&&!force)return getKnowledgeStatus();
+  try{
+    // Dynamic import keeps this module testable in Node and avoids loading the browser CDN client until needed.
+    const {supabaseClient,session}=await import('./cloud.js');
+    const s=await session();
+    if(!s?.user||s.localOnly){knowledgeStatus={...knowledgeStatus,source:'static-v25',hydrated:false,error:''};return getKnowledgeStatus();}
+    const sb=supabaseClient();
+    const [profilesResult,docsResult]=await Promise.all([
+      sb.from('calibre_kb_movement_profiles').select('*').order('maker',{ascending:true}).order('calibre',{ascending:true}),
+      sb.from('calibre_kb_documents').select('provider,maker,calibre_scope,document_type,title,landing_url,notes').order('maker',{ascending:true})
+    ]);
+    if(profilesResult.error)throw profilesResult.error;
+    if(docsResult.error)throw docsResult.error;
+    const profiles=(profilesResult.data||[]).map(profileToMovement).filter(m=>m.maker&&m.calibre);
+    if(profiles.length){liveMovements=profiles;rebuildIndex();}
+    if(Array.isArray(docsResult.data)&&docsResult.data.length)liveDocuments=docsResult.data.map(documentFromRow);
+    knowledgeStatus={source:'supabase',hydrated:true,count:liveMovements.length,error:''};
+    return getKnowledgeStatus();
+  }catch(error){
+    console.warn('Calibre Knowledge database hydration failed; using bundled v25 fallback',error);
+    knowledgeStatus={source:'static-v25',hydrated:false,count:liveMovements.length,error:String(error?.message||error||'Knowledge database unavailable')};
+    return getKnowledgeStatus();
+  }
+}
+
+// Warm only in a browser. Existing synchronous callers work immediately from the bundled pack.
+export const knowledgeDatabaseReady=typeof window!=='undefined'?hydrateKnowledgeFromCloud():Promise.resolve(getKnowledgeStatus());
+
+export function listSeedMovements(){return liveMovements.map(cloneMovement);}
 export const listVerifiedMovements=listSeedMovements;
 
 export function findMovementSpec(maker,calibre){
   if(!calibre)return null;
   const direct=index.get(movementKey(maker,calibre));if(direct)return cloneMovement(direct);
-  const target=normalise(calibre),matches=V25_MOVEMENTS.filter(m=>normalise(m.calibre)===target||(m.aliases||[]).some(raw=>{const [,aliasCalibre,relationship,confidence]=aliasTuple(raw);return normalise(aliasCalibre)===target&&String(relationship||'').includes('also_known_as')&&Number(confidence||1)>=.9;}));
+  const target=normalise(calibre),matches=liveMovements.filter(m=>normalise(m.calibre)===target||(m.aliases||[]).some(raw=>{const [,aliasCalibre,relationship,confidence]=aliasTuple(raw);return normalise(aliasCalibre)===target&&String(relationship||'').includes('also_known_as')&&Number(confidence||1)>=.9;}));
   return matches.length===1?cloneMovement(matches[0]):null;
 }
 
@@ -48,7 +123,7 @@ export function getPartReferences(maker,calibre){
 
 export function getTechnicalDocuments(maker,calibre){
   const target=normalise(calibre),makerKey=normalise(maker);
-  return V25_TECHNICAL_DOCUMENTS.filter(doc=>(!makerKey||normalise(doc.maker)===makerKey)&&(doc.calibres||[]).some(c=>normalise(c)===target)).map(doc=>({...doc,calibres:[...(doc.calibres||[])],confidence:'documented-calibre'}));
+  return liveDocuments.filter(doc=>(!makerKey||normalise(doc.maker)===makerKey)&&(doc.calibres||[]).some(c=>normalise(c)===target)).map(doc=>({...doc,calibres:[...(doc.calibres||[])],confidence:'documented-calibre'}));
 }
 
 export function contextualKnowledge(item={},state={}){
@@ -69,7 +144,7 @@ export function scoreMovementCandidate(observed={},movement){
   return {score:max?Math.round(score/max*100):0,raw:score,max};
 }
 
-export function identifyMovementCandidates(observed={}){return V25_MOVEMENTS.map(m=>({movement:cloneMovement(m),...scoreMovementCandidate(observed,m)})).sort((a,b)=>b.score-a.score);}
+export function identifyMovementCandidates(observed={}){return liveMovements.map(m=>({movement:cloneMovement(m),...scoreMovementCandidate(observed,m)})).sort((a,b)=>b.score-a.score);}
 
 export function rankCompatibilityEvidence(evidence={}){
   const kind=String(evidence.kind||evidence.scope||'').toLowerCase();
