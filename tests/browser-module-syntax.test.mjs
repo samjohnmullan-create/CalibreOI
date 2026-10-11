@@ -18,7 +18,9 @@ const modules=[
   'js/reference-ocr.js',
   'js/reference-pdf-ui-runtime.js',
   'js/reference-ui-runtime.js',
-  'js/visibility-ui-runtime.js'
+  'js/visibility-ui-runtime.js',
+  'js/timing-runs.js',
+  'js/timegrapher-audit-runtime.js'
 ];
 
 for(const file of modules){
