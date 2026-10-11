@@ -4,6 +4,18 @@ import { renderPrimaryNavigation } from './navigation-shell.js';
 const page=(location.pathname.split('/').pop()||'index.html').split('?')[0];
 const current=itemWorkspaceForPage(page);
 
+function cleanServiceWorkspace(){
+  if(page!=='service.html')return;
+  document.body.classList.add('service-work-ui');
+  document.querySelector('.service-top .row')?.remove();
+  const title=document.getElementById('watchTitle');
+  if(title?.textContent?.trim()==='Loading job…')title.textContent='Opening work…';
+  const typeHeading=document.getElementById('jobTypes')?.previousElementSibling;
+  if(typeHeading?.tagName==='H3')typeHeading.textContent='Work type';
+  const complete=document.getElementById('completeJob');
+  if(complete)complete.textContent='Complete work';
+}
+
 if(current){
   // Transitional nav.js still exists while the shell is being dismantled. Re-render
   // primary navigation from the canonical navigation contract so watch pages cannot
@@ -21,7 +33,6 @@ if(current){
   };
 
   // The new Item workspace is the only local navigation on watch pages.
-  // Remove the legacy eight-tab strip rather than hiding it so old CSS cannot revive it.
   document.querySelectorAll('.watch-contextnav').forEach(node=>node.remove());
   document.querySelectorAll('.item-workspace-shell').forEach(node=>node.remove());
 
@@ -42,10 +53,13 @@ if(current){
   if(watchStrip)watchStrip.insertAdjacentElement('afterend',mount);
   else document.querySelector('nav.mainnav')?.insertAdjacentElement('afterend',mount);
 
+  cleanServiceWorkspace();
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',cleanServiceWorkspace,{once:true});
+
   document.querySelectorAll('link[data-item-workspace-shell]').forEach(node=>node.remove());
   const css=document.createElement('link');
   css.rel='stylesheet';
-  css.href='css/item-workspace-shell.css?v=3';
+  css.href='css/item-workspace-shell.css?v=4';
   css.dataset.itemWorkspaceShell='1';
   document.head.appendChild(css);
 }
