@@ -7,6 +7,7 @@ export const CLOUD_SEEN_KEY = "calibre-cloud-seen-at";
 const LOCAL_SESSION={user:{id:"__calibre_local__",email:""},localOnly:true};
 let client;
 let recoveryPromise=null;
+const stamp=value=>{const n=Date.parse(value||"");return Number.isFinite(n)?n:0;};
 
 export function supabaseClient(){
   if(!client){
@@ -108,6 +109,7 @@ function cleanState(state){
 
 export function seenCloudAt(){ return localStorage.getItem(CLOUD_SEEN_KEY)||""; }
 export function markCloudSeen(updatedAt){ if(updatedAt)localStorage.setItem(CLOUD_SEEN_KEY,updatedAt); }
+export function isCloudConflict(error){return error?.code==='CALIBRE_SYNC_CONFLICT';}
 
 export async function readCloudState(){
   const s=await session();
@@ -117,9 +119,18 @@ export async function readCloudState(){
   return {signedIn:true,user:s.user,state:data?.data||null,updatedAt:data?.updated_at||null};
 }
 
-export async function writeCloudState(state){
+export async function writeCloudState(state,{force=false}={}){
   const s=await session();
   if(!s?.user||s.localOnly)return {signedIn:false,updatedAt:null};
+  if(!force){
+    const {data:remote,error:readError}=await supabaseClient().from("calibre_state").select("updated_at").eq("user_id",s.user.id).maybeSingle();
+    if(readError)throw readError;
+    const remoteAt=remote?.updated_at||'',seenAt=seenCloudAt();
+    if(remoteAt&&(!seenAt||stamp(remoteAt)>stamp(seenAt))){
+      const conflict=new Error('Cloud data changed since this device last saw it. Use Safe cloud pull to merge, or Safe cloud push only if you intend to overwrite the cloud copy.');
+      conflict.code='CALIBRE_SYNC_CONFLICT';conflict.remoteUpdatedAt=remoteAt;conflict.seenUpdatedAt=seenAt;throw conflict;
+    }
+  }
   const updatedAt=new Date().toISOString();
   const payload={user_id:s.user.id,data:cleanState(state),updated_at:updatedAt};
   const {error}=await supabaseClient().from("calibre_state").upsert(payload,{onConflict:"user_id"});
