@@ -17,7 +17,8 @@ const modules=[
   'js/reference-pdf-import.js',
   'js/reference-ocr.js',
   'js/reference-pdf-ui-runtime.js',
-  'js/reference-ui-runtime.js'
+  'js/reference-ui-runtime.js',
+  'js/visibility-ui-runtime.js'
 ];
 
 for(const file of modules){
