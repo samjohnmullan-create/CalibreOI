@@ -18,6 +18,7 @@ function calibreCandidates(text=''){
   const raw=text.match(calibreRe)||[];
   return unique(raw).filter(v=>{const digits=v.replace(/\D/g,'');return digits.length>=2&&digits.length<=7;});
 }
+function explicitCalibre(candidates=[]){return candidates.find(v=>/[A-Za-z]/.test(v))||'';}
 
 export function extractTechnicalReferenceCandidates(pages=[],meta={}){
   const candidates=[];
@@ -26,14 +27,15 @@ export function extractTechnicalReferenceCandidates(pages=[],meta={}){
     const pageNo=Number(page.page)||1;
     const lines=String(page.text||'').split(/\r?\n/).map(clean).filter(Boolean);
     const pageCals=calibreCandidates(lines.slice(0,12).join(' '));
-    if(pageCals.length)activeCalibre=pageCals[0];
+    const pageExplicit=explicitCalibre(pageCals);
+    if(pageExplicit)activeCalibre=pageExplicit;
+    else if(!activeCalibre&&pageCals.length)activeCalibre=pageCals[0];
     for(const line of lines){
-      const lineCals=calibreCandidates(line);
-      if(lineCals.length===1&&line.length<80&&!linePartName(line)){activeCalibre=lineCals[0];continue;}
-      const partName=linePartName(line);
+      const lineCals=calibreCandidates(line),partName=linePartName(line),lineExplicit=explicitCalibre(lineCals);
+      if(lineCals.length===1&&line.length<80&&!partName){activeCalibre=lineCals[0];continue;}
       const partReference=linePartReference(line);
       if(!partName&&!partReference)continue;
-      const calibre=lineCals[0]||activeCalibre||clean(meta.defaultCalibre||'');
+      const calibre=lineExplicit||activeCalibre||clean(meta.defaultCalibre||'');
       if(!calibre&&!partName)continue;
       const relation=partName||partReference?'fits':'note';
       const confidence=partName&&partReference&&calibre?68:partName&&calibre?58:48;
