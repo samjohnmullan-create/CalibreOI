@@ -20,6 +20,8 @@ Watch and clock Items additionally support:
 
 Calibre has one Core. Persisted data uses `schemaVersion`; stored-shape changes require explicit forward migrations. Reference knowledge remains read-only/shared rather than being copied into every Item.
 
+The canonical contract lives in `js/core.js`.
+
 ## Navigation rule
 
 Calibre has five primary destinations only: **Home · Items · Workbench · Business · Calibre**. New features attach beneath these destinations rather than automatically becoming new primary navigation.
