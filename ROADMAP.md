@@ -59,6 +59,7 @@ Other Core collections:
 - Compatibility evidence
 - Incoming
 - Knowledge
+- Ledger
 - Settings
 
 ## Navigation rule
@@ -147,7 +148,21 @@ Current rules:
 - `currentItemId` and `currentWorkId` own selection
 - Work history replaces Job-derived service history
 - active runtime must not reintroduce Job fields
-- compatibility/import tooling must remain isolated from normal runtime
+- compatibility/import tooling remains isolated from normal runtime
+
+## Foundation Lock — COMPLETE
+
+Foundation Lock has completed the persisted/runtime convergence work:
+
+- schema 2: Work persistence converged on canonical `work`
+- schema 3: loose parts/tools converged under `inventory`
+- schema 4: bench fit evidence converged under `compatibilityEvidence`; sourced facts/documents under typed `knowledge`
+- schema 5: purchase review converged under typed `incoming`; `ledger` made intentional Core data
+- active Parts, Tools, Reference and Incoming UI now read/write canonical collections directly
+- temporary runtime compatibility aliases/proxies have been removed
+- architecture documentation now describes one Core + schema versions
+
+Old field names remain supported only at explicit forward-migration/archive boundaries.
 
 ## Current state
 
@@ -170,80 +185,28 @@ Substantially complete:
 - deployment freshness guard
 - Timegrapher sample-clock engine and saved-run comparison
 - Knowledge Engine foundation
+- Foundation Lock persistence/runtime convergence
 
 ## Current build order
 
-1. **Foundation Lock** — reconcile persistence with the canonical Core, remove stale terminology, document transitional collections, consolidate design/runtime boundaries.
-2. **Validate Timegrapher with real hardware** — USB timing microphone, multiple BPH rates/positions and known-watch comparisons.
-3. **Integrate Knowledge Engine** — Passport, Timegrapher defaults, Parts, Workbench and technical documents.
-4. **Build Movement Finder** — maker/calibre/size/jewels/BPH/geometry-assisted identification.
-5. **Build proactive Workbench intelligence** — next action, blockers, relevant documents, parts and QC prompts.
-6. **Deepen parts/donor intelligence** — factory refs, variants/serial restrictions, donor economics and sourcing.
-7. **Finish business intelligence** — stock age, ROI, repair economics, capital efficiency and work-next ranking.
-8. **Build intake automation** — purchases, email, postage/tracking and arrivals.
-9. **Finish listing automation** — Passport + research + Work + condition + media + commerce into channel-specific listings.
-10. **Build global search / command palette.**
-11. **Add explicit Workstation / Touch / Capture interface modes.**
-12. **Finish Galaxy Tab microscope Capture workflow.**
-13. **Build Print Queue / Windows hardware bridge.**
-14. **Finish public Passport and customer-facing layer.**
+1. **Reliability layer** — sync/conflict handling, automated backup/export, migration recovery, integrity checks and a lightweight audit/event history.
+2. **Integrate Knowledge Engine** — Passport, Timegrapher defaults, Parts, Workbench and technical documents should consume the same sourced knowledge.
+3. **Build Movement Finder** — evidence-ranked identification by maker/calibre markings, measurements, mechanical traits and visual architecture.
+4. **Build proactive Workbench intelligence** — next action, blockers, relevant documents, part/donor candidates and QC prompts.
+5. **Expand Parts + Donor intelligence** — physical storage locations, verified fit history, donor sacrifice economics and compatibility alerts.
+6. **Device experience** — Automatic / Workstation / Touch / Capture behaviour for phone, DeX monitor and Galaxy Tab microscope use.
+7. **Hardware layer** — validate the USB Timegrapher microphone, then add printer/Windows bridge and QR/bin label workflows.
+8. **Global search / command** — Ctrl/Cmd+K on workstation plus touch-friendly search/actions.
+9. **Business brain** — potential/realised profit, ROI, profit per labour hour, stock age, capital tied up and “what should I work on next?” prioritisation.
+10. **Acquisition engine** — auction triage, max bid, resale potential and donor usefulness against current Items/Work.
+11. **Listing engine** — turn Item identity + research + Work + condition + media + commerce into channel-ready listings.
+12. **Customer/output layer** — public Passport, QR provenance, customer-facing presentation, COA/service outputs and storefront integration.
+13. **Continuous learning loop** — confirmed bench, timing, compatibility and sale outcomes improve future recommendations without overwriting provenance.
 
-## Foundation Lock rules
+## Near-term sequence
 
-Until Foundation Lock is complete:
+The next practical run is:
 
-- do not add new top-level persisted collections casually
-- do not delete transitional store buckets without a migration
-- do not create parallel Item/Work models
-- keep Reference/Knowledge provenance explicit
-- preserve bench evidence separately from external reference evidence
-- keep design tokens and reusable layout rules in CSS rather than growing page-specific runtime styling
+**Reliability → Knowledge Engine integration → Movement Finder → proactive Workbench intelligence**
 
-See `docs/FOUNDATION-LOCK.md`.
-
-## UI direction
-
-Calibre should feel like a precision workshop instrument, not a collection of SaaS cards.
-
-### Workstation
-- compact rows and tables where appropriate
-- split panes
-- slim sidebars
-- sticky context headers
-- collapsible detail panels
-- fewer oversized headings
-- reduced vertical padding
-
-### Phone
-- stacked content
-- larger touch targets
-- fewer controls visible at once
-- persistent contextual actions where useful
-
-### Context
-Use breadcrumbs such as:
-
-**Items › Olma Caravelle › Work › Full Service**
-
-The user should never need to remember the page structure to know where they are.
-
-## Design system
-
-The visual direction remains modern, restrained and workshop-focused.
-
-Design tokens and responsive rules belong in shared CSS. Runtime JavaScript should not become a second design system.
-
-## Success tests
-
-Calibre is moving in the right direction when:
-
-- every physical object has one Item identity
-- every activity is a Work record
-- a watch may have many Work records without duplicating its Passport
-- Workbench shows Work, not inventory
-- adding a feature does not require adding another primary navigation destination
-- important Items, parts, references and commands are quickly discoverable
-- the same data drives bench work, history, finance and sale output
-- phone, DeX/monitor and Galaxy Tab each feel intentional
-- legacy Jobs are not required by the active runtime
-- persisted state has one documented canonical contract and explicit migrations
+Timegrapher detector maths should not be expanded until the incoming USB microphone is validated against known watches/rates. Knowledge integration can still preload verified BPH/frequency/lift-angle defaults in the meantime.
