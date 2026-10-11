@@ -10,8 +10,10 @@ function canonicalStateBody(source){const start=source.indexOf('export function 
 
 test('roadmap describes one canonical Core rather than a Core generation',()=>{assert.match(roadmap,/## Canonical Core\n/);assert.doesNotMatch(roadmap,/## Canonical Core v2/);assert.doesNotMatch(roadmap,/`js\/core-v2\.js`/);assert.match(roadmap,/`js\/core\.js`/);});
 
-test('array-backed store collections cannot grow silently',()=>{const body=canonicalStateBody(storeSource);const found=[...body.matchAll(/Array\.isArray\(state\.([A-Za-z0-9_]+)\)/g)].map(match=>match[1]).sort();const expected=['compatibilityEvidence','incoming','items','knowledge','ledger','work'].sort();assert.deepEqual(found,expected,'Update the Core/migration plan before adding another top-level persisted collection');});
+test('array-backed canonical store collections cannot grow silently',()=>{const body=canonicalStateBody(storeSource);const found=[...body.matchAll(/Array\.isArray\(state\.([A-Za-z0-9_]+)\)/g)].map(match=>match[1]).sort();const expected=['compatibilityEvidence','incoming','items','knowledge','ledger','work'].sort();assert.deepEqual(found,expected,'Update the Core/migration plan before adding another top-level persisted collection');});
 
-test('no live transitional top-level collection remains after FL-5',()=>{assert.match(lockDoc,/No live top-level business\/intake side buckets remain after schema 5/);});
+test('Foundation Lock is complete through FL-6',()=>{for(const phase of ['FL-2 — Work/store convergence — COMPLETE','FL-3 — Inventory convergence — COMPLETE','FL-4 — Evidence/Knowledge convergence — COMPLETE','FL-5 — Business/intake ownership — COMPLETE','FL-6 — runtime/design cleanup — COMPLETE'])assert.match(lockDoc,new RegExp(phase.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')));assert.match(lockDoc,/schema 5/i);});
 
-test('Foundation Lock migrations are recorded as completed through FL-5',()=>{assert.match(lockDoc,/FL-2 — Work\/store convergence — COMPLETE/);assert.match(lockDoc,/FL-3 — Inventory convergence — COMPLETE/);assert.match(lockDoc,/FL-4 — Evidence\/Knowledge convergence — COMPLETE/);assert.match(lockDoc,/FL-5 — Business\/intake ownership — COMPLETE/);assert.match(lockDoc,/schema 5/i);});
+test('runtime compatibility proxy scaffolding is retired',()=>{assert.doesNotMatch(storeSource,/attachCompatibilityAliases/);assert.doesNotMatch(storeSource,/typedAlias\(/);const body=canonicalStateBody(storeSource);for(const legacy of ['partsStock','partFitEvidence','referenceFacts','referenceDocuments','purchaseReview'])assert.doesNotMatch(body,new RegExp(`Object\\.defineProperty\\([^)]*${legacy}`));});
+
+test('roadmap marks Foundation Lock complete before intelligence work',()=>{assert.match(roadmap,/Foundation Lock[^\n]*COMPLETE/i);});
