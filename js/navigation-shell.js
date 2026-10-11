@@ -1,3 +1,4 @@
+import './device-experience.js?v=1';
 import {PRIMARY_NAV,primaryHomeForPage} from './navigation-model.js';
 
 const ICONS={

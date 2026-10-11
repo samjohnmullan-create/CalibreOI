@@ -8,6 +8,7 @@ const modules=[
   'js/parts-intelligence.js',
   'js/parts-ui-runtime.js',
   'js/knowledge-parts.js',
+  'js/device-experience.js',
   'js/qr-global-runtime.js',
   'js/workbench-runtime.js',
   'js/work-ui-runtime.js',
