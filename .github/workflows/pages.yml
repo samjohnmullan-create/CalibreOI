@@ -24,9 +24,10 @@ jobs:
           set -euo pipefail
           python - <<'PY'
           from pathlib import Path
-          import os, re, shutil
+          import json, os, re, shutil
 
           sha = os.environ['GITHUB_SHA']
+          freshness_tag = f'<script type="module" src="js/build-refresh.js?v={sha}"></script>'
 
           # Make every app page reference one coherent build.
           for p in Path('.').glob('*.html'):
@@ -36,6 +37,8 @@ jobs:
                       '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">',
                       '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">'
                   )
+              if 'js/build-refresh.js' not in text:
+                  text = text.replace('</head>', freshness_tag + '</head>')
               text = re.sub(
                   r'((?:src|href)=["\'](?:\./)?(?:js|css)/[^"\'?]+\.(?:js|css))(?:\?v=[^"\']+)?',
                   rf'\1?v={sha}', text
@@ -78,6 +81,7 @@ jobs:
           for name in ('assets','css','js','cards'):
               src=Path(name)
               if src.exists(): shutil.copytree(src, site/name)
+          (site / 'build.json').write_text(json.dumps({'sha': sha}), encoding='utf-8')
           PY
       - uses: actions/configure-pages@v5
         with:

@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {spawnSync} from 'node:child_process';
 
 const modules=[
+  'js/build-refresh.js',
   'js/research-brief.js',
   'js/parts-intelligence.js',
   'js/qr-global-runtime.js',
