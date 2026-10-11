@@ -27,9 +27,11 @@ export function coverPhoto(job){return base.coverPhoto?base.coverPhoto(job):'';}
 
 export async function loadState(){
   const state=await base.loadState();
-  if(!state)return {items:[],workRecords:[]};
+  if(!state)return {items:[],workRecords:[],jobs:[]};
   state.items=Array.isArray(state.items)?state.items:[];
   state.workRecords=Array.isArray(state.workRecords)?state.workRecords:[];
+  // Temporary transport compatibility for the old cloud-core serializer only.
+  state.jobs=Array.isArray(state.jobs)?state.jobs:[];
   return state;
 }
 
@@ -37,6 +39,8 @@ export async function loadState(){
 export async function saveState(state){
   state.items=Array.isArray(state.items)?state.items:[];
   state.workRecords=Array.isArray(state.workRecords)?state.workRecords:[];
+  // TODO remove when store-cloud-core no longer validates the old transport bucket.
+  state.jobs=Array.isArray(state.jobs)?state.jobs:[];
   return base.saveState(state);
 }
 
