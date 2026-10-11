@@ -14,7 +14,7 @@ import("./checklist-fast-runtime.js?v=1").catch(err=>report("fast checklist",err
 import("./bench-measurements-runtime.js?v=1").catch(err=>report("bench measurements",err));
 import("./diagnostic-intelligence-runtime.js?v=1").catch(err=>report("diagnostic intelligence",err));
 import("./research-link.js?v=1").catch(err=>report("research link",err));
-import("./research-brief.js?v=4").catch(err=>report("research brief",err));
+import("./research-brief.js?v=5").catch(err=>report("research brief",err));
 import("./part-tree-runtime.js?v=3").catch(err=>report("parts tree",err));
 import("./repair-timeline-runtime.js?v=1").catch(err=>report("repair timeline",err));
 import("./final-qc-runtime.js?v=1").catch(err=>report("final QC",err));
