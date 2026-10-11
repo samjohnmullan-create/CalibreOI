@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Calibre &amp; Co. app icon</title>
+  <desc id="desc">A bold filled star above a filled crescent moon.</desc>
+  <rect width="512" height="512" rx="96" fill="#fff"/>
+  <path fill="#17191a" d="M256 92l28.1 86.4h90.8l-73.5 53.4 28.1 86.4L256 264.8l-73.5 53.4 28.1-86.4-73.5-53.4h90.8L256 92z"/>
+  <path fill="#17191a" fill-rule="evenodd" d="M101 247c9.5 107.3 76.9 173 155 173s145.5-65.7 155-173c-27.4 52.7-83.4 88.8-155 88.8S128.4 299.7 101 247zm0 0c0 0 0 0 0 0z"/>
+</svg>
