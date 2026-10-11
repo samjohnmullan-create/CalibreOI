@@ -11,6 +11,7 @@ const modules=[
   'js/work-ui-runtime.js',
   'js/item-ui-runtime.js',
   'js/reference-intelligence.js',
+  'js/reference-import.js',
   'js/reference-ui-runtime.js'
 ];
 
