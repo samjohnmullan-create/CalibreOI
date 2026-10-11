@@ -3,6 +3,7 @@ import {currentWork} from './work-model.js';
 import {extractTechnicalReferenceCandidates,readPdfText} from './reference-pdf-import.js';
 import {validateReferenceImport,importReferenceFacts} from './reference-import.js';
 import {ocrPageLimit,renderPdfPagesForOcr,ocrRenderedPages,summariseOcrPages} from './reference-ocr.js';
+import {upsertReferenceDocument} from './reference-library.js';
 
 const PDFJS_URL='https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.mjs';
 const PDFJS_WORKER='https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.worker.mjs';
@@ -34,7 +35,7 @@ async function waitForReferenceCard(timeoutMs=5000){
 async function enhancePdfImport(){
   const card=await waitForReferenceCard();
   if(!card||card.querySelector('.ref-pdf-import'))return;
-  let state=await loadState(),work=currentWork(state),rows=[],report=null,currentFile=null,pdfjsCache=null,ocrPages=[];
+  let state=await loadState(),work=currentWork(state),rows=[],report=null,currentFile=null,pdfjsCache=null,ocrPages=[],pagesTotal=0,pagesProcessed=0,importMethod='manual';
   if(!work)return;
   const item=(state.items||[]).find(x=>String(x.id)===String(work.itemId))||{};
   const defaultCalibre=item.watch?.passport?.calibre||item.watch?.movement?.calibre||'';
@@ -47,6 +48,7 @@ async function enhancePdfImport(){
 
   function sourceName(file){return file?.name||'Pasted technical reference';}
   function sourceMeta(file){return {source:$('pdfSource').value,sourceName:sourceName(file),fileName:sourceName(file),sourceUrl:$('pdfUrl').value.trim(),defaultCalibre:$('pdfCalibre').value.trim()};}
+  function documentType(){const source=$('pdfSource').value;return source==='manual'?'service-manual':source==='catalogue'?'parts-catalogue':source==='factory'?'parts-sheet':'technical-sheet';}
   function makePagesFromPaste(text=''){
     return String(text).split(/\n\s*---\s*PAGE\s*---\s*\n/i).map((part,i)=>({page:i+1,text:part.trim()})).filter(p=>p.text);
   }
@@ -78,17 +80,19 @@ async function enhancePdfImport(){
 
   $('pdfFile').onchange=async event=>{
     const file=event.target.files?.[0];if(!file)return;
-    currentFile=file;report=null;rows=[];hideOcr();$('pdfCandidates').innerHTML='';$('pdfCommit').disabled=true;$('pdfStatus').textContent='Reading PDF…';
+    currentFile=file;report=null;rows=[];pagesTotal=0;pagesProcessed=0;importMethod='text-pdf';hideOcr();$('pdfCandidates').innerHTML='';$('pdfCommit').disabled=true;$('pdfStatus').textContent='Reading PDF…';
     try{
       pdfjsCache=pdfjsCache||await loadPdfJs();
       const pages=await readPdfText(file,{pdfjs:pdfjsCache});
+      pagesTotal=pages.length;
       const textChars=pages.reduce((sum,p)=>sum+String(p.text||'').replace(/\s/g,'').length,0);
       if(textChars<80){
         const data=new Uint8Array(await file.arrayBuffer()),doc=await pdfjsCache.getDocument({data}).promise;
-        showOcrControls(doc.numPages);
+        pagesTotal=doc.numPages;pagesProcessed=0;importMethod='ocr';showOcrControls(doc.numPages);
         $('pdfStatus').textContent=`Scanned/image PDF detected. Select how many of the first ${doc.numPages} pages to OCR, then run OCR. Desktop is capped at 12 pages per pass; mobile at 6.`;
         return;
       }
+      pagesProcessed=pages.length;
       setRows(extractTechnicalReferenceCandidates(pages,sourceMeta(file)));
     }catch(error){report=null;rows=[];$('pdfCandidates').innerHTML='';$('pdfCommit').disabled=true;$('pdfStatus').textContent=`Could not analyse PDF: ${error.message}`;}
   };
@@ -99,12 +103,13 @@ async function enhancePdfImport(){
     try{
       pdfjsCache=pdfjsCache||await loadPdfJs();
       const data=new Uint8Array(await currentFile.arrayBuffer()),doc=await pdfjsCache.getDocument({data}).promise;
+      pagesTotal=doc.numPages;importMethod='ocr';
       const limit=ocrPageLimit({mobile:isMobile(),requested:$('pdfOcrPages').value,total:doc.numPages});
       $('pdfStatus').textContent=`Rendering ${limit} page${limit===1?'':'s'} for OCR…`;
       const rendered=await renderPdfPagesForOcr(currentFile,{pdfjs:pdfjsCache,maxPages:limit,onProgress:p=>{$('pdfStatus').textContent=`Rendering page ${p.page} of ${p.total}…`;}});
       const tess=await loadTesseract();
       ocrPages=await ocrRenderedPages(rendered.pages,{createWorker:tess.createWorker,onProgress:p=>{$('pdfStatus').textContent=`OCR page ${p.index} of ${p.total}…`;}});
-      renderOcrReview();
+      pagesProcessed=ocrPages.length;renderOcrReview();
       const usable=ocrPages.filter(p=>String(p.text||'').trim());
       if(!usable.length)throw new Error('OCR did not recognise usable text. Try fewer pages or a clearer scan.');
       setRows(extractTechnicalReferenceCandidates(usable,sourceMeta(currentFile)),{ocr:true});
@@ -115,16 +120,19 @@ async function enhancePdfImport(){
   $('pdfAnalyseText').onclick=()=>{
     const pages=makePagesFromPaste($('pdfPaste').value);
     if(!pages.length){$('pdfStatus').textContent='Paste some technical reference text first.';return;}
-    hideOcr();setRows(extractTechnicalReferenceCandidates(pages,sourceMeta(null)));
+    currentFile=null;pagesTotal=pages.length;pagesProcessed=pages.length;importMethod='pasted-text';hideOcr();setRows(extractTechnicalReferenceCandidates(pages,sourceMeta(null)));
   };
 
   $('pdfCommit').onclick=async()=>{
     if(!report?.valid?.length)return;
     const selected=new Set([...details.querySelectorAll('[data-pdf-row]:checked')].map(el=>Number(el.dataset.pdfRow)));
-    const selectedReport={...report,valid:report.valid.filter((_,i)=>selected.has(i))};
-    if(!selectedReport.valid.length){$('pdfStatus').textContent='Select at least one candidate to import.';return;}
+    const selectedRows=report.valid.filter((_,i)=>selected.has(i));
+    if(!selectedRows.length){$('pdfStatus').textContent='Select at least one candidate to import.';return;}
+    const name=sourceName(currentFile),reviewedAt=new Date().toISOString();
+    const doc=upsertReferenceDocument(state,{title:name,fileName:currentFile?.name||'',source:$('pdfSource').value,sourceUrl:$('pdfUrl').value.trim(),documentType:documentType(),calibreRange:$('pdfCalibre').value.trim(),importMethod,pagesTotal,pagesProcessed,status:pagesTotal&&pagesProcessed<pagesTotal?'partial':'processed',lastReviewedAt:reviewedAt});
+    const selectedReport={...report,valid:selectedRows.map(row=>({...row,fact:{...row.fact,documentId:doc.id}}))};
     const result=importReferenceFacts(state,selectedReport);await saveState(state);state=await loadState();work=currentWork(state)||work;
-    $('pdfStatus').textContent=`Imported ${result.imported} reviewed candidates. ${report.duplicates.length} duplicates and ${report.rejected.length} rejected rows were not imported.`;
+    $('pdfStatus').textContent=`Imported ${result.imported} reviewed candidates and linked them to ${doc.title}. ${report.duplicates.length} duplicates and ${report.rejected.length} rejected rows were not imported.`;
     $('pdfCommit').disabled=true;report=null;rows=[];
   };
 
