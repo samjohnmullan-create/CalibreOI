@@ -52,9 +52,9 @@ export function relevantReferenceFacts(work,state={}){
   const ctx=workContext(work,state),needCal=fold(ctx.calibre);
   return referenceFacts(state).map(fact=>{
     let score=0;const why=[];const cal=fold(fact.calibre),related=fold(fact.relatedCalibre);
-    if(needCal&&cal===needCal){score+=45;why.push('Matches this calibre.');}
-    else if(needCal&&related===needCal){score+=38;why.push('This calibre is the referenced related/donor calibre.');}
-    else if(needCal&&(cal.includes(needCal)||needCal.includes(cal)||related.includes(needCal)||needCal.includes(related))){score+=22;why.push('Calibre family/text overlaps.');}
+    if(needCal&&cal&&cal===needCal){score+=45;why.push('Matches this calibre.');}
+    else if(needCal&&related&&related===needCal){score+=38;why.push('This calibre is the referenced related/donor calibre.');}
+    else if(needCal&&((cal&&(cal.includes(needCal)||needCal.includes(cal)))||(related&&(related.includes(needCal)||needCal.includes(related))))){score+=22;why.push('Calibre family/text overlaps.');}
     const partText=[fact.partName,fact.partReference,fact.notes].join(' ').toLowerCase();
     if(partText&&ctx.text){const tokens=partText.split(/\W+/).filter(x=>x.length>3);if(tokens.some(t=>ctx.text.includes(t))){score+=15;why.push('Part wording overlaps the current Work.');}}
     score+=sourceWeight(fact.source);
