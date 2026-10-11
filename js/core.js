@@ -1,7 +1,7 @@
 // Calibre Core is a stable domain contract. The Core itself is not versioned by product generation.
 // Only persisted schema data is versioned, and future changes must use explicit migrations.
 
-export const CURRENT_SCHEMA_VERSION = 3;
+export const CURRENT_SCHEMA_VERSION = 4;
 
 export const ITEM_TYPES = ['watch','clock','jewellery','accessory','collectible','other'];
 export const ITEM_PURPOSES = ['resale','personal','customer','donor','reference'];
@@ -10,7 +10,7 @@ export const WORK_TYPES = ['service','repair','inspection','cleaning','restorati
 export const WORK_STATUSES = ['Planned','In progress','Waiting','Complete','Cancelled'];
 
 const TOP_LEVEL_KEYS = new Set(['schemaVersion','currentItemId','currentWorkId','items','work','mediaAssets','inventory','compatibilityEvidence','incoming','knowledge','settings','updatedAt']);
-const FORBIDDEN_LEGACY_KEYS = new Set(['jobs','jobId','legacyJobId','specialistJobId','sourceJobId','currentId','workRecords','partsStock']);
+const FORBIDDEN_LEGACY_KEYS = new Set(['jobs','jobId','legacyJobId','specialistJobId','sourceJobId','currentId','workRecords','partsStock','partFitEvidence','referenceFacts','referenceDocuments']);
 const now=()=>new Date().toISOString();
 const uid=prefix=>`${prefix}-${Math.random().toString(36).slice(2,9)}${Date.now().toString(36).slice(-4)}`;
 const list=v=>Array.isArray(v)?v:[];
@@ -27,6 +27,7 @@ function mergeResources(current=[],legacy=[]){
   }
   return out;
 }
+function typedRecord(raw,type,extra={}){return {...structuredClone(raw||{}),recordType:type,...extra};}
 
 export function normaliseInventory(value={}){
   const source=value&&typeof value==='object'?value:{};
@@ -58,8 +59,6 @@ export function createCoreState(partial={}){
   return {schemaVersion:CURRENT_SCHEMA_VERSION,currentItemId:partial.currentItemId||null,currentWorkId:partial.currentWorkId||null,items:list(partial.items),work:list(partial.work),mediaAssets:list(partial.mediaAssets),inventory:normaliseInventory(partial.inventory),compatibilityEvidence:list(partial.compatibilityEvidence),incoming:list(partial.incoming),knowledge:list(partial.knowledge),settings:partial.settings&&typeof partial.settings==='object'?partial.settings:{},updatedAt:partial.updatedAt||now()};
 }
 
-// Migrations are intentionally explicit. A new persisted shape increments schemaVersion
-// and adds one migration step here. We do not create a second Core alongside the first.
 const MIGRATIONS = new Map();
 export function registerSchemaMigration(fromVersion,migrate){
   if(!Number.isInteger(fromVersion)||fromVersion<1||typeof migrate!=='function')throw new Error('Invalid schema migration');
@@ -79,6 +78,20 @@ registerSchemaMigration(2,state=>{
   next.inventory=inventory;
   delete next.partsStock;
   delete next.tools;
+  return next;
+});
+registerSchemaMigration(3,state=>{
+  const next=structuredClone(state||{});
+  const compatibility=list(next.compatibilityEvidence);
+  const knowledge=list(next.knowledge);
+  const bench=list(next.partFitEvidence).map(x=>typedRecord(x,'bench-fit',{evidenceClass:'bench'}));
+  const facts=list(next.referenceFacts).map(x=>typedRecord(x,'reference-fact',{evidenceClass:'external'}));
+  const docs=list(next.referenceDocuments).map(x=>typedRecord(x,'reference-document',{evidenceClass:'source-document'}));
+  next.compatibilityEvidence=mergeResources(compatibility,bench);
+  next.knowledge=mergeResources(knowledge,[...facts,...docs]);
+  delete next.partFitEvidence;
+  delete next.referenceFacts;
+  delete next.referenceDocuments;
   return next;
 });
 export function migrateCoreState(raw={}){
@@ -113,6 +126,8 @@ export function validateCoreState(state={}){
   const inventory=state.inventory;
   if(!inventory||typeof inventory!=='object')errors.push('Core inventory must be an object');
   else for(const key of ['parts','tools','consumables','donors'])if(!Array.isArray(inventory[key]))errors.push(`Core inventory.${key} must be an array`);
+  if(!Array.isArray(state.compatibilityEvidence))errors.push('Core compatibilityEvidence must be an array');
+  if(!Array.isArray(state.knowledge))errors.push('Core knowledge must be an array');
 
   const itemIds=new Set();
   for(const item of list(state.items)){
