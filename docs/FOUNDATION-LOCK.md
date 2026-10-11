@@ -31,7 +31,6 @@ The local/cloud store currently preserves additional collections that predate or
 
 Current transitional collections are:
 
-- `workRecords` — active store name for canonical Work records; must converge to Core `work`
 - `ledger` — business cash events; ownership/model must be resolved before migration
 - `tools` — currently separate from canonical `inventory.tools`
 - `partsStock` — currently separate from canonical `inventory.parts`
@@ -41,6 +40,8 @@ Current transitional collections are:
 - `referenceDocuments` — technical source-document index; determine Knowledge ownership
 
 These fields are **migration debt, not a licence to add more top-level buckets**.
+
+`workRecords` is no longer a live transitional collection. Schema 2 migrates it forward to canonical `work`, local and cloud persistence save only `work`, and the strict Core rejects `workRecords` after the migration boundary.
 
 ## Rules during Foundation Lock
 
@@ -57,15 +58,16 @@ These fields are **migration debt, not a licence to add more top-level buckets**
 
 Foundation Lock should proceed in small migrations:
 
-### FL-1 — document and guard
+### FL-1 — document and guard — COMPLETE
 - update roadmap terminology
 - document the canonical/transitional boundary
 - add regression protection so transitional debt cannot grow silently
 
-### FL-2 — Work/store convergence
-- make store persistence use canonical `work`
-- retain a forward migration from existing `workRecords`
-- update selectors/callers deliberately
+### FL-2 — Work/store convergence — COMPLETE
+- persisted schema 2 uses canonical `work`
+- existing `workRecords` migrate forward without changing Work IDs or `currentWorkId`
+- local/cloud merge and active Work selectors use `work`
+- retired `workRecords` is rejected by strict Core after migration
 
 ### FL-3 — Inventory convergence
 - move loose parts/tools/consumables/donors under `inventory`
