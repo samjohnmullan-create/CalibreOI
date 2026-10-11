@@ -9,7 +9,7 @@ const dateMs=v=>{const n=Date.parse(v||'');return Number.isFinite(n)?n:0;};
 const typeLabel=type=>ITEM_TYPES.find(([key])=>key===type)?.[1]||'Other';
 let state=await loadState();
 state.items=Array.isArray(state.items)?state.items:[];
-state.workRecords=Array.isArray(state.workRecords)?state.workRecords:[];
+state.work=Array.isArray(state.work)?state.work:[];
 state.ledger=Array.isArray(state.ledger)?state.ledger:[];
 
 function commercial(item){return item.commercial&&typeof item.commercial==='object'?item.commercial:{};}
