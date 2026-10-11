@@ -5,9 +5,9 @@ const close=(a,b,t)=>Number.isFinite(a)&&Number.isFinite(b)&&Math.abs(a-b)<=t;
 
 export function scoreCatalogMovement(observed={},movement={}){
   let earned=0,possible=0;const evidence=[];
-  const rich=findMovementSpec(movement.maker,movement.calibre),maker=norm(observed.maker),cal=norm(observed.calibre),candidateMaker=norm(movement.maker),candidateCal=norm(movement.calibre);
+  const rich=movement.richSpec||findMovementSpec(movement.maker,movement.calibre),maker=norm(observed.maker),cal=norm(observed.calibre),candidateMaker=norm(movement.maker),candidateCal=norm(movement.calibre);
   if(maker){possible+=30;if(candidateMaker===maker){earned+=30;evidence.push('maker exact');}else if(candidateMaker.includes(maker)||maker.includes(candidateMaker)){earned+=18;evidence.push('maker related text');}}
-  if(cal){possible+=55;if(candidateCal===cal){earned+=55;evidence.push('calibre marking exact');}else if(candidateCal.includes(cal)||cal.includes(candidateCal)){earned+=30;evidence.push('calibre marking partial');}}
+  if(cal){possible+=55;if(candidateCal===cal){earned+=55;evidence.push('calibre marking exact');}else if(candidateCal.includes(cal)||cal.includes(candidateCal)){earned+=30;evidence.push('calibre marking partial');}else if((movement.searchAliases||[]).some(a=>norm(a).includes(cal))){earned+=24;evidence.push('catalogue alias match');}}
   const diameter=num(observed.diameter),candidateDiameter=num(movement.diameter??rich?.diameter);
   if(diameter!=null){possible+=30;if(close(diameter,candidateDiameter,.15)){earned+=30;evidence.push('diameter ±0.15 mm');}else if(close(diameter,candidateDiameter,.5)){earned+=18;evidence.push('diameter ±0.5 mm');}else if(close(diameter,candidateDiameter,1)){earned+=7;evidence.push('diameter ±1 mm');}}
   const height=num(observed.height),candidateHeight=num(movement.height??rich?.height);
@@ -15,8 +15,8 @@ export function scoreCatalogMovement(observed={},movement={}){
   const bph=num(observed.bph),candidateBph=num(movement.bph??rich?.bph);
   if(bph!=null){possible+=25;if(bph===candidateBph){earned+=25;evidence.push('BPH exact');}}
   if(observed.winding){possible+=12;if(norm(observed.winding)===norm(movement.winding||rich?.movementType)){earned+=12;evidence.push('winding type');}}
-  const jewels=num(observed.jewels);
-  if(jewels!=null){possible+=12;if(rich?.jewels!=null&&Number(rich.jewels)===jewels){earned+=12;evidence.push('jewel count exact');}}
+  const jewels=num(observed.jewels),candidateJewels=num(movement.jewels??rich?.jewels);
+  if(jewels!=null){possible+=12;if(candidateJewels!=null&&candidateJewels===jewels){earned+=12;evidence.push('jewel count exact');}}
   const score=possible?Math.round(earned/possible*100):0;
   return {score,earned,possible,evidence,rich};
 }
