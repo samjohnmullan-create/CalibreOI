@@ -1,11 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { normaliseMediaAsset } from '../js/media-model.js';
-import { normaliseQueuedMediaUpload } from '../js/media-upload-queue.js';
-import { mergeQueuedAssetIntoState } from '../js/media-queue-state.js';
+import {normaliseMediaAsset} from '../js/media-model.js';
+import {normaliseQueuedMediaUpload} from '../js/media-upload-queue.js';
+import {mergeQueuedAssetIntoState} from '../js/media-queue-state.js';
 
 test('media assets preserve a private thumbnail storage key',()=>{
-  const asset=normaliseMediaAsset({id:'m1',storageKey:'full.jpg',thumbnailStorageKey:'thumb.webp'});
+  const asset=normaliseMediaAsset({id:'m1',itemId:'item-1',storageKey:'full.jpg',thumbnailStorageKey:'thumb.webp'});
   assert.equal(asset.thumbnailStorageKey,'thumb.webp');
 });
 
@@ -15,16 +15,13 @@ test('queued media records keep a stable media id for retry',()=>{
   assert.equal(record.options.mediaId,'media-stable');
 });
 
-test('completed queued media is attached to legacy job and permanent item once',()=>{
-  const state={jobs:[{id:'watch-1',jobId:'JOB-1',watchName:'Test watch',jobType:'watch',passport:{},business:{},mediaAssets:[]}],items:[]};
-  const record={id:'media-1',options:{watchId:'watch-1'},asset:{id:'media-1',legacyWatchId:'watch-1',legacyJobId:'JOB-1',storageKey:'full.jpg',thumbnailStorageKey:'thumb.webp',category:'identity'}};
-  const first=mergeQueuedAssetIntoState(state,record);
-  const second=mergeQueuedAssetIntoState(state,record);
+test('completed queued media attaches to its Item once',()=>{
+  const state={items:[{id:'item-1',mediaAssets:[]}],workRecords:[{id:'work-1',itemId:'item-1'}]};
+  const record={id:'media-1',asset:{id:'media-1',itemId:'item-1',workId:'work-1',storageKey:'full.jpg',thumbnailStorageKey:'thumb.webp',category:'identity'}};
+  const first=mergeQueuedAssetIntoState(state,record),second=mergeQueuedAssetIntoState(state,record);
   assert.equal(first.changed,true);
-  assert.equal(state.jobs[0].mediaAssets.length,1);
-  assert.equal(state.items.length,1);
   assert.equal(state.items[0].mediaAssets.length,1);
+  assert.equal(state.items[0].mediaAssets[0].workId,'work-1');
   assert.equal(state.items[0].mediaAssets[0].thumbnailStorageKey,'thumb.webp');
-  assert.equal(state.jobs[0].itemId,state.items[0].id);
   assert.equal(second.changed,false);
 });

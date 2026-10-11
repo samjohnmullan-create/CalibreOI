@@ -13,26 +13,10 @@ export const ITEM_AREAS = [
 ];
 
 export const ITEM_SECTIONS = {
-  watch:{
-    work:['Diagnosis','Service','Measurements','Timing','Parts','QC'],
-    item:['Identity','Passport','Research','Media','History','Documents'],
-    commerce:['Costs','Valuation','Listing','Sale']
-  },
-  clock:{
-    work:['Diagnosis','Service','Measurements','Timing','Parts','QC'],
-    item:['Identity','Passport','Research','Media','History','Documents'],
-    commerce:['Costs','Valuation','Listing','Sale']
-  },
-  jewellery:{
-    work:['Inspect','Clean','Restore','Measurements','QC'],
-    item:['Identity','Research','Media','History','Documents'],
-    commerce:['Costs','Valuation','Listing','Sale']
-  },
-  default:{
-    work:['Inspect','Prepare','Restore','QC'],
-    item:['Identity','Research','Media','History','Documents'],
-    commerce:['Costs','Valuation','Listing','Sale']
-  }
+  watch:{work:['Diagnosis','Service','Measurements','Timing','Parts','QC'],item:['Identity','Passport','Research','Media','History','Documents'],commerce:['Costs','Valuation','Listing','Sale']},
+  clock:{work:['Diagnosis','Service','Measurements','Timing','Parts','QC'],item:['Identity','Passport','Research','Media','History','Documents'],commerce:['Costs','Valuation','Listing','Sale']},
+  jewellery:{work:['Inspect','Clean','Restore','Measurements','QC'],item:['Identity','Research','Media','History','Documents'],commerce:['Costs','Valuation','Listing','Sale']},
+  default:{work:['Inspect','Prepare','Restore','QC'],item:['Identity','Research','Media','History','Documents'],commerce:['Costs','Valuation','Listing','Sale']}
 };
 
 export const WORKBENCH_GROUPS = [
@@ -51,21 +35,17 @@ export const CALIBRE_SECTIONS = [
   {id:'settings',label:'Settings'}
 ];
 
-// One canonical ownership map for every existing route during the UI cutover.
-// A page may move or disappear later, but it must always have one primary home.
 export const PAGE_HOME = Object.freeze({
   'index.html':'home',
   'inventory.html':'items',
   'item.html':'items',
   'workbench.html':'workbench',
   'work.html':'workbench',
-  'service.html':'workbench',
   'passport.html':'items',
   'timegrapher.html':'workbench',
   'suppliers.html':'workbench',
   'business.html':'business',
   'sales.html':'items',
-  'summary.html':'items',
   'documents.html':'items',
   'finance.html':'business',
   'calibre.html':'calibre',
@@ -75,36 +55,18 @@ export const PAGE_HOME = Object.freeze({
   'settings.html':'calibre'
 });
 
-// Transitional route ownership for the existing watch pages. This maps old routes
-// into the stable Work / Item / Commerce workspace without making the old route
-// names part of Core. New screens should target these areas directly.
 export const ITEM_WORKSPACE_ROUTES = Object.freeze({
-  'service.html':{area:'work',section:'Service'},
+  'work.html':{area:'work',section:'Work'},
   'timegrapher.html':{area:'work',section:'Timing'},
   'suppliers.html':{area:'work',section:'Parts'},
   'passport.html':{area:'item',section:'Passport'},
-  'summary.html':{area:'item',section:'History'},
   'documents.html':{area:'item',section:'Documents'},
   'business.html':{area:'commerce',section:'Costs'},
   'sales.html':{area:'commerce',section:'Sale'}
 });
 
-export function sectionsForItem(type='other'){
-  return ITEM_SECTIONS[type]||ITEM_SECTIONS.default;
-}
-
-export function primaryHomeForPage(page='index.html'){
-  return PAGE_HOME[page]||'home';
-}
-
-export function primaryDestination(id='home'){
-  return PRIMARY_NAV.find(entry=>entry.id===id)||PRIMARY_NAV[0];
-}
-
-export function itemWorkspaceForPage(page=''){
-  return ITEM_WORKSPACE_ROUTES[page]||null;
-}
-
-export function breadcrumb(parts=[]){
-  return parts.filter(Boolean).map(value=>String(value).trim()).filter(Boolean).join(' › ');
-}
+export function sectionsForItem(type='other'){return ITEM_SECTIONS[type]||ITEM_SECTIONS.default;}
+export function primaryHomeForPage(page='index.html'){return PAGE_HOME[page]||'home';}
+export function primaryDestination(id='home'){return PRIMARY_NAV.find(entry=>entry.id===id)||PRIMARY_NAV[0];}
+export function itemWorkspaceForPage(page=''){return ITEM_WORKSPACE_ROUTES[page]||null;}
+export function breadcrumb(parts=[]){return parts.filter(Boolean).map(value=>String(value).trim()).filter(Boolean).join(' › ');}
