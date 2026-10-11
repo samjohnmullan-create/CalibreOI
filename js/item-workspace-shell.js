@@ -13,8 +13,10 @@ if(current){
     item:[['Passport','passport.html'],['History','summary.html'],['Documents','documents.html']],
     commerce:[['Costs','business.html'],['Sale','sales.html']]
   };
-  const legacy=document.querySelector('.watch-contextnav');
-  if(legacy)legacy.hidden=true;
+
+  // The new Item workspace is the only local navigation on watch pages.
+  // Remove the legacy eight-tab strip rather than hiding it so old CSS cannot revive it.
+  document.querySelectorAll('.watch-contextnav').forEach(node=>node.remove());
 
   const mount=document.createElement('section');
   mount.className='item-workspace-shell';
@@ -27,7 +29,7 @@ if(current){
     const active=label===current.section;
     return `<a class="item-section-link${active?' active':''}" href="${href}${suffix}"${active?' aria-current="page"':''}>${label}</a>`;
   }).join('');
-  mount.innerHTML=`<nav class="item-area-tabs">${areas}</nav><nav class="item-section-links" aria-label="${current.area} sections">${sections}</nav>`;
+  mount.innerHTML=`<nav class="item-area-tabs" aria-label="Workspace areas">${areas}</nav><nav class="item-section-links" aria-label="${current.area} sections">${sections}</nav>`;
 
   const watchStrip=document.querySelector('.watch-strip');
   if(watchStrip)watchStrip.insertAdjacentElement('afterend',mount);
@@ -36,7 +38,7 @@ if(current){
   if(!document.querySelector('link[data-item-workspace-shell]')){
     const css=document.createElement('link');
     css.rel='stylesheet';
-    css.href='css/item-workspace-shell.css?v=1';
+    css.href='css/item-workspace-shell.css?v=2';
     css.dataset.itemWorkspaceShell='1';
     document.head.appendChild(css);
   }
