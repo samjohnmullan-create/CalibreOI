@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {PRIMARY_NAV,PAGE_HOME,primaryHomeForPage} from '../js/navigation-model.js';
+import {PRIMARY_NAV,PAGE_HOME,ITEM_WORKSPACE_ROUTES,primaryHomeForPage,itemWorkspaceForPage} from '../js/navigation-model.js';
 import {pageName,primaryNavMarkup} from '../js/navigation-shell.js';
 
 test('every primary destination is unique and stable',()=>{
@@ -16,6 +16,14 @@ test('existing routes have one canonical primary home',()=>{
   assert.equal(primaryHomeForPage('passport.html'),'items');
   assert.equal(primaryHomeForPage('service.html'),'workbench');
   assert.equal(primaryHomeForPage('capture.html'),'calibre');
+});
+
+test('watch routes map into Work Item Commerce without adding destinations',()=>{
+  assert.deepEqual(itemWorkspaceForPage('service.html'),{area:'work',section:'Service'});
+  assert.deepEqual(itemWorkspaceForPage('passport.html'),{area:'item',section:'Passport'});
+  assert.deepEqual(itemWorkspaceForPage('business.html'),{area:'commerce',section:'Costs'});
+  assert.equal(itemWorkspaceForPage('index.html'),null);
+  assert.equal(new Set(Object.values(ITEM_WORKSPACE_ROUTES).map(x=>x.area)).size,3);
 });
 
 test('primary nav renders one active destination',()=>{
