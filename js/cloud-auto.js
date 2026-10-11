@@ -9,6 +9,10 @@ const here=(location.pathname.split("/").pop()||"index.html").split("?")[0];
 const idle=fn=>{if("requestIdleCallback" in window)requestIdleCallback(fn,{timeout:1800});else setTimeout(fn,350);};
 const laterImport=(path,label)=>idle(()=>import(path).catch(err=>console.warn(label,err)));
 
+// Canonical primary navigation is global. nav.js still contains transitional legacy
+// behaviour, but every page finishes on the locked Core order and ownership map.
+import("./canonical-nav-runtime.js?v=1").catch(err=>console.warn("Canonical navigation unavailable",err));
+
 laterImport("./qr-global-runtime.js?v=1","Calibre QR scanner entry unavailable");
 if(here==="workbench.html")laterImport("./workbench-parts-intel-runtime.js?v=1","Calibre Workbench parts intelligence unavailable");
 if(here==="item.html")laterImport("./item-qr-runtime.js?v=1","Calibre Item QR tools unavailable");
@@ -17,7 +21,7 @@ if(here==="sales.html"){
   laterImport("./publish-controls.js?v=1","Calibre public publishing controls unavailable");
   laterImport("./square-storefront-runtime.js?v=1","Calibre Square storefront controls unavailable");
 }
-if(here==="finance.html"||here==="index.html")laterImport("./available-cash.js?v=1","Calibre cash position unavailable");
+if(here==="index.html")laterImport("./available-cash.js?v=2","Calibre cash position unavailable");
 if(here==="suppliers.html"){
   laterImport("./parts-intelligence-runtime.js?v=2","Calibre parts intelligence unavailable");
   laterImport("./workshop-assets-link.js?v=1","Calibre workshop IDs link unavailable");
