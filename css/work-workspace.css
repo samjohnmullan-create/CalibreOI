@@ -1,0 +1,89 @@
+/* Desktop-first workshop workspace. Mobile remains touch-friendly and single-column. */
+.work-context{max-width:none}
+.work-status-row>div{min-width:0}
+.work-status-row strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.stage-strip{scroll-snap-type:x proximity}
+.stage-btn{scroll-snap-align:start;transition:border-color .15s ease,background .15s ease,transform .15s ease}
+.stage-btn:hover{border-color:var(--accent-soft)}
+.stage-btn.active{box-shadow:inset 3px 0 0 var(--accent)}
+#stage-work{min-width:0}
+#steps .yn:last-child{border-bottom:0}
+.yn p{line-height:1.35}
+.yn-btns button{cursor:pointer}
+.yn-btns button:hover{border-color:var(--accent-soft);color:var(--ink)}
+.work-ui-progress{height:5px;border-radius:999px;background:var(--surface-2);overflow:hidden;margin:8px 0 3px}
+.work-ui-progress>i{display:block;height:100%;width:0;background:var(--accent);transition:width .2s ease}
+.work-ui-progress-copy{display:flex;justify-content:space-between;gap:8px;font-size:.64rem;color:var(--muted)}
+.work-ui-section-label{font-size:.62rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+
+@media(min-width:900px){
+  .shell{max-width:1480px}
+  .work-context{grid-template-columns:72px minmax(0,1fr) auto;padding:8px 0}
+  .work-photo{width:72px;height:72px}
+  .work-context h2{font-size:1.2rem}
+  .work-menu{margin-bottom:8px}
+  .work-menu a{min-height:34px;padding:5px 11px}
+  .stage-strip{gap:5px;padding:0 0 8px}
+  .stage-btn{flex-basis:126px;min-height:58px;padding:7px 8px}
+  .stage-btn strong{font-size:.67rem}
+  .work-status-row{grid-template-columns:160px minmax(240px,1fr) minmax(220px,1fr) 150px;gap:6px;margin-bottom:10px}
+  .work-status-row>div{padding:8px 10px;border-radius:7px}
+  .work-status-row strong{font-size:.78rem}
+  .work-layout{grid-template-columns:minmax(0,1fr) 340px;gap:14px;align-items:start}
+  .work-layout>main{min-width:0}
+  .work-layout>aside{position:sticky;top:12px;display:grid;gap:10px;align-content:start}
+  .work-card{padding:15px}
+  #stage-work{min-height:520px}
+  .stage-head{padding-bottom:4px}
+  .stage-head h2{font-size:1.35rem}
+  #stageAim{max-width:780px}
+  #steps{padding-top:10px;margin-top:10px}
+  #steps>h3{font-size:.78rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:4px}
+  .yn{grid-template-columns:minmax(0,1fr) 160px;padding:10px 4px;min-height:50px}
+  .yn p{font-size:.82rem}
+  .yn-btns{justify-content:flex-end}
+  .yn-btns button{min-width:48px;min-height:32px}
+  .field-grid{gap:8px 10px}
+  #stage-work .work-section:last-of-type{margin-top:12px;padding-top:12px}
+  .stage-actions{position:sticky;bottom:0;background:linear-gradient(to top,var(--surface) 78%,transparent);padding-top:14px;padding-bottom:2px;z-index:3}
+  #work-record{opacity:.96}
+  #work-record .work-section:first-child>h2{font-size:1rem;margin-bottom:10px}
+  #work-record textarea{min-height:70px}
+  aside .work-card{padding:13px}
+  aside .work-card h3{font-size:.8rem;margin-bottom:9px}
+}
+
+@media(min-width:1200px){
+  .work-layout{grid-template-columns:minmax(0,1fr) 370px;gap:16px}
+  #stage-work{padding:18px 20px}
+  .yn{padding:11px 6px}
+  .yn p{font-size:.84rem}
+}
+
+@media(max-width:899px){
+  .work-layout{grid-template-columns:1fr}
+  .work-layout>aside{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .stage-actions{position:sticky;bottom:0;z-index:6;background:var(--surface);padding:10px 0 2px;border-top:1px solid var(--line)}
+}
+
+@media(max-width:760px){
+  .work-context{padding-top:6px}
+  .work-menu{top:0}
+  .stage-strip{margin-left:-2px;margin-right:-2px;padding-bottom:8px}
+  .stage-btn{flex-basis:116px;min-height:58px}
+  .work-status-row{display:flex;overflow-x:auto;gap:6px;scrollbar-width:none;padding-bottom:2px}
+  .work-status-row::-webkit-scrollbar{display:none}
+  .work-status-row>div{flex:0 0 145px;padding:8px}
+  .work-status-row>div:nth-child(2),.work-status-row>div:nth-child(3){flex-basis:190px}
+  .work-status-row strong{font-size:.72rem}
+  .work-layout>aside{grid-template-columns:1fr}
+  #stage-work{padding:13px}
+  .stage-head h2{font-size:1.15rem}
+  .yn{padding:10px 0}
+  .yn p{font-size:.8rem}
+  .yn-btns{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));width:100%}
+  .yn-btns button{min-height:40px}
+  .stage-actions{margin-left:-13px;margin-right:-13px;padding:9px 13px calc(4px + env(safe-area-inset-bottom))}
+  .stage-actions .btn{min-height:42px;flex:1}
+  #work-record{margin-top:9px!important}
+}
