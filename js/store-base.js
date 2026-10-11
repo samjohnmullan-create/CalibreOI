@@ -25,7 +25,7 @@ export function partsCost(work={}){return (work.parts||[]).reduce((n,p)=>n+(Numb
 export function coverPhoto(record={}){const assets=Array.isArray(record.mediaAssets)?record.mediaAssets:[];return assets.find(a=>a?.isCover&&(a.thumbnailUrl||a.url))?.thumbnailUrl||assets.find(a=>a?.thumbnailUrl||a?.url)?.thumbnailUrl||assets.find(a=>a?.url)?.url||'';}
 export function progress(work={}){const stages=Array.isArray(work.stages)?work.stages:[];if(!stages.length)return 0;return Math.round(stages.filter(s=>s?.complete||s?.completedAt).length/stages.length*100);}
 export function money(n){const v=Number(n);return Number.isFinite(v)?v.toLocaleString('en-AU',{style:'currency',currency:'AUD'}):'$0.00';}
-export function escapeHtml(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[c]));}
+export function escapeHtml(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 export function labourCost(b={}){return (Number(b.labourMinutes)||0)/60*(Number(b.labourRate)||0);}
 export function cashOut(b={}){return ['purchasePrice','buyerPremium','postage','preparationCost','repairCost','partsCost','consumables','externalService','marketplaceFees','shippingToBuyer','otherCost'].reduce((n,k)=>n+(Number(b[k])||0),0);}
 export function investment(b){return cashOut(b);} export function salePrice(b={}){return Number(b.actualSale)||Number(b.targetSale)||0;} export function cashProfit(b={}){const sale=salePrice(b);return sale?sale-cashOut(b):0;} export function profitAfterLabour(b={}){return cashProfit(b)-labourCost(b);} export function roi(b={}){const out=cashOut(b);return out?cashProfit(b)/out:0;}
