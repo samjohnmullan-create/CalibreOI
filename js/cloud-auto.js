@@ -9,10 +9,7 @@ const here=(location.pathname.split("/").pop()||"index.html").split("?")[0];
 const idle=fn=>{if("requestIdleCallback" in window)requestIdleCallback(fn,{timeout:1800});else setTimeout(fn,350);};
 const laterImport=(path,label)=>idle(()=>import(path).catch(err=>console.warn(label,err)));
 
-// Canonical primary navigation is global. nav.js still contains transitional legacy
-// behaviour, but every page finishes on the locked Core order and ownership map.
 import("./canonical-nav-runtime.js?v=1").catch(err=>console.warn("Canonical navigation unavailable",err));
-
 laterImport("./qr-global-runtime.js?v=1","Calibre QR scanner entry unavailable");
 if(here==="workbench.html")laterImport("./workbench-parts-intel-runtime.js?v=1","Calibre Workbench parts intelligence unavailable");
 if(here==="item.html")laterImport("./item-qr-runtime.js?v=1","Calibre Item QR tools unavailable");
@@ -32,15 +29,11 @@ if(here==="inventory.html"){
   laterImport("./collection-dashboard.js?v=2","Calibre collection dashboard unavailable");
   laterImport("./purchase-review.js?v=2","Calibre purchase review unavailable");
 }
-if(new Set(["index.html","inventory.html","calibre.html","sales.html","service.html","passport.html","timegrapher.html","business.html","summary.html","suppliers.html","documents.html"]).has(here)){
-  laterImport("./archive-cover-runtime.js?v=4","Calibre archive covers unavailable");
-}
 
 function isEditing(){const el=document.activeElement;return !!el?.closest?.("input,textarea,select,[contenteditable='true']");}
 function touch(){lastInteraction=Date.now();}
 ["input","change","pointerdown","keydown"].forEach(type=>document.addEventListener(type,touch,true));
 function safeToRefresh(){return document.visibilityState==="visible"&&!isEditing()&&Date.now()-lastInteraction>EDIT_GRACE_MS;}
-
 function purchaseType(item){const type=String(item?.job_data?.type||"").toLowerCase();return type==="calibrepurchase"||type==="calibreincoming";}
 function reviewKey(p={}){return String(p.sourceKey||p.pushId||[p.source,p.orderId,p.itemName||p.name,p.variant].filter(Boolean).join("|")||"");}
 function reviewItem(source={},raw={}){
