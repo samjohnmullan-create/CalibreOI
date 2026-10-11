@@ -1,6 +1,6 @@
 # Calibre & Co. — Canonical Roadmap
 
-_Last revised: 11 October 2026_
+_Last revised: 12 October 2026_
 
 ## Product direction
 
@@ -40,30 +40,32 @@ See `docs/RELIABILITY.md`.
 
 The Knowledge Engine is now part of workshop flow rather than an isolated reference module:
 
+- the full v25 reference dataset is normalized in Supabase rather than copied into Core state
+- 3,458 calibre records, 736 normalized part references, 1,172 calibre-part links and 9,165 compatibility edges are available server-side
 - verified v25 movement specifications feed Passport suggestions
 - Passport fills **missing movement-owned fields only**; movement launch year never becomes watch year automatically
 - Timegrapher preloads documented BPH/frequency/lift angle without changing detector maths
 - missing lift angle stays unset; Calibre never invents it
 - Work / Workbench / Parts surfaces sourced part references and technical documents
 - exact documented part references remain distinguishable from family-reported references
-- canonical imported `knowledge` facts/documents are surfaced alongside the compact v25 workshop pack
-- 18 rich verified movement records currently carry Passport/Timegrapher/parts detail
+- 18 rich verified movement records remain the lightweight workshop/offline pack for Passport, Timegrapher and immediate reference use
+- normal app hydration deliberately loads only those 18 rich profiles; large catalogue searches stay server-side
 
-## Movement Finder v1 — COMPLETE
+## Movement Finder — FULL CATALOGUE LIVE
 
 Movement Finder is a Calibre tool, not a sixth primary destination.
 
-Current v1 capabilities:
+Current capabilities:
 
-- evidence-ranked matching across the **18 rich verified movement records** currently in the workshop Knowledge pack
-- matching by maker, calibre markings, diameter, height, BPH, winding type and jewel count
+- evidence-ranked matching across the **full 3,458-calibre v25 catalogue** when signed in
+- server-side ranking by maker, calibre markings/aliases, diameter, height, BPH, winding type and jewel count
+- the original 18 rich verified movements remain an automatic offline/signed-out fallback
 - every result explains the evidence that contributed to its rank
 - scores represent evidence fit, not certainty
 - current Item can prefill observed clues
 - explicit **Use as probable** action writes a candidate only as `Probable`, never `Confirmed`
-- verified movement records retain source URLs and provenance
-
-The wider **3,458-calibre v25 catalogue** remains available as source material for a later Finder indexing phase.
+- selected candidates retain the canonical Knowledge database ID so duplicate maker/calibre labels remain distinguishable
+- rich verified records retain source URLs and provenance; broader catalogue records may contain less detail and are labelled accordingly
 
 A source audit of the current 65 `identification_signals` found structured measurement/specification clues (diameter, height, jewels, BPH, winding/movement type), not bridge-shape or other photo-architecture descriptors. Therefore visual recognition is deliberately **not** claimed or scheduled as complete until richer visual signal data exists.
 
@@ -110,8 +112,9 @@ Substantially complete:
 - Timegrapher sample-clock engine and saved-run comparison
 - Foundation Lock
 - Reliability including atomic cloud concurrency protection
+- normalized full v25 Knowledge database in Supabase
 - live Knowledge Engine workshop integration
-- Movement Finder v1
+- full-catalogue server-side Movement Finder with offline fallback
 - proactive Workbench intelligence
 - donor sacrifice / donor-pair intelligence foundation
 
