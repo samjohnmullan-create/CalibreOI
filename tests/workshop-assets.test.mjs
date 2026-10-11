@@ -12,11 +12,12 @@ test('unsupported workshop asset types fall back safely',()=>{
   assert.equal(normaliseWorkshopAsset({id:'x',type:'watch'}).type,'tray');
 });
 
-test('upsert is stable by workshop asset id',()=>{
-  const state={workshopAssets:[]};
+test('upsert is stable by workshop asset id inside canonical inventory',()=>{
+  const state={inventory:{parts:[],tools:[],consumables:[],donors:[],locations:[]}};
   upsertWorkshopAsset(state,{id:'tool-1',type:'tool',name:'Staking set'});
   upsertWorkshopAsset(state,{id:'tool-1',type:'tool',name:'Bergeon staking set',location:'Bench shelf'});
-  assert.equal(state.workshopAssets.length,1);
+  assert.equal(state.inventory.tools.length,1);
   assert.equal(assetById(state,'tool-1').name,'Bergeon staking set');
   assert.equal(workshopAssets(state)[0].location,'Bench shelf');
+  assert.equal('workshopAssets' in state,false);
 });

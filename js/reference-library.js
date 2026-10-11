@@ -2,108 +2,13 @@ const now=()=>new Date().toISOString();
 const uid=()=>`refdoc-${Date.now().toString(36)}${Math.random().toString(36).slice(2,7)}`;
 const text=v=>String(v??'').trim();
 const fold=v=>text(v).toLowerCase().replace(/[^a-z0-9]+/g,'');
-
-export const REFERENCE_DOCUMENT_TYPES=[
-  ['parts-sheet','Parts sheet'],
-  ['service-manual','Service manual'],
-  ['parts-catalogue','Parts catalogue'],
-  ['interchange','Interchange guide'],
-  ['mainspring-catalogue','Mainspring catalogue'],
-  ['technical-sheet','Technical sheet'],
-  ['training','Training / reference'],
-  ['other','Other']
-];
-
-export const REFERENCE_DOCUMENT_STATUSES=[
-  ['queued','Queued'],
-  ['partial','Partially processed'],
-  ['processed','Processed'],
-  ['reference-only','Reference only']
-];
-
-export function normaliseReferenceDocument(raw={}){
-  const createdAt=raw.createdAt||now();
-  return {
-    id:text(raw.id)||uid(),
-    title:text(raw.title)||text(raw.fileName)||'Untitled reference',
-    maker:text(raw.maker),
-    family:text(raw.family),
-    calibreRange:text(raw.calibreRange||raw.calibre),
-    source:text(raw.source)||'other',
-    sourceUrl:text(raw.sourceUrl),
-    documentType:text(raw.documentType)||'other',
-    yearEra:text(raw.yearEra||raw.year),
-    fileName:text(raw.fileName),
-    importMethod:text(raw.importMethod)||'manual',
-    pagesTotal:Math.max(0,Number(raw.pagesTotal)||0),
-    pagesProcessed:Math.max(0,Number(raw.pagesProcessed)||0),
-    status:text(raw.status)||'queued',
-    notes:text(raw.notes),
-    lastReviewedAt:text(raw.lastReviewedAt),
-    createdAt,
-    updatedAt:raw.updatedAt||createdAt
-  };
-}
-
-export function referenceDocuments(state={}){
-  return (Array.isArray(state.referenceDocuments)?state.referenceDocuments:[]).map(normaliseReferenceDocument);
-}
-
-function documentKey(doc={}){
-  const url=fold(doc.sourceUrl);
-  if(url)return `url:${url}`;
-  const file=fold(doc.fileName);
-  if(file)return `file:${file}|${fold(doc.source)}`;
-  return `title:${fold(doc.title)}|${fold(doc.source)}`;
-}
-
-export function upsertReferenceDocument(state={},raw={}){
-  state.referenceDocuments=Array.isArray(state.referenceDocuments)?state.referenceDocuments:[];
-  const next=normaliseReferenceDocument(raw),key=documentKey(next);
-  const index=state.referenceDocuments.findIndex(doc=>String(doc.id)===String(next.id)||documentKey(doc)===key);
-  if(index>=0){
-    const existing=normaliseReferenceDocument(state.referenceDocuments[index]);
-    const merged=normaliseReferenceDocument({...existing,...next,id:existing.id,createdAt:existing.createdAt,updatedAt:now()});
-    state.referenceDocuments[index]=merged;
-    return merged;
-  }
-  state.referenceDocuments.unshift(next);
-  return next;
-}
-
-export function removeReferenceDocument(state={},id=''){
-  state.referenceDocuments=(state.referenceDocuments||[]).filter(doc=>String(doc.id)!==String(id));
-  return state;
-}
-
-export function factsForReferenceDocument(document={},state={}){
-  const id=String(document.id||'');
-  const file=fold(document.fileName),title=fold(document.title);
-  return (state.referenceFacts||[]).filter(fact=>{
-    if(id&&String(fact.documentId||'')===id)return true;
-    if(file&&fold(fact.sourceName)===file)return true;
-    return !file&&title&&fold(fact.sourceName)===title;
-  });
-}
-
-export function referenceDocumentStats(state={}){
-  const docs=referenceDocuments(state),facts=Array.isArray(state.referenceFacts)?state.referenceFacts:[];
-  return {
-    documents:docs.length,
-    processed:docs.filter(doc=>doc.status==='processed').length,
-    partial:docs.filter(doc=>doc.status==='partial').length,
-    queued:docs.filter(doc=>doc.status==='queued').length,
-    facts:facts.length
-  };
-}
-
-export function searchReferenceDocuments(state={},query='',filters={}){
-  const q=text(query).toLowerCase();
-  return referenceDocuments(state).filter(doc=>{
-    if(filters.source&&doc.source!==filters.source)return false;
-    if(filters.status&&doc.status!==filters.status)return false;
-    if(filters.type&&doc.documentType!==filters.type)return false;
-    if(!q)return true;
-    return [doc.title,doc.maker,doc.family,doc.calibreRange,doc.source,doc.fileName,doc.yearEra,doc.notes].join(' ').toLowerCase().includes(q);
-  }).sort((a,b)=>String(b.updatedAt).localeCompare(String(a.updatedAt)));
-}
+export const REFERENCE_DOCUMENT_TYPES=[['parts-sheet','Parts sheet'],['service-manual','Service manual'],['parts-catalogue','Parts catalogue'],['interchange','Interchange guide'],['mainspring-catalogue','Mainspring catalogue'],['technical-sheet','Technical sheet'],['training','Training / reference'],['other','Other']];
+export const REFERENCE_DOCUMENT_STATUSES=[['queued','Queued'],['partial','Partially processed'],['processed','Processed'],['reference-only','Reference only']];
+export function normaliseReferenceDocument(raw={}){const createdAt=raw.createdAt||now();return {id:text(raw.id)||uid(),recordType:'reference-document',evidenceClass:'source-document',title:text(raw.title)||text(raw.fileName)||'Untitled reference',maker:text(raw.maker),family:text(raw.family),calibreRange:text(raw.calibreRange||raw.calibre),source:text(raw.source)||'other',sourceUrl:text(raw.sourceUrl),documentType:text(raw.documentType)||'other',yearEra:text(raw.yearEra||raw.year),fileName:text(raw.fileName),importMethod:text(raw.importMethod)||'manual',pagesTotal:Math.max(0,Number(raw.pagesTotal)||0),pagesProcessed:Math.max(0,Number(raw.pagesProcessed)||0),status:text(raw.status)||'queued',notes:text(raw.notes),lastReviewedAt:text(raw.lastReviewedAt),createdAt,updatedAt:raw.updatedAt||createdAt};}
+export function referenceDocuments(state={}){return (Array.isArray(state.knowledge)?state.knowledge:[]).filter(x=>x?.recordType==='reference-document').map(normaliseReferenceDocument);}
+function documentKey(doc={}){const url=fold(doc.sourceUrl);if(url)return `url:${url}`;const file=fold(doc.fileName);if(file)return `file:${file}|${fold(doc.source)}`;return `title:${fold(doc.title)}|${fold(doc.source)}`;}
+export function upsertReferenceDocument(state={},raw={}){state.knowledge=Array.isArray(state.knowledge)?state.knowledge:[];const next=normaliseReferenceDocument(raw),key=documentKey(next);const index=state.knowledge.findIndex(doc=>doc?.recordType==='reference-document'&&(String(doc.id)===String(next.id)||documentKey(doc)===key));if(index>=0){const existing=normaliseReferenceDocument(state.knowledge[index]);const merged=normaliseReferenceDocument({...existing,...next,id:existing.id,createdAt:existing.createdAt,updatedAt:now()});state.knowledge[index]=merged;return merged;}state.knowledge.unshift(next);return next;}
+export function removeReferenceDocument(state={},id=''){state.knowledge=(state.knowledge||[]).filter(doc=>!(doc?.recordType==='reference-document'&&String(doc.id)===String(id)));return state;}
+export function factsForReferenceDocument(document={},state={}){const id=String(document.id||''),file=fold(document.fileName),title=fold(document.title);return (state.knowledge||[]).filter(fact=>fact?.recordType==='reference-fact').filter(fact=>{if(id&&String(fact.documentId||'')===id)return true;if(file&&fold(fact.sourceName)===file)return true;return !file&&title&&fold(fact.sourceName)===title;});}
+export function referenceDocumentStats(state={}){const docs=referenceDocuments(state),facts=(state.knowledge||[]).filter(x=>x?.recordType==='reference-fact');return {documents:docs.length,processed:docs.filter(doc=>doc.status==='processed').length,partial:docs.filter(doc=>doc.status==='partial').length,queued:docs.filter(doc=>doc.status==='queued').length,facts:facts.length};}
+export function searchReferenceDocuments(state={},query='',filters={}){const q=text(query).toLowerCase();return referenceDocuments(state).filter(doc=>{if(filters.source&&doc.source!==filters.source)return false;if(filters.status&&doc.status!==filters.status)return false;if(filters.type&&doc.documentType!==filters.type)return false;if(!q)return true;return [doc.title,doc.maker,doc.family,doc.calibreRange,doc.source,doc.fileName,doc.yearEra,doc.notes].join(' ').toLowerCase().includes(q);}).sort((a,b)=>String(b.updatedAt).localeCompare(String(a.updatedAt)));}

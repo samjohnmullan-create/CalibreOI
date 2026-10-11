@@ -23,22 +23,11 @@ test('schema 3 evidence and reference collections migrate to canonical records',
   assert.equal(doc.evidenceClass,'source-document');
 });
 
-test('runtime compatibility views write through without becoming persisted keys',()=>{
-  const state=canonicalState({schemaVersion:4,items:[],work:[],inventory:{parts:[],tools:[],consumables:[],donors:[]},compatibilityEvidence:[],knowledge:[],incoming:[],ledger:[],purchaseReview:[]});
-  state.partFitEvidence.unshift({id:'fit-new',result:'used'});
-  state.referenceFacts.unshift({id:'fact-new',relation:'note'});
-  state.referenceDocuments.unshift({id:'doc-new',title:'Manual'});
-  assert.equal(state.compatibilityEvidence.find(x=>x.id==='fit-new')?.recordType,'bench-fit');
-  assert.equal(state.knowledge.find(x=>x.id==='fact-new')?.recordType,'reference-fact');
-  assert.equal(state.knowledge.find(x=>x.id==='doc-new')?.recordType,'reference-document');
-  assert.equal(Object.keys(state).includes('partFitEvidence'),false);
-  assert.equal(Object.keys(state).includes('referenceFacts'),false);
-  assert.equal(Object.keys(state).includes('referenceDocuments'),false);
-});
-
-test('indexed reference document edits update canonical knowledge',()=>{
-  const state=canonicalState({schemaVersion:4,items:[],work:[],inventory:{parts:[],tools:[],consumables:[],donors:[]},compatibilityEvidence:[],knowledge:[{id:'doc-1',recordType:'reference-document',evidenceClass:'source-document',title:'Old title'}],incoming:[],ledger:[],purchaseReview:[]});
-  state.referenceDocuments[0]={...state.referenceDocuments[0],title:'Updated title'};
-  assert.equal(state.knowledge.find(x=>x.id==='doc-1')?.title,'Updated title');
-  assert.equal(state.knowledge.find(x=>x.id==='doc-1')?.recordType,'reference-document');
+test('canonical runtime exposes evidence and knowledge directly only',()=>{
+  const state=canonicalState({schemaVersion:5,items:[],work:[],inventory:{parts:[],tools:[],consumables:[],donors:[]},compatibilityEvidence:[{id:'fit-1',recordType:'bench-fit'}],knowledge:[{id:'fact-1',recordType:'reference-fact'},{id:'doc-1',recordType:'reference-document'}],incoming:[],ledger:[]});
+  assert.equal(state.compatibilityEvidence.length,1);
+  assert.equal(state.knowledge.length,2);
+  assert.equal('partFitEvidence' in state,false);
+  assert.equal('referenceFacts' in state,false);
+  assert.equal('referenceDocuments' in state,false);
 });
