@@ -1,7 +1,8 @@
 // Full v25 Knowledge Database runtime.
 // This reference database is lazy-loaded and never persisted into Core Item/Work state.
 const ASSET_URL=new URL('../data/calibre-knowledge-v25.json.gz',import.meta.url);
-const EXPECTED_GZIP_SHA256='e67f56b3718ad7e15f6f125f395a33862747ba0fb45f573497ca71f9449e3c4a';
+const EXPECTED_RAW_BYTES=5030848;
+const EXPECTED_RAW_SHA256='04b11354a1587d06282d359eecd165516ba5af80f1603497de3ea0e2ac6d2846';
 const EXPECTED_COUNTS={sources:90,families:67,calibres:3458,part_references:736,calibre_part_refs:1172,compatibility_edges:9165,aliases:14,family_evidence:2,measured_parts:22,dimensional_candidates:17,external_coverage:8,movement_applications:51,source_capabilities:9,application_compatibility:30,movement_specs:18,technical_documents:10,identification_signals:65,app_feature_bindings:15,knowledge_rules:8,owned_watch_profiles:9,owned_watch_research:17,owned_watch_parts:14,calibre_catalog_index:372,manufacturer_coverage:7,research_queue:33,brand_movement_associations:41,brand_identity_notes:12,waltham_grade_index:14};
 let databasePromise=null,indexPromise=null;
 
@@ -25,7 +26,16 @@ function validate(db){
   return db;
 }
 export async function loadKnowledgeDatabase(){
-  if(!databasePromise)databasePromise=(async()=>{const bytes=await readAsset(),digest=await sha256(bytes);if(digest!==EXPECTED_GZIP_SHA256)throw new Error('Knowledge database integrity check failed.');return validate(JSON.parse(await gunzip(bytes)));})();
+  if(!databasePromise)databasePromise=(async()=>{
+    const compressed=await readAsset();
+    let text;
+    try{text=await gunzip(compressed);}catch(error){throw new Error(`Knowledge database decompression failed: ${error?.message||error}`);}
+    const raw=new TextEncoder().encode(text);
+    if(raw.byteLength!==EXPECTED_RAW_BYTES)throw new Error(`Knowledge database byte length mismatch: ${raw.byteLength}`);
+    const digest=await sha256(raw);
+    if(digest!==EXPECTED_RAW_SHA256)throw new Error('Knowledge database content integrity check failed.');
+    return validate(JSON.parse(text));
+  })();
   return databasePromise;
 }
 export async function knowledgeDatabaseStats(){const db=await loadKnowledgeDatabase();return Object.fromEntries(Object.entries(db).map(([k,v])=>[k,Array.isArray(v)?v.length:(v&&typeof v==='object'?Object.keys(v).length:0)]));}
@@ -50,4 +60,4 @@ export async function compatibilityForCalibreId(calibreId){const {edgesByCalibre
 export async function technicalDocumentsFor(maker,calibre){const {db}=await indexes(),mk=norm(maker),ck=norm(calibre);return db.technical_documents.filter(d=>(!mk||norm(d.maker)===mk)&&(!ck||norm(d.calibre_scope).includes(ck)));}
 export async function movementApplicationsFor({maker='',calibre='',serial=null}={}){const {db}=await indexes(),mk=norm(maker),ck=norm(calibre),sn=Number(serial);return db.movement_applications.filter(r=>(!mk||norm(r.maker)===mk)&&(!ck||norm(r.grade_or_calibre)===ck)&&(!Number.isFinite(sn)||((r.serial_min==null||sn>=Number(r.serial_min))&&(r.serial_max==null||sn<=Number(r.serial_max)))));}
 export async function brandMovementAssociations(brand){const {db}=await indexes(),b=norm(brand);return db.brand_movement_associations.filter(r=>!b||norm(r.brand)===b);}
-export {EXPECTED_COUNTS};
+export {EXPECTED_COUNTS,EXPECTED_RAW_BYTES,EXPECTED_RAW_SHA256};
