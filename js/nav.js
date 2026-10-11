@@ -85,6 +85,14 @@ if(here==='suppliers.html'){
   }
 }
 
+if(here==='timegrapher.html'&&!document.querySelector('script[data-calibre-timegrapher-audit]')){
+  const timingUi=document.createElement('script');
+  timingUi.type='module';
+  timingUi.src='js/timegrapher-audit-runtime.js?v=1';
+  timingUi.dataset.calibreTimegrapherAudit='1';
+  document.head.appendChild(timingUi);
+}
+
 if(['index.html','calibre.html'].includes(here)&&!document.querySelector('script[data-calibre-visibility-ui]')){
   const visibilityUi=document.createElement('script');
   visibilityUi.type='module';
