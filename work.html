@@ -27,10 +27,10 @@ import {STAGE_COPY} from './js/stages.js?v=10';
 import {ensureWorkStages} from './js/work-stages.js?v=1';
 renderPrimaryNavigation(document,'work.html');
 const $=id=>document.getElementById(id),params=new URLSearchParams(location.search),workId=params.get('id')||'',esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let state=await loadState();state.items=Array.isArray(state.items)?state.items:[];state.workRecords=Array.isArray(state.workRecords)?state.workRecords:[];
-let wi=state.workRecords.findIndex(w=>String(w.id)===String(workId));
+let state=await loadState();state.items=Array.isArray(state.items)?state.items:[];state.work=Array.isArray(state.work)?state.work:[];
+let wi=state.work.findIndex(w=>String(w.id)===String(workId));
 if(wi<0){$('title').textContent='Work not found';$('msg').textContent='Return to Workbench and choose a Work record.';$('save').disabled=true;throw new Error('Work not found');}
-let work=state.workRecords[wi],item=state.items.find(i=>String(i.id)===String(work.itemId));ensureWorkStages(work,item);
+let work=state.work[wi],item=state.items.find(i=>String(i.id)===String(work.itemId));ensureWorkStages(work,item);
 $('menuItem').href=item?`item.html?id=${encodeURIComponent(item.id)}&tab=work`:'inventory.html';
 $('menuTiming').href=`timegrapher.html?work=${encodeURIComponent(workId)}`;
 $('menuParts').href=`suppliers.html?work=${encodeURIComponent(workId)}`;
@@ -57,9 +57,9 @@ function paint(){
   paintStages();paintSteps(s);
 }
 function capture(){captureStage();fields.forEach(k=>{if($(k))work[k]=$(k).value;});work.title=$('workTitle').value;work.updatedAt=new Date().toISOString();if(work.status==='Complete'&&!work.completedAt)work.completedAt=new Date().toISOString().slice(0,10);}
-async function persistState(message=''){state.workRecords[wi]=work;if(item){item.workIds=[...new Set([...(item.workIds||[]),work.id])];item.updatedAt=new Date().toISOString();const ii=state.items.findIndex(x=>String(x.id)===String(item.id));if(ii>=0)state.items[ii]=item;}state.currentItemId=item?.id||state.currentItemId;state.currentWorkId=work.id;await saveState(state);if(message){$('msg').textContent=message;$('stageMsg').textContent=message;}}
+async function persistState(message=''){state.work[wi]=work;if(item){item.workIds=[...new Set([...(item.workIds||[]),work.id])];item.updatedAt=new Date().toISOString();const ii=state.items.findIndex(x=>String(x.id)===String(item.id));if(ii>=0)state.items[ii]=item;}state.currentItemId=item?.id||state.currentItemId;state.currentWorkId=work.id;await saveState(state);if(message){$('msg').textContent=message;$('stageMsg').textContent=message;}}
 async function persist(message='Saved'){capture();ensureWorkStages(work,item);await persistState(message);paint();}
-$('save').onclick=()=>persist('Saved');$('wait').onclick=async()=>{capture();work.status='Waiting';if(!work.blocker)work.blocker='Waiting on parts';await persistState('Moved to Waiting');paint();};$('complete').onclick=async()=>{capture();work.status='Complete';work.blocker='';await persistState('Work completed');paint();};$('remove').onclick=async()=>{if(!confirm(`Remove ${work.title||'this Work record'}?`))return;state.workRecords.splice(wi,1);if(item){item.workIds=(item.workIds||[]).filter(id=>id!==work.id);const ii=state.items.findIndex(x=>String(x.id)===String(item.id));if(ii>=0)state.items[ii]=item;}await saveState(state);location.href='workbench.html';};
+$('save').onclick=()=>persist('Saved');$('wait').onclick=async()=>{capture();work.status='Waiting';if(!work.blocker)work.blocker='Waiting on parts';await persistState('Moved to Waiting');paint();};$('complete').onclick=async()=>{capture();work.status='Complete';work.blocker='';await persistState('Work completed');paint();};$('remove').onclick=async()=>{if(!confirm(`Remove ${work.title||'this Work record'}?`))return;state.work.splice(wi,1);if(item){item.workIds=(item.workIds||[]).filter(id=>id!==work.id);const ii=state.items.findIndex(x=>String(x.id)===String(item.id));if(ii>=0)state.items[ii]=item;}await saveState(state);location.href='workbench.html';};
 $('prevStage').onclick=async()=>{captureStage();work.stageIndex=Math.max(0,work.stageIndex-1);await persistState();paint();};$('nextStage').onclick=async()=>{captureStage();work.stageIndex=Math.min(work.stages.length-1,work.stageIndex+1);await persistState();paint();};
 ['stageCondition','stageMeasure','stageNotes'].forEach(id=>$(id).addEventListener('change',()=>persist('Stage saved')));$('stageComplete').addEventListener('change',()=>persist('Stage saved'));
 $('type').addEventListener('change',async()=>{capture();work.type=$('type').value;ensureWorkStages(work,item);await persistState('Work type updated');paint();});$('decision').addEventListener('change',async()=>{capture();ensureWorkStages(work,item);await persistState('Decision updated');paint();});
