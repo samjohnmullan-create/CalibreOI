@@ -18,13 +18,13 @@ import {loadState,saveState} from './js/store.js?v=26';
 import {allItems,itemDisplayName} from './js/item-model.js?v=5';
 import {uploadMedia,privateMediaThumbnailObjectUrl,retryQueuedMediaUpload} from './js/media.js?v=4';
 import {listQueuedMediaUploads,removeQueuedMediaUpload} from './js/media-upload-queue.js?v=1';
-import {CAPTURE_ROLES,captureRoleConfig,captureTargets,captureAttachment} from './js/capture-model.js?v=1';
+import {CAPTURE_ROLES,captureRoleConfig,captureTargets,captureAttachment} from './js/capture-model.js?v=2';
 const $=id=>document.getElementById(id),params=new URLSearchParams(location.search);let state=await loadState(),selectedRole='movement',selectedFile=null,objectUrls=[];
-state.items=Array.isArray(state.items)?state.items:[];state.workRecords=Array.isArray(state.workRecords)?state.workRecords:[];
+state.items=Array.isArray(state.items)?state.items:[];state.work=Array.isArray(state.work)?state.work:[];
 const requestedItemId=params.get('item')||params.get('id')||'',requestedWorkId=params.get('work')||'';
 const targets=()=>captureTargets(state,allItems);
 const selectedItem=()=>allItems(state).find(i=>String(i.id)===String($('itemSelect').value));
-const selectedWork=()=>state.workRecords.find(w=>String(w.id)===String($('workSelect').value));
+const selectedWork=()=>state.work.find(w=>String(w.id)===String($('workSelect').value));
 function safe(text){return String(text??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function formatBytes(bytes){const n=Number(bytes)||0;if(n<1024)return `${n} B`;if(n<1048576)return `${(n/1024).toFixed(1)} KB`;return `${(n/1048576).toFixed(1)} MB`;}
 function paintTargets(){const rows=targets();$('itemSelect').innerHTML=rows.length?rows.map(t=>`<option value="${safe(t.id)}">${safe(t.title)}</option>`).join(''):'<option value="">No Items available</option>';const preferred=requestedItemId||state.currentItemId||'';if(rows.some(t=>String(t.id)===String(preferred)))$('itemSelect').value=preferred;paintWorks();paintContext();paintRecent();paintQueue();}
