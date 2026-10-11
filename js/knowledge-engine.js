@@ -68,7 +68,8 @@ export async function hydrateKnowledgeFromCloud({force=false}={}){
     if(!s?.user||s.localOnly){knowledgeStatus={...knowledgeStatus,source:'static-v25',hydrated:false,error:''};return getKnowledgeStatus();}
     const sb=supabaseClient();
     const [profilesResult,docsResult]=await Promise.all([
-      sb.from('calibre_kb_movement_profiles').select('*').order('maker',{ascending:true}).order('calibre',{ascending:true}),
+      // Keep ordinary workshop hydration deliberately small. The full 3,458-calibre catalogue is queried on demand by Movement Finder.
+      sb.from('calibre_kb_verified_profiles').select('*').order('maker',{ascending:true}).order('calibre',{ascending:true}),
       sb.from('calibre_kb_documents').select('provider,maker,calibre_scope,document_type,title,landing_url,notes').order('maker',{ascending:true})
     ]);
     if(profilesResult.error)throw profilesResult.error;
