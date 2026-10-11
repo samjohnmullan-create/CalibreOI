@@ -20,7 +20,10 @@ const modules=[
   'js/reference-ui-runtime.js',
   'js/visibility-ui-runtime.js',
   'js/timing-runs.js',
-  'js/timegrapher-audit-runtime.js'
+  'js/timegrapher-audit-runtime.js',
+  'js/knowledge-learning.js',
+  'js/knowledge-learning-ui.js',
+  'js/knowledge-admin-prefill.js'
 ];
 
 for(const file of modules){
