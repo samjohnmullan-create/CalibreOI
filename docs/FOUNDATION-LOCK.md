@@ -24,6 +24,14 @@ Canonical top-level fields are:
 - `settings`
 - `updatedAt`
 
+Canonical `inventory` resources are:
+
+- `parts`
+- `tools`
+- `consumables`
+- `donors`
+- `locations` — trays, drawers, bins and other physical storage locations
+
 Unknown top-level Core fields are rejected. Persisted-shape changes require a schema version change and a forward migration.
 
 ## Migration history
@@ -32,6 +40,7 @@ Unknown top-level Core fields are rejected. Persisted-shape changes require a sc
 - Schema 3: `tools` / `partsStock` → `inventory.tools` / `inventory.parts`.
 - Schema 4: `partFitEvidence` → `compatibilityEvidence`; `referenceFacts` / `referenceDocuments` → typed `knowledge` records.
 - Schema 5: `purchaseReview` → typed `incoming` records; `ledger` becomes an intentional durable Core collection.
+- Schema 6: legacy `workshopAssets` → canonical `inventory.locations`, `inventory.tools` and `inventory.parts`; retired `donorJobId` is preserved only as a neutral `legacyWorkRef` during migration.
 
 Legacy field names remain only inside forward-migration and archive/import boundaries. Active runtime features read and write canonical collections directly.
 
@@ -72,10 +81,12 @@ Legacy field names remain only inside forward-migration and archive/import bound
 ### FL-6 — runtime/design cleanup — COMPLETE
 - active Parts code reads `inventory.parts` directly
 - active Tools UI reads `inventory.tools` directly
+- Workshop IDs use `inventory.locations`, `inventory.tools` and `inventory.parts` directly
 - bench fit history reads/writes `compatibilityEvidence` directly
 - Reference Intelligence, imports and Reference Library read/write typed `knowledge` records directly
 - Incoming review UI reads typed `incoming` records directly
 - temporary runtime compatibility aliases/proxies removed from the store
+- hidden `workshopAssets` side-state retired through schema 6
 - architecture terminology aligned to one Core + schema versions
 - regression tests now assert canonical runtime ownership rather than compatibility aliases
 
