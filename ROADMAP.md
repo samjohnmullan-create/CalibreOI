@@ -1,6 +1,6 @@
 # Calibre & Co. — Canonical Roadmap
 
-_Last revised: 11 October 2026_
+_Last revised: 12 October 2026_
 
 ## Product direction
 
@@ -36,40 +36,66 @@ Calibre now has checked portable backups, local recovery snapshots, canonical in
 
 See `docs/RELIABILITY.md`.
 
+## Full v25 Knowledge Database — LIVE
+
+The **entire v25 reference database** is now a lazy-loaded runtime asset outside Core state. The original ~5 MB JSON is stored as an integrity-checked gzip reference asset and only loads when a full-database feature needs it.
+
+Runtime coverage includes:
+
+- 90 sources
+- 67 movement families
+- **3,458 calibres**
+- 736 part references
+- **1,172 calibre → part-reference links**
+- **9,165 compatibility edges**
+- 14 aliases
+- family evidence, measured parts and dimensional candidates
+- 51 movement applications
+- 30 application-compatibility records
+- 18 rich movement specifications
+- 10 technical documents
+- 65 identification signals
+- owned-watch profiles, research and owned-watch parts
+- calibre catalogue index and manufacturer coverage
+- research queue
+- 41 brand/movement associations and brand identity notes
+- Waltham grade index
+- Knowledge rules, feature bindings and source capability records
+
+`js/knowledge-database.js` provides indexed queries over the whole dataset while the existing rich movement pack remains useful as a high-confidence overlay. The database is reference data and is never copied wholesale into Item/Work persistence.
+
 ## Knowledge Engine integration — LIVE
 
-The Knowledge Engine is now part of workshop flow rather than an isolated reference module:
+The Knowledge Engine is part of workshop flow rather than an isolated reference module:
 
-- verified v25 movement specifications feed Passport suggestions
+- verified movement specifications feed Passport suggestions
 - Passport fills **missing movement-owned fields only**; movement launch year never becomes watch year automatically
 - Timegrapher preloads documented BPH/frequency/lift angle without changing detector maths
 - missing lift angle stays unset; Calibre never invents it
 - Work / Workbench / Parts surfaces sourced part references and technical documents
 - exact documented part references remain distinguishable from family-reported references
-- canonical imported `knowledge` facts/documents are surfaced alongside the compact v25 workshop pack
-- 18 rich verified movement records currently carry Passport/Timegrapher/parts detail
+- canonical imported `knowledge` facts/documents remain separate from shared v25 reference data
 
-## Movement Finder v1 — COMPLETE
+## Movement Finder — FULL DATABASE LIVE
 
 Movement Finder is a Calibre tool, not a sixth primary destination.
 
-Current v1 capabilities:
+Current capabilities:
 
-- evidence-ranked matching across the **18 rich verified movement records** currently in the workshop Knowledge pack
-- matching by maker, calibre markings, diameter, height, BPH, winding type and jewel count
+- evidence-ranked matching across the **full 3,458-calibre v25 catalogue**
+- matching by maker, calibre markings/aliases, diameter, height, BPH, winding type and jewel count where available
+- richer 18-record verified specs overlay deeper evidence where available
 - every result explains the evidence that contributed to its rank
 - scores represent evidence fit, not certainty
 - current Item can prefill observed clues
-- explicit **Use as probable** action writes a candidate only as `Probable`, never `Confirmed`
-- verified movement records retain source URLs and provenance
+- explicit **Use as probable** writes a candidate only as `Probable`, never `Confirmed`
+- probable candidates retain the v25 calibre ID for later joins into parts/compatibility evidence
 
-The wider **3,458-calibre v25 catalogue** remains available as source material for a later Finder indexing phase.
-
-A source audit of the current 65 `identification_signals` found structured measurement/specification clues (diameter, height, jewels, BPH, winding/movement type), not bridge-shape or other photo-architecture descriptors. Therefore visual recognition is deliberately **not** claimed or scheduled as complete until richer visual signal data exists.
+A source audit of the current 65 `identification_signals` found structured measurement/specification clues (diameter, height, jewels, BPH, winding/movement type), not bridge-shape or other photo-architecture descriptors. Visual recognition is therefore deliberately **not** claimed until richer visual signal data exists.
 
 ## Proactive Workbench intelligence — COMPLETE
 
-Work and Workbench now surface a compact **Calibre Suggestions** rail derived from the current Item, Work and sourced Knowledge.
+Work and Workbench surface a compact **Calibre Suggestions** rail derived from the current Item, Work and sourced Knowledge.
 
 - maximum three suggestions at a time
 - explicit blocker stays highest priority
@@ -82,7 +108,7 @@ Work and Workbench now surface a compact **Calibre Suggestions** rail derived fr
 
 ## Parts + Donor intelligence — COMPLETE FOUNDATION
 
-Calibre now separates **compatibility evidence** from **donor sacrifice economics**.
+Calibre separates **compatibility evidence** from **donor sacrifice economics**.
 
 - Parts can compare loose-stock evidence against donor candidates
 - high-value or apparently complete donors are protected when fit is not bench-verified
@@ -110,8 +136,9 @@ Substantially complete:
 - Timegrapher sample-clock engine and saved-run comparison
 - Foundation Lock
 - Reliability including atomic cloud concurrency protection
+- **full v25 Knowledge Database runtime**
 - live Knowledge Engine workshop integration
-- Movement Finder v1
+- full-database Movement Finder
 - proactive Workbench intelligence
 - donor sacrifice / donor-pair intelligence foundation
 
