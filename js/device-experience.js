@@ -2,6 +2,7 @@ const STORAGE_KEY='calibre-device-mode';
 const allowed=new Set(['auto','workstation','touch','capture']);
 const page=(location.pathname.split('/').pop()||'index.html').split('?')[0];
 const html=document.documentElement;
+if(!document.querySelector('link[data-calibre-device-css]')){const link=document.createElement('link');link.rel='stylesheet';link.href='css/device-experience.css?v=1';link.dataset.calibreDeviceCss='1';document.head.appendChild(link);}
 const coarse=()=>matchMedia?.('(pointer: coarse)').matches||false;
 const fine=()=>matchMedia?.('(pointer: fine)').matches||false;
 const hover=()=>matchMedia?.('(hover: hover)').matches||false;
