@@ -1,5 +1,6 @@
 import * as base from "./store-local-fast.js?v=1";
 import { ensureAllJobItemLinks, ensureItemForJob } from "./item-integrity.js?v=1";
+import { ensureWorkForJob, reconcileItemWorkPassportLinks } from "./item-work-passport-links.js?v=1";
 
 export * from "./store-local-fast.js?v=1";
 
@@ -90,10 +91,11 @@ export async function loadState(){
     try{state.jobs[index]=base.normalise(state.jobs[index]);}catch{}
     tidyJob(state.jobs[index]);
     sanitisePhotos(state.jobs[index]);
-    ensureItemForJob(state,state.jobs[index]);
+    const linked=ensureItemForJob(state,state.jobs[index]);
+    ensureWorkForJob(state,state.jobs[index],linked.item);
   }
   const page=pageName();
-  if(page==="inventory.html"||page==="item.html")ensureAllJobItemLinks(state);
+  if(page==="inventory.html"||page==="item.html")reconcileItemWorkPassportLinks(state);
   return state;
 }
 
@@ -102,10 +104,10 @@ export async function saveState(state){
   if(selected){
     tidyJob(selected);
     sanitisePhotos(selected);
-    ensureItemForJob(state,selected);
+    const linked=ensureItemForJob(state,selected);
+    ensureWorkForJob(state,selected,linked.item);
   }
-  const page=pageName();
-  if(page==="inventory.html"||page==="item.html")ensureAllJobItemLinks(state);
+  reconcileItemWorkPassportLinks(state);
   return base.saveState(state);
 }
 
@@ -126,6 +128,7 @@ export async function importInboxItems(items){
   if(previousCurrentId&&state.jobs.some(j=>j.id===previousCurrentId)&&state.currentId!==previousCurrentId){state.currentId=previousCurrentId;changed=true;}
   for(const job of (state.jobs||[])){const old=job.business?.soldDate;tidyJob(job);if(old!==job.business.soldDate)changed=true;if(sanitisePhotos(job))changed=true;}
   const integrity=ensureAllJobItemLinks(state);if(integrity.changed)changed=true;
+  const relationships=reconcileItemWorkPassportLinks(state);if(relationships.changed)changed=true;
   if(changed)await base.saveState(state);
   return {...result,state};
 }

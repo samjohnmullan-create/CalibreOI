@@ -9,7 +9,7 @@ const completeStatus=s=>['Ready to list','Listed','Sold','Spares'].includes(Stri
 
 export function serviceHistoryEntry(job={}){
   return {
-    jobId:text(job.id),jobNumber:text(job.jobId),status:text(job.status),decision:text(job.decision),
+    workId:text(job.workId),jobId:text(job.id),jobNumber:text(job.jobId),status:text(job.status),decision:text(job.decision),
     openedAt:text(job.createdAt||job.openedAt),updatedAt:text(job.updatedAt),completedAt:completeStatus(job.status)?text(job.updatedAt||new Date().toISOString()):'',
     diagnosis:text(job.diagnosis),repairPerformed:text(job.repairPerformed),outcome:text(job.outcome||job.finalOutcome||''),
     benchMeasurements:clone(job.benchMeasurements||{}),diagnostics:diagnostics(job),partsUsed:usedParts(job),timingRuns:timing(job)
