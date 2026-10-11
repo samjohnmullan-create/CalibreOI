@@ -98,17 +98,22 @@ Work and Workbench now surface a compact **Calibre Suggestions** rail derived fr
 - near-complete Work can prompt Final QC
 - suggestions remain derived and non-persistent
 
-## Parts + Donor intelligence — COMPLETE FOUNDATION
+## Parts + Donor intelligence — FULL KNOWLEDGE LIVE
 
-Calibre now separates **compatibility evidence** from **donor sacrifice economics**.
+Calibre now combines **reference compatibility evidence**, **owned stock**, **bench history** and **donor sacrifice economics**.
 
-- Parts can compare loose-stock evidence against donor candidates
-- high-value or apparently complete donors are protected when fit is not bench-verified
-- similar-quality loose stock is preferred when it avoids donor sacrifice
+- each real Work part requirement can query the full server-side Knowledge catalogue on demand
+- exact factory part references and serial-aware movement applications rank first
+- documented shared factory part numbers and explicit compatibility edges become donor evidence
+- dimensional candidates remain low-confidence measure/modify leads
+- same-family movements remain **lead only**, never proof of interchangeability
+- owned loose parts are promoted when their recorded reference matches documented Knowledge evidence
+- owned donor Items inherit documented calibre/part compatibility by canonical Knowledge ID or exact maker/calibre identity
+- high-value or apparently complete donors are still protected when fit is not bench-verified
+- comparable loose stock is preferred when it avoids donor sacrifice
 - bench-verified low-risk donors can be promoted as sensible donor choices
 - donor risk considers recorded value/investment and whether the donor is already documented as parted
 - same-calibre owned donor Items can create a **combine opportunity** alert
-- calibre-overlap pairs remain leads only, never proof of interchangeability
 - physical/bench verification still outranks family/name similarity
 
 ## Current state
@@ -133,7 +138,7 @@ Substantially complete:
 - Knowledge Editor / Research Inbox with allow-listed writes and audit history
 - full-catalogue server-side Movement Finder with offline fallback
 - proactive Workbench intelligence
-- donor sacrifice / donor-pair intelligence foundation
+- full-catalogue Parts + Donor intelligence with donor-protection economics
 
 ## Current build order
 
