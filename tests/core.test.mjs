@@ -37,12 +37,22 @@ test('Core rejects unknown top-level junk drawers',()=>{
   assert.equal(validateCoreState(state).healthy,false);
 });
 
-test('schema 1 workRecords migrates forward to schema 2 work',()=>{
+test('schema 1 workRecords migrates through current schema',()=>{
   const old={schemaVersion:1,currentItemId:null,currentWorkId:null,items:[],workRecords:[{id:'work-old',itemId:'item-old'}],mediaAssets:[],inventory:{parts:[],tools:[],consumables:[],donors:[]},compatibilityEvidence:[],incoming:[],knowledge:[],settings:{},updatedAt:'2026-10-11T00:00:00.000Z'};
   const migrated=migrateCoreState(old);
   assert.equal(migrated.schemaVersion,CURRENT_SCHEMA_VERSION);
   assert.deepEqual(migrated.work,old.workRecords);
   assert.equal('workRecords' in migrated,false);
+});
+
+test('schema 2 tools and partsStock migrate into canonical inventory',()=>{
+  const old={schemaVersion:2,currentItemId:null,currentWorkId:null,items:[],work:[],mediaAssets:[],inventory:{parts:[{id:'part-existing',name:'Existing'}],tools:[],consumables:[],donors:[]},partsStock:[{id:'part-legacy',name:'Legacy part'}],tools:[{id:'tool-legacy',name:'Legacy tool'}],compatibilityEvidence:[],incoming:[],knowledge:[],settings:{},updatedAt:'2026-10-11T00:00:00.000Z'};
+  const migrated=migrateCoreState(old);
+  assert.equal(migrated.schemaVersion,CURRENT_SCHEMA_VERSION);
+  assert.deepEqual(migrated.inventory.parts.map(x=>x.id),['part-existing','part-legacy']);
+  assert.deepEqual(migrated.inventory.tools.map(x=>x.id),['tool-legacy']);
+  assert.equal('partsStock' in migrated,false);
+  assert.equal('tools' in migrated,false);
 });
 
 test('current schema remains stable through migration',()=>{

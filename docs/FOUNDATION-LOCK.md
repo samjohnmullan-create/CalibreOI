@@ -32,8 +32,6 @@ The local/cloud store currently preserves additional collections that predate or
 Current transitional collections are:
 
 - `ledger` — business cash events; ownership/model must be resolved before migration
-- `tools` — currently separate from canonical `inventory.tools`
-- `partsStock` — currently separate from canonical `inventory.parts`
 - `purchaseReview` — review/intake workflow state; determine whether derived, Incoming-owned or specialist state
 - `partFitEvidence` — bench compatibility evidence; migrate deliberately to canonical compatibility evidence without losing verdict semantics
 - `referenceFacts` — sourced external compatibility/reference evidence; determine production Knowledge/Compatibility ownership
@@ -42,6 +40,8 @@ Current transitional collections are:
 These fields are **migration debt, not a licence to add more top-level buckets**.
 
 `workRecords` is no longer a live transitional collection. Schema 2 migrates it forward to canonical `work`, local and cloud persistence save only `work`, and the strict Core rejects `workRecords` after the migration boundary.
+
+`tools` and `partsStock` are no longer persisted top-level collections. Schema 3 migrates them into canonical `inventory.tools` and `inventory.parts` while preserving resource IDs and existing canonical inventory entries. A temporary non-enumerable runtime alias remains for older UI code during Foundation Lock; it is not persisted and should be removed during FL-6 cleanup.
 
 ## Rules during Foundation Lock
 
@@ -69,10 +69,13 @@ Foundation Lock should proceed in small migrations:
 - local/cloud merge and active Work selectors use `work`
 - retired `workRecords` is rejected by strict Core after migration
 
-### FL-3 — Inventory convergence
-- move loose parts/tools/consumables/donors under `inventory`
-- migrate `partsStock` and `tools`
-- preserve IDs and compatibility evidence links
+### FL-3 — Inventory convergence — COMPLETE
+- persisted schema 3 moves loose parts and tools under canonical `inventory`
+- existing `partsStock` migrates into `inventory.parts`
+- existing `tools` migrates into `inventory.tools`
+- existing IDs are preserved and duplicate IDs are not re-added
+- cloud reconciliation merges parts, tools, consumables and donors independently
+- temporary runtime aliases keep older inventory UI working without persisting legacy top-level buckets
 
 ### FL-4 — Evidence/Knowledge convergence
 - map bench fit evidence and sourced reference evidence into explicit canonical evidence/knowledge records
@@ -84,6 +87,7 @@ Foundation Lock should proceed in small migrations:
 - avoid duplicating commercial totals onto multiple records
 
 ### FL-6 — runtime/design cleanup
+- remove temporary inventory compatibility aliases after all active UI reads canonical `inventory`
 - move reusable styling out of runtime JavaScript
 - retire duplicate/obsolete active pages and aliases only after route usage is audited
 - update architecture/tests/docs to the final persisted contract

@@ -1,7 +1,7 @@
 // Calibre Core is a stable domain contract. The Core itself is not versioned by product generation.
 // Only persisted schema data is versioned, and future changes must use explicit migrations.
 
-export const CURRENT_SCHEMA_VERSION = 2;
+export const CURRENT_SCHEMA_VERSION = 3;
 
 export const ITEM_TYPES = ['watch','clock','jewellery','accessory','collectible','other'];
 export const ITEM_PURPOSES = ['resale','personal','customer','donor','reference'];
@@ -10,11 +10,28 @@ export const WORK_TYPES = ['service','repair','inspection','cleaning','restorati
 export const WORK_STATUSES = ['Planned','In progress','Waiting','Complete','Cancelled'];
 
 const TOP_LEVEL_KEYS = new Set(['schemaVersion','currentItemId','currentWorkId','items','work','mediaAssets','inventory','compatibilityEvidence','incoming','knowledge','settings','updatedAt']);
-const FORBIDDEN_LEGACY_KEYS = new Set(['jobs','jobId','legacyJobId','specialistJobId','sourceJobId','currentId','workRecords']);
+const FORBIDDEN_LEGACY_KEYS = new Set(['jobs','jobId','legacyJobId','specialistJobId','sourceJobId','currentId','workRecords','partsStock']);
 const now=()=>new Date().toISOString();
 const uid=prefix=>`${prefix}-${Math.random().toString(36).slice(2,9)}${Date.now().toString(36).slice(-4)}`;
 const list=v=>Array.isArray(v)?v:[];
 const text=v=>v==null?'':String(v);
+
+function mergeResources(current=[],legacy=[]){
+  const out=[],seen=new Set();
+  for(const raw of [...list(current),...list(legacy)]){
+    if(!raw||typeof raw!=='object')continue;
+    const id=String(raw.id||'');
+    if(id&&seen.has(id))continue;
+    if(id)seen.add(id);
+    out.push(structuredClone(raw));
+  }
+  return out;
+}
+
+export function normaliseInventory(value={}){
+  const source=value&&typeof value==='object'?value:{};
+  return {parts:list(source.parts),tools:list(source.tools),consumables:list(source.consumables),donors:list(source.donors)};
+}
 
 export function blankCommercial(partial={}){return {purchasePrice:'',buyerPremium:'',postage:'',preparationCost:'',repairCost:'',partsCost:'',consumables:'',externalService:'',marketplaceFees:'',shippingToBuyer:'',otherCost:'',labourMinutes:'',labourRate:'',targetSale:'',minSale:'',actualSale:'',source:'',saleChannel:'Not listed',acquiredAt:'',listedAt:'',soldAt:'',...partial};}
 export function blankIdentity(partial={}){return {maker:'',model:'',title:'',country:'',era:'',year:'',materials:'',marks:'',reference:'',serial:'',dimensions:'',weight:'',notes:'',...partial};}
@@ -38,7 +55,7 @@ export function createMediaAsset(partial={}){
 }
 
 export function createCoreState(partial={}){
-  return {schemaVersion:CURRENT_SCHEMA_VERSION,currentItemId:partial.currentItemId||null,currentWorkId:partial.currentWorkId||null,items:list(partial.items),work:list(partial.work),mediaAssets:list(partial.mediaAssets),inventory:partial.inventory&&typeof partial.inventory==='object'?partial.inventory:{parts:[],tools:[],consumables:[],donors:[]},compatibilityEvidence:list(partial.compatibilityEvidence),incoming:list(partial.incoming),knowledge:list(partial.knowledge),settings:partial.settings&&typeof partial.settings==='object'?partial.settings:{},updatedAt:partial.updatedAt||now()};
+  return {schemaVersion:CURRENT_SCHEMA_VERSION,currentItemId:partial.currentItemId||null,currentWorkId:partial.currentWorkId||null,items:list(partial.items),work:list(partial.work),mediaAssets:list(partial.mediaAssets),inventory:normaliseInventory(partial.inventory),compatibilityEvidence:list(partial.compatibilityEvidence),incoming:list(partial.incoming),knowledge:list(partial.knowledge),settings:partial.settings&&typeof partial.settings==='object'?partial.settings:{},updatedAt:partial.updatedAt||now()};
 }
 
 // Migrations are intentionally explicit. A new persisted shape increments schemaVersion
@@ -53,6 +70,15 @@ registerSchemaMigration(1,state=>{
   const next=structuredClone(state||{});
   if(!Array.isArray(next.work)&&Array.isArray(next.workRecords))next.work=next.workRecords;
   delete next.workRecords;
+  return next;
+});
+registerSchemaMigration(2,state=>{
+  const next=structuredClone(state||{}),inventory=normaliseInventory(next.inventory);
+  inventory.parts=mergeResources(inventory.parts,next.partsStock);
+  inventory.tools=mergeResources(inventory.tools,next.tools);
+  next.inventory=inventory;
+  delete next.partsStock;
+  delete next.tools;
   return next;
 });
 export function migrateCoreState(raw={}){
@@ -83,6 +109,10 @@ export function validateCoreState(state={}){
   if(state.schemaVersion!==CURRENT_SCHEMA_VERSION)errors.push(`Unsupported schema version ${state.schemaVersion??'(missing)'}`);
   for(const key of Object.keys(state))if(!TOP_LEVEL_KEYS.has(key))errors.push(`Unknown top-level Core field ${key}`);
   walkLegacyKeys(state,'state',errors);
+
+  const inventory=state.inventory;
+  if(!inventory||typeof inventory!=='object')errors.push('Core inventory must be an object');
+  else for(const key of ['parts','tools','consumables','donors'])if(!Array.isArray(inventory[key]))errors.push(`Core inventory.${key} must be an array`);
 
   const itemIds=new Set();
   for(const item of list(state.items)){

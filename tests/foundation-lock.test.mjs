@@ -29,18 +29,16 @@ test('transitional array-backed store collections cannot grow silently',()=>{
     'items',
     'ledger',
     'partFitEvidence',
-    'partsStock',
     'purchaseReview',
     'referenceDocuments',
     'referenceFacts',
-    'tools',
     'work'
   ].sort();
   assert.deepEqual(found,expected,'Update the Core/migration plan before adding another top-level persisted collection');
 });
 
 test('every remaining transitional store collection is named in Foundation Lock documentation',()=>{
-  for(const field of ['ledger','tools','partsStock','purchaseReview','partFitEvidence','referenceFacts','referenceDocuments']){
+  for(const field of ['ledger','purchaseReview','partFitEvidence','referenceFacts','referenceDocuments']){
     assert.match(lockDoc,new RegExp('`'+field+'`'),`${field} must remain documented until migrated`);
   }
 });
@@ -48,4 +46,9 @@ test('every remaining transitional store collection is named in Foundation Lock 
 test('Work convergence is recorded as completed debt',()=>{
   assert.match(lockDoc,/FL-2 — Work\/store convergence — COMPLETE/);
   assert.doesNotMatch(lockDoc,/`workRecords` — active store name/);
+});
+
+test('Inventory convergence is recorded as completed debt',()=>{
+  assert.match(lockDoc,/FL-3 — Inventory convergence — COMPLETE/);
+  assert.match(lockDoc,/schema 3/i);
 });
