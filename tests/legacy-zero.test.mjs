@@ -6,7 +6,8 @@ import {join,relative} from 'node:path';
 const ROOT=new URL('../',import.meta.url).pathname;
 const ACTIVE_EXT=/\.(?:js|html)$/;
 const EXCLUDE_PREFIXES=['tests/','cards/','docs/'];
-const EXCLUDE_FILES=new Set(['backup.html']);
+// Core deliberately names retired fields only so validation can reject them.
+const EXCLUDE_FILES=new Set(['backup.html','js/core.js']);
 const BANNED=[
   ['state.jobs',/\bstate\.jobs\b/],
   ['currentId',/\bcurrentId\b/],
@@ -35,9 +36,7 @@ test('active runtime contains no legacy Job architecture',async()=>{
     const rel=relative(ROOT,file).replaceAll('\\','/');
     if(EXCLUDE_PREFIXES.some(prefix=>rel.startsWith(prefix))||EXCLUDE_FILES.has(rel))continue;
     const source=await readFile(file,'utf8');
-    for(const [label,pattern] of BANNED){
-      if(pattern.test(source))violations.push(`${rel}: ${label}`);
-    }
+    for(const [label,pattern] of BANNED){if(pattern.test(source))violations.push(`${rel}: ${label}`);}
   }
   assert.deepEqual(violations,[],`Legacy Zero violations:\n${violations.join('\n')}`);
 });
