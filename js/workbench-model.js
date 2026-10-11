@@ -17,6 +17,10 @@ function potentialProfit(item={}){
 function linkedItem(items,job){
   return items.find(item=>(job.itemId&&String(item.id)===String(job.itemId))||(item.legacyJobId&&String(item.legacyJobId)===String(job.id)))||null;
 }
+function mirrorForJob(works=[],job={}){
+  return works.find(work=>(job.workId&&String(work?.id)===String(job.workId))||String(work?.legacyJobId||work?.sourceJobId||'')===String(job.id||''))||null;
+}
+function sourceJobId(work={}){return String(work?.legacyJobId||work?.sourceJobId||'');}
 function legacyBlockers(job={}){
   const out=[];
   if(job.status==='Awaiting parts')out.push('Waiting on parts');
@@ -49,17 +53,21 @@ function workNextAction(work={}){
 }
 
 export function workbenchEntries(state={}){
-  const items=allItems(state),entries=[];
-  for(const job of (state.jobs||[])){
+  const items=allItems(state),entries=[],rawWorks=Array.isArray(state.workRecords)?state.workRecords:[],jobs=Array.isArray(state.jobs)?state.jobs:[];
+  const jobIds=new Set(jobs.map(job=>String(job?.id||'')).filter(Boolean));
+  const canonicalWorkIds=new Set(jobs.map(job=>String(job?.workId||'')).filter(Boolean));
+  for(const job of jobs){
     const item=linkedItem(items,job),commercial=item?.commercial||{},queued=!['Sold','Spares'].includes(job.status)&&job.workbenchHidden===true;
+    const mirror=mirrorForJob(rawWorks,job),workId=String(mirror?.id||job.workId||'');
     entries.push({
-      key:`job:${job.id}`,
+      key:workId?`work:${workId}`:`job:${job.id}`,
       kind:'legacy-job',
       sourceId:job.id,
+      workId,
       itemId:item?.id||job.itemId||'',
       title:item?itemDisplayName(item):(job.watchName||'Untitled watch'),
       subtitle:[job.jobId||'',job.status||'Purchased'].filter(Boolean).join(' · '),
-      workTitle:job.jobId||'Watch service',
+      workTitle:mirror?.title||job.jobId||'Watch service',
       status:job.status||'Purchased',
       group:queued?'Queue':(JOB_GROUP[job.status]||'Needs attention'),
       queued,
@@ -75,7 +83,9 @@ export function workbenchEntries(state={}){
       openHref:`service.html?id=${encodeURIComponent(job.id)}`
     });
   }
-  for(const raw of (state.workRecords||[])){
+  for(const raw of rawWorks){
+    const mirrorJobId=sourceJobId(raw);
+    if((mirrorJobId&&jobIds.has(mirrorJobId))||(raw?.id&&canonicalWorkIds.has(String(raw.id))))continue;
     const work=normaliseWork(raw),item=items.find(candidate=>String(candidate.id)===String(work.itemId));
     if(!item)continue;
     const queued=!['Complete','Cancelled'].includes(work.status)&&raw.workbenchHidden===true,commercial=item.commercial||{};
@@ -83,6 +93,7 @@ export function workbenchEntries(state={}){
       key:`work:${work.id}`,
       kind:'work',
       sourceId:work.id,
+      workId:work.id,
       itemId:item.id,
       title:itemDisplayName(item),
       subtitle:[work.title,work.status].filter(Boolean).join(' · '),
