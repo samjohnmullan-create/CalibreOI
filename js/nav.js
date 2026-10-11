@@ -34,6 +34,23 @@ if(!document.querySelector('script[data-calibre-cloud-auto]')){
   document.head.appendChild(sync);
 }
 
+if(here==='work.html'){
+  if(!document.querySelector('link[data-calibre-work-workspace]')){
+    const workCss=document.createElement('link');
+    workCss.rel='stylesheet';
+    workCss.href='css/work-workspace.css?v=1';
+    workCss.dataset.calibreWorkWorkspace='1';
+    document.head.appendChild(workCss);
+  }
+  if(!document.querySelector('script[data-calibre-work-workspace]')){
+    const workUi=document.createElement('script');
+    workUi.type='module';
+    workUi.src='js/work-ui-runtime.js?v=1';
+    workUi.dataset.calibreWorkWorkspace='1';
+    document.head.appendChild(workUi);
+  }
+}
+
 const savedTheme=localStorage.getItem('calibre-theme');
 if(savedTheme==='dark')document.documentElement.dataset.theme='dark';
 else document.documentElement.removeAttribute('data-theme');
