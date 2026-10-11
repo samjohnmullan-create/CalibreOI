@@ -55,15 +55,15 @@ Movement Finder is a Calibre tool, not a sixth primary destination.
 
 Current v1 capabilities:
 
-- lightweight compressed catalogue of **3,458 v25 calibre records**
-- evidence-ranked matching by maker, calibre markings, diameter, height, BPH, winding type and jewel count where richer data exists
+- evidence-ranked matching across the **18 rich verified movement records** currently in the workshop Knowledge pack
+- matching by maker, calibre markings, diameter, height, BPH, winding type and jewel count
 - every result explains the evidence that contributed to its rank
 - scores represent evidence fit, not certainty
 - current Item can prefill observed clues
 - explicit **Use as probable** action writes a candidate only as `Probable`, never `Confirmed`
-- richer verified movement records provide source URLs and deeper detail when available
+- verified movement records retain source URLs and provenance
 
-Next Movement Finder expansion will add architecture/visual identification signals from Capture rather than pretending v1 text/measurement scoring is visual recognition.
+The wider **3,458-calibre v25 catalogue** remains available as source material for the next Finder indexing phase. It will be introduced alongside `identification_signals` and Capture/architecture evidence rather than shipping a broad but shallow compressed lookup layer in v1.
 
 ## Current state
 
@@ -88,7 +88,7 @@ Substantially complete:
 ## Current build order
 
 1. **Proactive Workbench intelligence** — next action, blockers, relevant documents, part/donor candidates and QC prompts surfaced in context.
-2. **Movement Finder visual/architecture expansion** — bridge `identification_signals` and Capture evidence into ranked candidates.
+2. **Movement Finder visual/architecture expansion** — bridge the wider v25 catalogue, `identification_signals` and Capture evidence into ranked candidates.
 3. **Expand Parts + Donor intelligence** — verified fit history, donor sacrifice economics and compatibility alerts.
 4. **Device experience** — Automatic / Workstation / Touch / Capture behaviour for phone, DeX monitor and Galaxy Tab microscope use.
 5. **Hardware layer** — validate the USB Timegrapher microphone, then add printer/Windows bridge and QR/bin label workflows.
