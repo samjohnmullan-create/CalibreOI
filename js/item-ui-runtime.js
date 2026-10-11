@@ -34,10 +34,11 @@ if(tabs&&head){
   const requestBtn=document.getElementById('requestResearch'),copyBtn=document.getElementById('copyResearchReference'),refEl=document.getElementById('researchReference'),refStatus=document.getElementById('researchReferenceStatus');
   const reference=id=>id?`CALIBRE-RESEARCH:${id}`:'';
   const setReference=(id,status='')=>{
-    if(!id){researchBar.hidden=true;return;}
+    if(!id&&!status){researchBar.hidden=true;return;}
     researchBar.hidden=false;
-    refEl.textContent=reference(id);
+    refEl.textContent=id?reference(id):'Research request not created';
     refStatus.textContent=status;
+    copyBtn.hidden=!id;
   };
   const chooseWork=(state,item)=>{
     const linked=(state.work||[]).filter(w=>String(w.itemId)===String(item?.id));
@@ -69,7 +70,8 @@ if(tabs&&head){
       setReference(result.id,result.mediaError?`Request created · photos need attention: ${result.mediaError}`:'Request created · ready to paste into ChatGPT');
       requestBtn.textContent='Research requested';
     }catch(err){
-      setReference(itemId&&refEl.textContent?.startsWith('CALIBRE-RESEARCH:')?refEl.textContent.split(':')[1]:'',err?.message||'Research request failed.');
+      const existing=refEl.textContent?.startsWith('CALIBRE-RESEARCH:')?refEl.textContent.split(':')[1]:'';
+      setReference(existing,err?.message||'Research request failed.');
       requestBtn.textContent=original;
     }finally{
       requestBtn.disabled=false;
@@ -77,7 +79,7 @@ if(tabs&&head){
     }
   };
   if(copyBtn)copyBtn.onclick=async()=>{
-    const ref=refEl.textContent.trim();if(!ref)return;
+    const ref=refEl.textContent.trim();if(!ref.startsWith('CALIBRE-RESEARCH:'))return;
     const text=`Research this Calibre request: ${ref}`;
     try{await navigator.clipboard.writeText(text);}catch{
       const ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();
