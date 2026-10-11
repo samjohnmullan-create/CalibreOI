@@ -51,6 +51,23 @@ if(here==='work.html'){
   }
 }
 
+if(here==='item.html'){
+  if(!document.querySelector('link[data-calibre-item-workspace]')){
+    const itemCss=document.createElement('link');
+    itemCss.rel='stylesheet';
+    itemCss.href='css/item-workspace.css?v=1';
+    itemCss.dataset.calibreItemWorkspace='1';
+    document.head.appendChild(itemCss);
+  }
+  if(!document.querySelector('script[data-calibre-item-workspace]')){
+    const itemUi=document.createElement('script');
+    itemUi.type='module';
+    itemUi.src='js/item-ui-runtime.js?v=1';
+    itemUi.dataset.calibreItemWorkspace='1';
+    document.head.appendChild(itemUi);
+  }
+}
+
 const savedTheme=localStorage.getItem('calibre-theme');
 if(savedTheme==='dark')document.documentElement.dataset.theme='dark';
 else document.documentElement.removeAttribute('data-theme');
