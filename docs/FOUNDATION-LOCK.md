@@ -33,15 +33,16 @@ Current transitional collections are:
 
 - `ledger` — business cash events; ownership/model must be resolved before migration
 - `purchaseReview` — review/intake workflow state; determine whether derived, Incoming-owned or specialist state
-- `partFitEvidence` — bench compatibility evidence; migrate deliberately to canonical compatibility evidence without losing verdict semantics
-- `referenceFacts` — sourced external compatibility/reference evidence; determine production Knowledge/Compatibility ownership
-- `referenceDocuments` — technical source-document index; determine Knowledge ownership
 
 These fields are **migration debt, not a licence to add more top-level buckets**.
 
 `workRecords` is no longer a live transitional collection. Schema 2 migrates it forward to canonical `work`, local and cloud persistence save only `work`, and the strict Core rejects `workRecords` after the migration boundary.
 
-`tools` and `partsStock` are no longer persisted top-level collections. Schema 3 migrates them into canonical `inventory.tools` and `inventory.parts` while preserving resource IDs and existing canonical inventory entries. A temporary non-enumerable runtime alias remains for older UI code during Foundation Lock; it is not persisted and should be removed during FL-6 cleanup.
+`tools` and `partsStock` are no longer persisted top-level collections. Schema 3 migrates them into canonical `inventory.tools` and `inventory.parts` while preserving resource IDs and existing canonical inventory entries.
+
+`partFitEvidence`, `referenceFacts` and `referenceDocuments` are no longer persisted top-level collections. Schema 4 migrates bench fit outcomes to canonical `compatibilityEvidence` and migrates sourced facts/documents to typed canonical `knowledge` records. Bench evidence remains explicitly marked `bench-fit` / `bench`; external facts remain `reference-fact` / `external`; source documents remain `reference-document` / `source-document`.
+
+Temporary non-enumerable runtime compatibility views keep older Parts and Reference UI code functional while persistence remains canonical. Those views are migration scaffolding and should be removed during FL-6 cleanup.
 
 ## Rules during Foundation Lock
 
@@ -75,11 +76,14 @@ Foundation Lock should proceed in small migrations:
 - existing `tools` migrates into `inventory.tools`
 - existing IDs are preserved and duplicate IDs are not re-added
 - cloud reconciliation merges parts, tools, consumables and donors independently
-- temporary runtime aliases keep older inventory UI working without persisting legacy top-level buckets
 
-### FL-4 — Evidence/Knowledge convergence
-- map bench fit evidence and sourced reference evidence into explicit canonical evidence/knowledge records
-- preserve source document IDs, URLs, confidence and bench verdicts
+### FL-4 — Evidence/Knowledge convergence — COMPLETE
+- persisted schema 4 moves bench fit history into canonical `compatibilityEvidence`
+- sourced reference facts and technical documents move into typed canonical `knowledge`
+- source document IDs, URLs, confidence and bench verdict fields are preserved
+- bench and external evidence remain explicitly distinguishable
+- cloud reconciliation merges canonical evidence and knowledge records independently
+- temporary compatibility views preserve current Parts / Reference workflows during cleanup
 
 ### FL-5 — Business/intake ownership
 - resolve `ledger` and `purchaseReview`
@@ -87,7 +91,7 @@ Foundation Lock should proceed in small migrations:
 - avoid duplicating commercial totals onto multiple records
 
 ### FL-6 — runtime/design cleanup
-- remove temporary inventory compatibility aliases after all active UI reads canonical `inventory`
+- remove temporary inventory/evidence/reference compatibility views after active UI reads canonical collections directly
 - move reusable styling out of runtime JavaScript
 - retire duplicate/obsolete active pages and aliases only after route usage is audited
 - update architecture/tests/docs to the final persisted contract
