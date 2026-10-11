@@ -16,9 +16,11 @@ Watch and clock Items additionally support:
 
 **Diagnose → Service → Parts → Measure → Time → QC → Passport**
 
-## Canonical Core v2
+## Canonical Core
 
-Core v2 contains only first-class records. Legacy Jobs are not part of the target architecture.
+Calibre has one Core. Product generations such as “Core v2” are not part of the architecture. Persisted data uses `schemaVersion`; stored-shape changes require explicit forward migrations.
+
+The canonical contract lives in `js/core.js`.
 
 ```text
 Item
@@ -27,8 +29,8 @@ Item
 ├── Research
 ├── Commercial
 ├── Sale
-├── Media
-├── Work[]
+├── Media references
+├── Work references
 └── Watch extension?
     ├── Passport
     ├── Movement
@@ -42,7 +44,7 @@ Work
 ├── Faults
 ├── Stages
 ├── Measurements
-├── Parts
+├── Parts references
 ├── Labour
 ├── Timing runs
 ├── Repair performed
@@ -50,16 +52,14 @@ Work
 └── Final QC
 ```
 
-Other first-class collections:
+Other Core collections:
 
 - MediaAsset
-- InventoryResource
-- CompatibilityEvidence
+- Inventory resources
+- Compatibility evidence
 - Incoming
 - Knowledge
 - Settings
-
-`js/core-v2.js` is the canonical legacy-free schema contract.
 
 ## Navigation rule
 
@@ -72,8 +72,6 @@ Calibre has five primary destinations only:
 5. **Calibre** — assistant, inbox, capture, knowledge and settings.
 
 New features do not automatically get new destinations. They attach to Item, Work, Business or Calibre.
-
-`js/navigation-model.js` is the canonical navigation contract.
 
 ## Item workspace
 
@@ -139,49 +137,71 @@ The same app will support:
 - **Touch** — phone / bench; large targets and reduced simultaneous controls
 - **Capture** — Galaxy Tab / microscope station; minimal capture-first UI
 
-## Legacy cutover policy
+## Legacy cutover status
 
-The progressive compatibility migration is retired.
+The active runtime has been cut over from legacy Jobs to Item + Work.
 
-Before cutover:
+Current rules:
 
-1. create a frozen full legacy export
-2. convert useful legacy information into Item + Work + Media records
-3. log data that cannot be mapped cleanly
-4. verify the converted state
+- `state.jobs` is not part of active runtime state
+- `currentItemId` and `currentWorkId` own selection
+- Work history replaces Job-derived service history
+- active runtime must not reintroduce Job fields
+- compatibility/import tooling must remain isolated from normal runtime
 
-After cutover:
+## Current state
 
-- `state.jobs` is no longer loaded by the active app
-- `currentId` is replaced by `currentItemId` and `currentWorkId`
-- legacy Job ↔ Item bridges are removed
-- Job-derived service history is replaced by Work history
-- compatibility code remains only in the one-shot migration/archive tooling
+Substantially complete:
 
-Preservation is useful, but the new model will not be distorted to retain obsolete fields.
+- canonical Item + Work runtime
+- five-destination navigation
+- Item workspace: Work · Item · Commerce
+- Workbench around canonical Work
+- structured workshop stages
+- desktop/DeX Work workspace
+- Business Item dashboard
+- Capture Station
+- canonical Parts matching and donor evidence
+- Reference Intelligence
+- CSV/JSON reference import
+- technical PDF import
+- scanned-PDF OCR review
+- Reference Library
+- deployment freshness guard
+- Timegrapher sample-clock engine and saved-run comparison
+- Knowledge Engine foundation
 
-# Immediate build order
+## Current build order
 
-1. **Define Core v2 schema** — IN PROGRESS / foundation added.
-2. **Lock navigation architecture** — IN PROGRESS / canonical map added.
-3. **Design/build Item workspace: Work · Item · Commerce.**
-4. **Rebuild Workbench around Work only.**
-5. **Build global search / command palette.**
-6. **Create full legacy backup and one-shot converter.**
-7. **Cut active runtime over to Core v2 and remove legacy Job bridges.**
-8. **Simplify persistence/store layer around canonical collections.**
-9. **Consolidate design system and remove CSS injected from JavaScript.**
-10. **Add Workstation / Touch / Capture interface modes.**
-11. **Finish Galaxy Tab microscope Capture workflow.**
-12. **Build proactive next-action / diagnostic / QC intelligence.**
-13. **Build parts, donor and compatibility intelligence.**
-14. **Finish business / finance intelligence.**
-15. **Build intake automation for purchases, email and arrivals.**
-16. **Build Print Queue / hardware bridge.**
-17. **Validate Timegrapher with real hardware.**
-18. **Finish listing automation, public Passport and customer-facing layer.**
+1. **Foundation Lock** — reconcile persistence with the canonical Core, remove stale terminology, document transitional collections, consolidate design/runtime boundaries.
+2. **Validate Timegrapher with real hardware** — USB timing microphone, multiple BPH rates/positions and known-watch comparisons.
+3. **Integrate Knowledge Engine** — Passport, Timegrapher defaults, Parts, Workbench and technical documents.
+4. **Build Movement Finder** — maker/calibre/size/jewels/BPH/geometry-assisted identification.
+5. **Build proactive Workbench intelligence** — next action, blockers, relevant documents, parts and QC prompts.
+6. **Deepen parts/donor intelligence** — factory refs, variants/serial restrictions, donor economics and sourcing.
+7. **Finish business intelligence** — stock age, ROI, repair economics, capital efficiency and work-next ranking.
+8. **Build intake automation** — purchases, email, postage/tracking and arrivals.
+9. **Finish listing automation** — Passport + research + Work + condition + media + commerce into channel-specific listings.
+10. **Build global search / command palette.**
+11. **Add explicit Workstation / Touch / Capture interface modes.**
+12. **Finish Galaxy Tab microscope Capture workflow.**
+13. **Build Print Queue / Windows hardware bridge.**
+14. **Finish public Passport and customer-facing layer.**
 
-# UI direction
+## Foundation Lock rules
+
+Until Foundation Lock is complete:
+
+- do not add new top-level persisted collections casually
+- do not delete transitional store buckets without a migration
+- do not create parallel Item/Work models
+- keep Reference/Knowledge provenance explicit
+- preserve bench evidence separately from external reference evidence
+- keep design tokens and reusable layout rules in CSS rather than growing page-specific runtime styling
+
+See `docs/FOUNDATION-LOCK.md`.
+
+## UI direction
 
 Calibre should feel like a precision workshop instrument, not a collection of SaaS cards.
 
@@ -207,28 +227,13 @@ Use breadcrumbs such as:
 
 The user should never need to remember the page structure to know where they are.
 
-# Design system
+## Design system
 
-The settled visual direction remains quiet sage + graphite, modern and restrained.
+The visual direction remains modern, restrained and workshop-focused.
 
-Do not introduce a second brand palette inside runtime JavaScript. Design tokens and responsive rules belong in shared CSS.
+Design tokens and responsive rules belong in shared CSS. Runtime JavaScript should not become a second design system.
 
-# Later phases retained
-
-Once Core v2 and navigation are stable, continue with:
-
-- media/capture
-- workshop intelligence
-- donor/parts matching
-- business analytics
-- intake automation
-- printing
-- timegrapher validation
-- sales/listing automation
-- public Passport / storefront
-- accumulated Calibre Knowledge
-
-# Success tests
+## Success tests
 
 Calibre is moving in the right direction when:
 
@@ -236,8 +241,9 @@ Calibre is moving in the right direction when:
 - every activity is a Work record
 - a watch may have many Work records without duplicating its Passport
 - Workbench shows Work, not inventory
-- adding a feature does not require adding another navigation destination
-- any important Item or command can be found quickly
+- adding a feature does not require adding another primary navigation destination
+- important Items, parts, references and commands are quickly discoverable
 - the same data drives bench work, history, finance and sale output
 - phone, DeX/monitor and Galaxy Tab each feel intentional
-- legacy Jobs are no longer required by the active runtime
+- legacy Jobs are not required by the active runtime
+- persisted state has one documented canonical contract and explicit migrations
