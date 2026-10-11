@@ -51,6 +51,22 @@ The Knowledge Engine is now part of workshop flow rather than an isolated refere
 - 18 rich verified movement records remain the lightweight workshop/offline pack for Passport, Timegrapher and immediate reference use
 - normal app hydration deliberately loads only those 18 rich profiles; large catalogue searches stay server-side
 
+## Knowledge Editor / Research Inbox — LIVE
+
+Knowledge can now grow incrementally without rebuilding or re-importing the full v25 dataset.
+
+- Knowledge Editor lives under the existing **Calibre** destination
+- normal signed-in accounts retain shared read-only Knowledge access
+- only explicitly allow-listed Knowledge editors can stage or apply changes
+- research is saved as **Draft** or **Ready** before it can affect shared Knowledge
+- applying a submission is an explicit second action, never an automatic side effect of form entry
+- supported record types are Source, Family, Calibre, Part, Calibre↔Part link and Compatibility evidence
+- evidence is labelled **Confirmed**, **Supported** or **Candidate**
+- existing calibres can be looked up by Knowledge ID and corrected without deleting/recreating them
+- applied changes preserve before/after data in an audit log
+- production Knowledge tables now allocate new IDs automatically, so individual records can be added safely without a bulk import
+- family/dimensional similarity remains evidence, never proof of interchangeability
+
 ## Movement Finder — FULL CATALOGUE LIVE
 
 Movement Finder is a Calibre tool, not a sixth primary destination.
@@ -114,6 +130,7 @@ Substantially complete:
 - Reliability including atomic cloud concurrency protection
 - normalized full v25 Knowledge database in Supabase
 - live Knowledge Engine workshop integration
+- Knowledge Editor / Research Inbox with allow-listed writes and audit history
 - full-catalogue server-side Movement Finder with offline fallback
 - proactive Workbench intelligence
 - donor sacrifice / donor-pair intelligence foundation
