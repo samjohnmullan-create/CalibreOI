@@ -55,7 +55,7 @@ Work
 Other Core collections:
 
 - MediaAsset
-- Inventory resources
+- Inventory resources — parts, tools, consumables, donors and storage locations
 - Compatibility evidence
 - Incoming
 - Knowledge
@@ -158,7 +158,8 @@ Foundation Lock has completed the persisted/runtime convergence work:
 - schema 3: loose parts/tools converged under `inventory`
 - schema 4: bench fit evidence converged under `compatibilityEvidence`; sourced facts/documents under typed `knowledge`
 - schema 5: purchase review converged under typed `incoming`; `ledger` made intentional Core data
-- active Parts, Tools, Reference and Incoming UI now read/write canonical collections directly
+- schema 6: legacy Workshop IDs converged into `inventory.locations`, `inventory.tools` and `inventory.parts`
+- active Parts, Tools, Workshop IDs, Reference and Incoming UI now read/write canonical collections directly
 - temporary runtime compatibility aliases/proxies have been removed
 - architecture documentation now describes one Core + schema versions
 
@@ -177,6 +178,7 @@ Substantially complete:
 - Business Item dashboard
 - Capture Station
 - canonical Parts matching and donor evidence
+- canonical Workshop IDs and storage locations
 - Reference Intelligence
 - CSV/JSON reference import
 - technical PDF import
