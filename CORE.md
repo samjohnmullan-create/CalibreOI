@@ -11,7 +11,7 @@ The Core owns only durable domain objects and references:
 - Item — the physical thing
 - Work — activity performed on an Item
 - MediaAsset — a stored image/document belonging to an Item and optionally Work
-- Inventory resources — parts, tools, consumables and donors
+- Inventory resources — parts, tools, consumables, donors and physical storage locations
 - Compatibility evidence
 - Incoming records
 - Knowledge records
@@ -33,6 +33,7 @@ Passport, movement and permanent watch identity belong to the watch/clock Item e
 9. **Unknown top-level state is rejected.** New top-level collections require an intentional Core contract change and migration rather than becoming a junk drawer.
 10. **Legacy Job fields and retired runtime aliases are forbidden in canonical Core state.**
 11. **Cash is not projected profit.** Available Cash comes from actual Ledger movements; Item targets and projected sale profit remain derived business intelligence.
+12. **Workshop storage is Inventory.** Trays, drawers and bins live under `inventory.locations`; they do not get a separate top-level workshop state.
 
 ## Change process
 
