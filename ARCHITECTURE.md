@@ -89,7 +89,8 @@ inventory
 ├── parts[]
 ├── tools[]
 ├── consumables[]
-└── donors[]
+├── donors[]
+└── locations[]             # trays, drawers, bins, cabinets
 
 compatibilityEvidence[]
 incoming[]
@@ -100,7 +101,7 @@ settings
 
 `js/core.js` is the executable domain contract. `js/store-base.js` owns local persisted-shape migration and normalisation; `js/store-cloud-core.js` owns cloud reconciliation of canonical collections.
 
-Current persisted schema: **5**.
+Current persisted schema: **6**.
 
 Migration history:
 
@@ -108,6 +109,7 @@ Migration history:
 - schema 3: `tools` / `partsStock` → `inventory`
 - schema 4: bench fit evidence → `compatibilityEvidence`; reference facts/documents → typed `knowledge`
 - schema 5: purchase review suggestions → typed `incoming`; ledger made intentional Core data
+- schema 6: `workshopAssets` → canonical inventory parts/tools/locations
 
 Legacy names may remain inside migration/archive code only. Active runtime code must use canonical owners directly.
 
@@ -151,13 +153,9 @@ Every Item uses three high-level areas.
 ## Work
 What am I physically doing?
 
-Watch / clock:
+Watch / clock: **Diagnosis · Service · Measurements · Timing · Parts · QC**
 
-**Diagnosis · Service · Measurements · Timing · Parts · QC**
-
-Jewellery:
-
-**Inspect · Clean · Restore · Measurements · QC**
+Jewellery: **Inspect · Clean · Restore · Measurements · QC**
 
 ## Item
 What is it?
@@ -179,11 +177,25 @@ Bench-confirmed evidence and sourced external claims are deliberately different.
 
 - `compatibilityEvidence` contains workshop evidence such as `recordType: bench-fit`.
 - `knowledge` contains sourced/reference records such as `reference-fact` and `reference-document`.
-- source URL, document ID, confidence, evidence class and verdict must remain explicit.
-- family membership or dimensional similarity may suggest a candidate, but do not prove part interchangeability.
+- source URL, document ID, confidence, evidence class and verdict remain explicit.
+- family membership or dimensional similarity may suggest a candidate, but do not prove interchangeability.
 - exact factory/shared part references and serial-range-specific evidence outrank general family inference.
 
 Items may reference Knowledge but should not duplicate entire shared Knowledge records.
+
+---
+
+# Inventory and workshop storage
+
+Physical workshop resources use one Inventory owner.
+
+- loose parts → `inventory.parts`
+- tools → `inventory.tools`
+- consumables → `inventory.consumables`
+- donor resources → `inventory.donors` and donor Items where appropriate
+- trays, drawers, bins and cabinets → `inventory.locations`
+
+QR/Workshop IDs reference these canonical resources. There is no separate `workshopAssets` runtime collection.
 
 ---
 
@@ -204,15 +216,7 @@ Device mode changes presentation, not the underlying data model.
 
 Calibre will have one global find/command layer capable of locating Items and Work by name, maker, calibre, serial, status, tag, part or workflow state.
 
-Contextual commands may include:
-
-- start Work
-- capture image
-- add part
-- time watch
-- mark waiting
-- print label
-- create listing
+Contextual commands may include start Work, capture image, add part, time watch, mark waiting, print label and create listing.
 
 Desktop target shortcut: **Ctrl/Cmd + K**.
 
@@ -222,19 +226,7 @@ Desktop target shortcut: **Ctrl/Cmd + K**.
 
 Business analytics operate across all resale Items, not only watches.
 
-Useful outputs include:
-
-- available cash
-- cash profit
-- profit after labour
-- ROI
-- profit per labour hour
-- stock age
-- capital tied up
-- category/source/channel profitability
-- realised vs projected profit
-- average days to sale
-- preparation/restoration uplift
+Useful outputs include available cash, cash profit, profit after labour, ROI, profit per labour hour, stock age, capital tied up, category/source/channel profitability, realised vs projected profit, average days to sale and restoration uplift.
 
 `ledger` records real business money movements. Available Cash is derived from ledger movements only; projected Item profit does not alter cash position.
 
@@ -244,11 +236,7 @@ Tool costs and inventory-resource costs remain separate from Item profitability 
 
 # Media
 
-Media is a first-class record.
-
-A MediaAsset always belongs to an Item and may optionally belong to a Work record.
-
-Typical categories include intake, identity, movement, workshop, damage, part, progress, finished, sale/listing and document.
+Media is a first-class record. A MediaAsset always belongs to an Item and may optionally belong to a Work record.
 
 The Galaxy Tab microscope workflow uses the same MediaAsset model; there is no special Job attachment path.
 
@@ -274,7 +262,7 @@ IndexedDB remains useful for offline/local-first behaviour. Supabase remains the
 
 Persistence code should stay boring: load, migrate, normalise, merge and save. Specialist workshop/business logic belongs in domain modules.
 
-Foundation Lock removed the runtime compatibility aliases used during schema convergence. Old shapes are accepted only at explicit migration/import boundaries.
+Foundation Lock removed runtime compatibility aliases used during schema convergence. Old shapes are accepted only at explicit migration/import boundaries.
 
 ---
 
@@ -282,26 +270,9 @@ Foundation Lock removed the runtime compatibility aliases used during schema con
 
 The active runtime does not load or write `state.jobs`.
 
-Retired active concepts include:
+Retired active concepts include `currentId` as current Job, legacy/specialist Job IDs, Job mirroring, `workRecords`, top-level `partsStock` / `tools`, `partFitEvidence`, `referenceFacts` / `referenceDocuments`, `purchaseReview`, and `workshopAssets`.
 
-- `currentId` as current Job
-- `legacyJobId`
-- `specialistJobId`
-- Job → Item mirroring
-- Job → Work mirroring
-- `workRecords`
-- top-level `partsStock` / `tools`
-- top-level `partFitEvidence`
-- top-level `referenceFacts` / `referenceDocuments`
-- top-level `purchaseReview`
-
-Current ownership uses:
-
-- `currentItemId`
-- `currentWorkId`
-- direct `work.itemId`
-- Work-derived history
-- canonical Inventory / Evidence / Knowledge / Incoming
+Current ownership uses `currentItemId`, `currentWorkId`, direct `work.itemId`, Work-derived history and canonical Inventory / Evidence / Knowledge / Incoming.
 
 Legacy conversion code may remain only as explicit archive/import/migration tooling.
 
@@ -317,7 +288,7 @@ Rules:
 - runtime JavaScript must not introduce a competing palette
 - Workstation uses tighter rows, tables, panes and sticky context
 - Touch uses stacked content, large targets and fewer simultaneous controls
-- breadcrumbs show context, e.g. `Items › Olma Caravelle › Work › Full Service`
+- breadcrumbs show context
 - avoid creating a giant card for every piece of information
 
 Runtime-injected component styles may exist during feature development, but reusable styles should migrate into shared CSS when the component stabilises.
