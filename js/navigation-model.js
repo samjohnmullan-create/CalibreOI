@@ -32,6 +32,7 @@ export const CALIBRE_SECTIONS = [
   {id:'inbox',label:'Inbox'},
   {id:'capture',label:'Capture'},
   {id:'knowledge',label:'Knowledge'},
+  {id:'library',label:'Reference Library'},
   {id:'settings',label:'Settings'}
 ];
 
@@ -52,6 +53,7 @@ export const PAGE_HOME = Object.freeze({
   'assistant.html':'calibre',
   'capture.html':'calibre',
   'news.html':'calibre',
+  'reference-library.html':'calibre',
   'settings.html':'calibre'
 });
 
