@@ -32,39 +32,17 @@ export const CALIBRE_SECTIONS = [
   {id:'inbox',label:'Inbox'},
   {id:'capture',label:'Capture'},
   {id:'knowledge',label:'Knowledge'},
+  {id:'movement-finder',label:'Movement Finder'},
   {id:'library',label:'Reference Library'},
   {id:'settings',label:'Settings'}
 ];
 
 export const PAGE_HOME = Object.freeze({
-  'index.html':'home',
-  'inventory.html':'items',
-  'item.html':'items',
-  'workbench.html':'workbench',
-  'work.html':'workbench',
-  'passport.html':'items',
-  'timegrapher.html':'workbench',
-  'suppliers.html':'workbench',
-  'business.html':'business',
-  'sales.html':'items',
-  'documents.html':'items',
-  'finance.html':'business',
-  'calibre.html':'calibre',
-  'assistant.html':'calibre',
-  'capture.html':'calibre',
-  'news.html':'calibre',
-  'reference-library.html':'calibre',
-  'settings.html':'calibre'
+  'index.html':'home','inventory.html':'items','item.html':'items','workbench.html':'workbench','work.html':'workbench','passport.html':'items','timegrapher.html':'workbench','suppliers.html':'workbench','business.html':'business','sales.html':'items','documents.html':'items','finance.html':'business','calibre.html':'calibre','assistant.html':'calibre','capture.html':'calibre','news.html':'calibre','movement-finder.html':'calibre','reference-library.html':'calibre','settings.html':'calibre'
 });
 
 export const ITEM_WORKSPACE_ROUTES = Object.freeze({
-  'work.html':{area:'work',section:'Work'},
-  'timegrapher.html':{area:'work',section:'Timing'},
-  'suppliers.html':{area:'work',section:'Parts'},
-  'passport.html':{area:'item',section:'Passport'},
-  'documents.html':{area:'item',section:'Documents'},
-  'business.html':{area:'commerce',section:'Costs'},
-  'sales.html':{area:'commerce',section:'Sale'}
+  'work.html':{area:'work',section:'Work'},'timegrapher.html':{area:'work',section:'Timing'},'suppliers.html':{area:'work',section:'Parts'},'passport.html':{area:'item',section:'Passport'},'documents.html':{area:'item',section:'Documents'},'business.html':{area:'commerce',section:'Costs'},'sales.html':{area:'commerce',section:'Sale'}
 });
 
 export function sectionsForItem(type='other'){return ITEM_SECTIONS[type]||ITEM_SECTIONS.default;}
