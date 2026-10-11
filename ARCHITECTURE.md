@@ -20,51 +20,25 @@ Watch and clock Items additionally support:
 
 ## Item is permanent
 
-An Item is the physical thing.
-
-Examples:
-- wristwatch
-- pocket watch
-- clock
-- brooch
-- ring
-- bracelet
-- cufflinks
-- lighter
-- pen
-- small collectible
-
-The Item survives acquisition, restoration, service, listing, sale and future history.
+An Item is the physical thing. It survives acquisition, restoration, service, listing, sale and future history.
 
 ## Work is activity
 
-A Work record describes something done to an Item.
+A Work record describes something done to an Item. An Item may have no Work records, one Work record or many Work records over its lifetime.
 
-Examples:
-- full service
-- regulation
-- inspection
-- cleaning
-- restoration
-- preparation
-- photography preparation
-- listing preparation
-
-An Item may have no Work records, one Work record or many Work records over its lifetime.
-
-There is no active architectural role for a legacy Job object in Core v2.
+There is no active architectural role for a legacy Job object.
 
 ---
 
-# Canonical Core v2 object model
+# Canonical Core object model
+
+Calibre has one Core. Persisted-shape evolution is represented by `schemaVersion`, not by parallel Core generations.
 
 ```text
 item
 ├── id
-├── type
-├── purpose
+├── type / purpose / status
 ├── title
-├── status
 ├── identity
 ├── condition
 ├── research[]
@@ -84,9 +58,7 @@ work
 ├── id
 ├── itemId
 ├── number
-├── type
-├── title
-├── status
+├── type / status
 ├── diagnosis
 ├── faults[]
 ├── diagnosticFaults[]
@@ -104,7 +76,7 @@ work
 mediaAsset
 ├── id
 ├── itemId
-├── workId?                 # optional work context
+├── workId?                 # optional Work context
 ├── category
 ├── source
 ├── storageKey / URL
@@ -122,10 +94,22 @@ inventory
 compatibilityEvidence[]
 incoming[]
 knowledge[]
+ledger[]
 settings
 ```
 
-`js/core-v2.js` is the executable schema contract for the new model.
+`js/core.js` is the executable domain contract. `js/store-base.js` owns local persisted-shape migration and normalisation; `js/store-cloud-core.js` owns cloud reconciliation of canonical collections.
+
+Current persisted schema: **5**.
+
+Migration history:
+
+- schema 2: `workRecords` → `work`
+- schema 3: `tools` / `partsStock` → `inventory`
+- schema 4: bench fit evidence → `compatibilityEvidence`; reference facts/documents → typed `knowledge`
+- schema 5: purchase review suggestions → typed `incoming`; ledger made intentional Core data
+
+Legacy names may remain inside migration/archive code only. Active runtime code must use canonical owners directly.
 
 ---
 
@@ -136,17 +120,12 @@ Calibre has exactly five primary destinations:
 **Home · Items · Workbench · Business · Calibre**
 
 ## Home
-
 Attention only: what needs action now?
 
 ## Items
-
 Everything physical owned or previously owned.
 
-Filters may include Watches, Clocks, Jewellery, Accessories, Collectibles, Donors and Sold.
-
 ## Workbench
-
 Active or deliberately queued Work only.
 
 Workbench groups:
@@ -154,11 +133,9 @@ Workbench groups:
 **Now · Next · Waiting · Ready · Queue**
 
 ## Business
-
 Portfolio financial, sourcing and sales intelligence.
 
 ## Calibre
-
 Assistant, Inbox, Capture, Knowledge and Settings.
 
 New features attach to one of these places. They do not automatically create new top-level destinations.
@@ -172,7 +149,6 @@ New features attach to one of these places. They do not automatically create new
 Every Item uses three high-level areas.
 
 ## Work
-
 What am I physically doing?
 
 Watch / clock:
@@ -183,21 +159,31 @@ Jewellery:
 
 **Inspect · Clean · Restore · Measurements · QC**
 
-Other Items use an appropriate reduced Work set.
-
 ## Item
-
 What is it?
 
 **Identity · Passport where applicable · Research · Media · History · Documents**
 
 ## Commerce
-
 What did it cost and how do I sell it?
 
 **Costs · Valuation · Listing · Sale**
 
 The three areas are the mental model. Individual sections should not become top-level application navigation.
+
+---
+
+# Evidence and Knowledge
+
+Bench-confirmed evidence and sourced external claims are deliberately different.
+
+- `compatibilityEvidence` contains workshop evidence such as `recordType: bench-fit`.
+- `knowledge` contains sourced/reference records such as `reference-fact` and `reference-document`.
+- source URL, document ID, confidence, evidence class and verdict must remain explicit.
+- family membership or dimensional similarity may suggest a candidate, but do not prove part interchangeability.
+- exact factory/shared part references and serial-range-specific evidence outrank general family inference.
+
+Items may reference Knowledge but should not duplicate entire shared Knowledge records.
 
 ---
 
@@ -216,11 +202,9 @@ Device mode changes presentation, not the underlying data model.
 
 # Search and commands
 
-Calibre will have one global find/command layer.
+Calibre will have one global find/command layer capable of locating Items and Work by name, maker, calibre, serial, status, tag, part or workflow state.
 
-It must be capable of locating Items and Work by useful identifiers such as name, maker, calibre, serial, status, tag, part or workflow state.
-
-It may also expose contextual commands such as:
+Contextual commands may include:
 
 - start Work
 - capture image
@@ -247,12 +231,12 @@ Useful outputs include:
 - profit per labour hour
 - stock age
 - capital tied up
-- category profitability
-- source profitability
-- channel profitability
+- category/source/channel profitability
 - realised vs projected profit
 - average days to sale
 - preparation/restoration uplift
+
+`ledger` records real business money movements. Available Cash is derived from ledger movements only; projected Item profit does not alter cash position.
 
 Tool costs and inventory-resource costs remain separate from Item profitability unless explicitly allocated.
 
@@ -264,18 +248,7 @@ Media is a first-class record.
 
 A MediaAsset always belongs to an Item and may optionally belong to a Work record.
 
-Typical categories:
-
-- original/intake
-- identity
-- movement
-- workshop
-- fault/damage
-- part
-- progress
-- finished
-- sale/listing
-- document
+Typical categories include intake, identity, movement, workshop, damage, part, progress, finished, sale/listing and document.
 
 The Galaxy Tab microscope workflow uses the same MediaAsset model; there is no special Job attachment path.
 
@@ -283,9 +256,7 @@ The Galaxy Tab microscope workflow uses the same MediaAsset model; there is no s
 
 # Storage direction
 
-The active Core v2 state uses canonical collections only.
-
-Target local/cloud collections:
+Canonical local/cloud collections are:
 
 ```text
 items
@@ -295,49 +266,44 @@ inventory
 compatibilityEvidence
 incoming
 knowledge
+ledger
 settings
 ```
 
 IndexedDB remains useful for offline/local-first behaviour. Supabase remains the cloud/auth platform unless there is a reason to change it.
 
-Persistence should become simpler over time: storage code stores and syncs canonical records; specialist business logic belongs outside the store layer.
+Persistence code should stay boring: load, migrate, normalise, merge and save. Specialist workshop/business logic belongs in domain modules.
+
+Foundation Lock removed the runtime compatibility aliases used during schema convergence. Old shapes are accepted only at explicit migration/import boundaries.
 
 ---
 
 # Legacy cutover
 
-The old progressive compatibility strategy is retired.
-
-## Before cutover
-
-1. export the full existing legacy state
-2. keep the export as a frozen archive
-3. run a one-shot converter into Core v2
-4. preserve useful identity, Passport, research, commercial, media, faults, parts, timing and service information where it maps cleanly
-5. log anything skipped or ambiguous
-6. validate the converted Core v2 state
-
-## After cutover
-
 The active runtime does not load or write `state.jobs`.
 
-Retire:
+Retired active concepts include:
 
 - `currentId` as current Job
 - `legacyJobId`
 - `specialistJobId`
 - Job → Item mirroring
 - Job → Work mirroring
-- bridge/reconciliation code whose only purpose is dual-model compatibility
+- `workRecords`
+- top-level `partsStock` / `tools`
+- top-level `partFitEvidence`
+- top-level `referenceFacts` / `referenceDocuments`
+- top-level `purchaseReview`
 
-Replace with:
+Current ownership uses:
 
 - `currentItemId`
 - `currentWorkId`
 - direct `work.itemId`
 - Work-derived history
+- canonical Inventory / Evidence / Knowledge / Incoming
 
-Legacy conversion code may remain only as explicit archive/import tooling until no longer useful.
+Legacy conversion code may remain only as explicit archive/import/migration tooling.
 
 ---
 
@@ -354,6 +320,8 @@ Rules:
 - breadcrumbs show context, e.g. `Items › Olma Caravelle › Work › Full Service`
 - avoid creating a giant card for every piece of information
 
+Runtime-injected component styles may exist during feature development, but reusable styles should migrate into shared CSS when the component stabilises.
+
 ---
 
 # Non-negotiable rules
@@ -366,29 +334,23 @@ Rules:
 6. Media references Item and optional Work directly.
 7. Research claims remain evidence-aware and reviewable.
 8. Offline use remains first-class.
-9. No new active feature should depend on the legacy Job model.
+9. No new active feature should depend on the legacy Job model or retired runtime aliases.
 10. Adding a feature does not automatically add a navigation destination.
 11. The user should be able to find important objects and commands quickly.
 12. Calibre should learn from confirmed bench and sales evidence over time.
 
 ---
 
-# Implementation sequence
+# Current implementation sequence
 
-1. Core v2 schema
-2. canonical navigation model
-3. Item workspace: Work / Item / Commerce
-4. Workbench around Work only
-5. global search/command palette
-6. frozen legacy export + converter
-7. runtime cutover from Jobs
-8. simplified persistence/store layer
-9. CSS/design consolidation
-10. Workstation / Touch / Capture modes
-11. microscope Capture workflow
-12. diagnostics / next action / QC intelligence
-13. donor / compatibility intelligence
-14. finance and intake automation
-15. print bridge
-16. timegrapher hardware validation
-17. listing/public Passport/customer layer
+Foundation Lock is complete. Next priorities are:
+
+1. reliability layer: sync/conflict recovery, backups, integrity checks and audit history
+2. Knowledge Engine integration across Passport, Timegrapher, Parts, Workbench and technical documents
+3. Movement Finder
+4. proactive Workbench intelligence
+5. parts/donor intelligence expansion
+6. device modes and hardware workflows
+7. global search/command
+8. Business prioritisation and acquisition intelligence
+9. listing/public Passport/customer layer
