@@ -10,6 +10,8 @@ const modules=[
   'js/knowledge-parts.js',
   'js/device-experience.js',
   'js/hardware.js',
+  'js/global-command.js',
+  'js/movement-finder-query.js',
   'js/qr-global-runtime.js',
   'js/qr-labels-runtime.js',
   'js/workbench-runtime.js',
