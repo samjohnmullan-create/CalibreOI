@@ -1,6 +1,7 @@
 const now=()=>new Date().toISOString();
 const id=()=>`ref-${Date.now().toString(36)}${Math.random().toString(36).slice(2,7)}`;
 const fold=v=>String(v||'').trim().toLowerCase().replace(/[^a-z0-9]+/g,'');
+const sameCalibre=(a,b)=>!!(a&&b&&(a===b||((a.length>=3&&b.length>=3)&&(a.endsWith(b)||b.endsWith(a)))));
 export const REFERENCE_SOURCES=[
   ['factory','Factory / manufacturer'],
   ['ranfft','Ranfft DB'],
@@ -52,8 +53,8 @@ export function relevantReferenceFacts(work,state={}){
   const ctx=workContext(work,state),needCal=fold(ctx.calibre);
   return referenceFacts(state).map(fact=>{
     let score=0;const why=[];const cal=fold(fact.calibre),related=fold(fact.relatedCalibre);
-    if(needCal&&cal&&cal===needCal){score+=45;why.push('Matches this calibre.');}
-    else if(needCal&&related&&related===needCal){score+=38;why.push('This calibre is the referenced related/donor calibre.');}
+    if(needCal&&cal&&sameCalibre(cal,needCal)){score+=45;why.push('Matches this calibre.');}
+    else if(needCal&&related&&sameCalibre(related,needCal)){score+=38;why.push('This calibre is the referenced related/donor calibre.');}
     else if(needCal&&((cal&&(cal.includes(needCal)||needCal.includes(cal)))||(related&&(related.includes(needCal)||needCal.includes(related))))){score+=22;why.push('Calibre family/text overlaps.');}
     const partText=[fact.partName,fact.partReference,fact.notes].join(' ').toLowerCase();
     if(partText&&ctx.text){const tokens=partText.split(/\W+/).filter(x=>x.length>3);if(tokens.some(t=>ctx.text.includes(t))){score+=15;why.push('Part wording overlaps the current Work.');}}
