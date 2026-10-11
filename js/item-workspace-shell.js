@@ -1,9 +1,15 @@
 import { ITEM_AREAS, itemWorkspaceForPage } from './navigation-model.js';
+import { renderPrimaryNavigation } from './navigation-shell.js';
 
 const page=(location.pathname.split('/').pop()||'index.html').split('?')[0];
 const current=itemWorkspaceForPage(page);
 
 if(current){
+  // Transitional nav.js still exists while the shell is being dismantled. Re-render
+  // primary navigation from the canonical navigation contract so watch pages cannot
+  // fall back to the old order or mark Workbench active for Item/Commerce routes.
+  renderPrimaryNavigation(document,page);
+
   const params=new URLSearchParams(location.search);
   const id=params.get('id')||'';
   const suffix=id?`?id=${encodeURIComponent(id)}`:'';
@@ -17,6 +23,7 @@ if(current){
   // The new Item workspace is the only local navigation on watch pages.
   // Remove the legacy eight-tab strip rather than hiding it so old CSS cannot revive it.
   document.querySelectorAll('.watch-contextnav').forEach(node=>node.remove());
+  document.querySelectorAll('.item-workspace-shell').forEach(node=>node.remove());
 
   const mount=document.createElement('section');
   mount.className='item-workspace-shell';
@@ -35,11 +42,10 @@ if(current){
   if(watchStrip)watchStrip.insertAdjacentElement('afterend',mount);
   else document.querySelector('nav.mainnav')?.insertAdjacentElement('afterend',mount);
 
-  if(!document.querySelector('link[data-item-workspace-shell]')){
-    const css=document.createElement('link');
-    css.rel='stylesheet';
-    css.href='css/item-workspace-shell.css?v=2';
-    css.dataset.itemWorkspaceShell='1';
-    document.head.appendChild(css);
-  }
+  document.querySelectorAll('link[data-item-workspace-shell]').forEach(node=>node.remove());
+  const css=document.createElement('link');
+  css.rel='stylesheet';
+  css.href='css/item-workspace-shell.css?v=3';
+  css.dataset.itemWorkspaceShell='1';
+  document.head.appendChild(css);
 }

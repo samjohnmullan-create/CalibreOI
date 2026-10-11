@@ -29,7 +29,7 @@ if(here==="inventory.html"){
   laterImport("./purchase-review.js?v=2","Calibre purchase review unavailable");
 }
 if(new Set(["index.html","inventory.html","calibre.html","sales.html","service.html","passport.html","timegrapher.html","business.html","summary.html","suppliers.html","documents.html"]).has(here)){
-  laterImport("./archive-cover-runtime.js?v=3","Calibre archive covers unavailable");
+  laterImport("./archive-cover-runtime.js?v=4","Calibre archive covers unavailable");
 }
 
 function isEditing(){const el=document.activeElement;return !!el?.closest?.("input,textarea,select,[contenteditable='true']");}
