@@ -1,0 +1,44 @@
+/* Canonical Item workspace: desktop/DeX first, responsive on mobile. */
+body.item-workspace-mode .item-head{align-items:center;padding:6px 0 10px;margin-bottom:4px}
+body.item-workspace-mode .item-head h2{font-size:1.35rem}
+.item-quick-actions{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.item-quick-actions .btn{min-height:34px;padding:7px 10px;font-size:.7rem}
+.item-area-nav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:2px 0 8px;padding:5px;border:1px solid var(--line);border-radius:11px;background:var(--surface)}
+.item-area-nav button{min-height:42px;border:1px solid transparent;border-radius:8px;background:transparent;color:var(--muted);font:inherit;font-size:.76rem;font-weight:800;cursor:pointer}
+.item-area-nav button:hover{background:var(--surface-2);color:var(--ink)}
+.item-area-nav button.on{background:var(--surface-2);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 30%,var(--line))}
+body.item-workspace-mode .item-tabs{position:sticky;top:0;z-index:7;background:color-mix(in srgb,var(--bg) 94%,transparent);backdrop-filter:blur(10px);margin-bottom:10px;padding-top:2px}
+body.item-workspace-mode .item-tabs button[hidden]{display:none!important}
+body.item-workspace-mode .item-card{padding:14px}
+body.item-workspace-mode .item-card h3{font-size:.9rem;letter-spacing:.01em}
+body.item-workspace-mode .summary-card{grid-template-columns:repeat(4,minmax(0,1fr))}
+body.item-workspace-mode .item-actions{position:sticky;bottom:10px;z-index:10;margin:14px 0 4px;padding:8px;border:1px solid var(--line);border-radius:11px;background:color-mix(in srgb,var(--surface) 94%,transparent);backdrop-filter:blur(12px);box-shadow:0 8px 24px rgba(0,0,0,.08)}
+body.item-workspace-mode .item-actions #save{min-width:118px}
+body.item-workspace-mode .item-panel .card{box-shadow:none}
+@media(min-width:1000px){
+  body.item-workspace-mode .shell{max-width:1440px}
+  body.item-workspace-mode .item-area-nav{width:430px;margin-left:0}
+  body.item-workspace-mode .item-tabs{justify-content:flex-start;min-height:39px}
+  body.item-workspace-mode .item-tabs button{padding:8px 13px;font-size:.72rem}
+  body.item-workspace-mode .item-grid{grid-template-columns:minmax(0,1.3fr) minmax(330px,.7fr);gap:14px;align-items:start}
+  body.item-workspace-mode #panel-condition .item-grid,
+  body.item-workspace-mode #panel-research .item-grid,
+  body.item-workspace-mode #panel-work .item-grid,
+  body.item-workspace-mode #panel-prep .item-grid,
+  body.item-workspace-mode #panel-sale .item-grid{grid-template-columns:minmax(0,1.15fr) minmax(340px,.85fr)}
+  body.item-workspace-mode .record-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+  body.item-workspace-mode textarea{resize:vertical}
+}
+@media(max-width:760px){
+  body.item-workspace-mode .item-head{align-items:flex-start}
+  .item-quick-actions{width:100%}
+  .item-quick-actions .btn{flex:1 1 auto;justify-content:center}
+  .item-area-nav{position:sticky;top:0;z-index:9;margin-left:-2px;margin-right:-2px;padding:4px;gap:4px;background:var(--bg);border-radius:9px}
+  .item-area-nav button{min-height:39px;font-size:.72rem}
+  body.item-workspace-mode .item-tabs{top:48px;padding:5px 0 7px;margin-bottom:8px;background:var(--bg)}
+  body.item-workspace-mode .item-tabs button{min-height:36px}
+  body.item-workspace-mode .summary-card{grid-template-columns:repeat(2,minmax(0,1fr))}
+  body.item-workspace-mode .item-actions{bottom:calc(64px + env(safe-area-inset-bottom));padding:7px}
+  body.item-workspace-mode .item-actions #save{flex:1 1 100%;min-height:42px}
+  body.item-workspace-mode .danger-link,body.item-workspace-mode .delete-item{flex:1 1 calc(50% - 4px)}
+}
