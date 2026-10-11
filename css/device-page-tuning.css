@@ -23,7 +23,7 @@ html[data-device-mode="touch"][data-page="workbench"] .wb-toolbar{margin-bottom:
 html[data-device-mode="touch"][data-page="workbench"] .hub-card{border-radius:11px;padding:10px;gap:8px}
 html[data-device-mode="touch"][data-page="workbench"] .hub-stage{padding-top:8px}
 html[data-device-mode="touch"][data-page="workbench"] .hub-next{padding-top:7px}
-html[data-device-mode="touch"][data-page="workbench"] .hub-card:not(.has-blocker) .hub-state{display:none}
+html[data-device-mode="touch"][data-page="workbench"] .hub-state{padding-top:7px}
 html[data-device-mode="touch"][data-page="workbench"] .hub-actions{gap:6px}
 html[data-device-mode="touch"][data-page="workbench"] .hub-actions button{min-height:44px}
 html[data-device-mode="touch"][data-page="workbench"] .hub-actions .primary{order:-1;flex-basis:100%;font-size:.72rem}
