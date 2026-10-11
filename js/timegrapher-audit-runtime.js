@@ -7,12 +7,12 @@ if((location.pathname.split('/').pop()||'')==='timegrapher.html')enhance();
 async function enhance(){
   let state=await loadState();
   const params=new URLSearchParams(location.search),requested=params.get('work')||params.get('id')||'';
-  if(requested&&String(state.currentWorkId||'')!==String(requested)&&(state.workRecords||[]).some(w=>String(w.id)===String(requested))){
+  if(requested&&String(state.currentWorkId||'')!==String(requested)&&(state.work||[]).some(w=>String(w.id)===String(requested))){
     state.currentWorkId=String(requested);await saveState(state);
     const guard='calibre-tg-work-'+requested;
     if(!sessionStorage.getItem(guard)){sessionStorage.setItem(guard,'1');location.reload();return;}
   }
-  const work=(state.workRecords||[]).find(w=>String(w.id)===String(requested||state.currentWorkId))||(state.workRecords||[]).find(w=>!['Complete','Cancelled'].includes(w.status))||(state.workRecords||[])[0];
+  const work=(state.work||[]).find(w=>String(w.id)===String(requested||state.currentWorkId))||(state.work||[]).find(w=>!['Complete','Cancelled'].includes(w.status))||(state.work||[])[0];
   if(!work)return;
   const item=(state.items||[]).find(i=>String(i.id)===String(work.itemId));
   const title=document.getElementById('watchTitle');if(title&&item)title.textContent=`${itemDisplayName(item)} · Timing`;
