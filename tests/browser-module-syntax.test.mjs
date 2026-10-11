@@ -12,6 +12,8 @@ const modules=[
   'js/hardware.js',
   'js/global-command.js',
   'js/movement-finder-query.js',
+  'js/business-brain.js',
+  'js/business-brain-runtime.js',
   'js/qr-global-runtime.js',
   'js/qr-labels-runtime.js',
   'js/workbench-runtime.js',
