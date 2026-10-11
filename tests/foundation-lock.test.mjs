@@ -34,13 +34,18 @@ test('transitional array-backed store collections cannot grow silently',()=>{
     'referenceDocuments',
     'referenceFacts',
     'tools',
-    'workRecords'
+    'work'
   ].sort();
   assert.deepEqual(found,expected,'Update the Core/migration plan before adding another top-level persisted collection');
 });
 
-test('every transitional store collection is named in Foundation Lock documentation',()=>{
-  for(const field of ['workRecords','ledger','tools','partsStock','purchaseReview','partFitEvidence','referenceFacts','referenceDocuments']){
+test('every remaining transitional store collection is named in Foundation Lock documentation',()=>{
+  for(const field of ['ledger','tools','partsStock','purchaseReview','partFitEvidence','referenceFacts','referenceDocuments']){
     assert.match(lockDoc,new RegExp('`'+field+'`'),`${field} must remain documented until migrated`);
   }
+});
+
+test('Work convergence is recorded as completed debt',()=>{
+  assert.match(lockDoc,/FL-2 — Work\/store convergence — COMPLETE/);
+  assert.doesNotMatch(lockDoc,/`workRecords` — active store name/);
 });
