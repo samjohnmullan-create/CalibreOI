@@ -4,6 +4,19 @@ function enhanceWorkWorkspace(){
   const strip=document.getElementById('stageStrip');
   if(!progressHost||!strip||progressHost.dataset.enhanced)return;
   progressHost.dataset.enhanced='1';
+  const workMenu=document.querySelector('.work-menu');
+  const workId=new URLSearchParams(location.search).get('id')||'';
+  if(workMenu&&!workMenu.querySelector('[data-work-capture]')){
+    const itemLink=document.getElementById('menuItem');
+    let itemId='';
+    try{itemId=new URL(itemLink?.href||'',location.href).searchParams.get('id')||'';}catch{}
+    const capture=document.createElement('a');
+    capture.dataset.workCapture='1';
+    capture.textContent='Capture';
+    capture.href=`capture.html?${new URLSearchParams({...(itemId?{item:itemId}:{}),...(workId?{work:workId}:{})}).toString()}`;
+    const passport=document.getElementById('menuPassport');
+    if(passport)workMenu.insertBefore(capture,passport);else workMenu.appendChild(capture);
+  }
   const wrap=document.createElement('div');
   wrap.innerHTML='<div class="work-ui-section-label">Workflow completion</div><div class="work-ui-progress" aria-hidden="true"><i></i></div><div class="work-ui-progress-copy"><span data-work-progress-label>0 of 0 stages</span><span data-work-progress-percent>0%</span></div>';
   progressHost.replaceWith(wrap);
