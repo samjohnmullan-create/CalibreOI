@@ -14,9 +14,19 @@ async function loadPdfJs(){
   return mod;
 }
 
+async function waitForReferenceCard(timeoutMs=5000){
+  const existing=document.querySelector('.ref-intel');
+  if(existing)return existing;
+  return new Promise(resolve=>{
+    const observer=new MutationObserver(()=>{const card=document.querySelector('.ref-intel');if(card){observer.disconnect();resolve(card);}});
+    observer.observe(document.documentElement,{childList:true,subtree:true});
+    setTimeout(()=>{observer.disconnect();resolve(document.querySelector('.ref-intel'));},timeoutMs);
+  });
+}
+
 async function enhancePdfImport(){
-  const card=document.querySelector('.ref-intel');
-  if(!card)return;
+  const card=await waitForReferenceCard();
+  if(!card||card.querySelector('.ref-pdf-import'))return;
   let state=await loadState(),work=currentWork(state),rows=[],report=null;
   if(!work)return;
   const item=(state.items||[]).find(x=>String(x.id)===String(work.itemId))||{};
