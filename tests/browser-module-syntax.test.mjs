@@ -6,6 +6,8 @@ const modules=[
   'js/build-refresh.js',
   'js/research-brief.js',
   'js/parts-intelligence.js',
+  'js/parts-ui-runtime.js',
+  'js/knowledge-parts.js',
   'js/qr-global-runtime.js',
   'js/workbench-runtime.js',
   'js/work-ui-runtime.js',
