@@ -25,7 +25,7 @@ export function partsCost(work={}){return (work.parts||[]).reduce((n,p)=>n+(Numb
 export function coverPhoto(record={}){const assets=Array.isArray(record.mediaAssets)?record.mediaAssets:[];return assets.find(a=>a?.isCover&&(a.thumbnailUrl||a.url))?.thumbnailUrl||assets.find(a=>a?.thumbnailUrl||a?.url)?.thumbnailUrl||assets.find(a=>a?.url)?.url||'';}
 export function progress(work={}){const stages=Array.isArray(work.stages)?work.stages:[];if(!stages.length)return 0;return Math.round(stages.filter(s=>s?.complete||s?.completedAt).length/stages.length*100);}
 export function money(n){const v=Number(n);return Number.isFinite(v)?v.toLocaleString('en-AU',{style:'currency',currency:'AUD'}):'$0.00';}
-export function escapeHtml(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+export function escapeHtml(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[c]));}
 export function labourCost(b={}){return (Number(b.labourMinutes)||0)/60*(Number(b.labourRate)||0);}
 export function cashOut(b={}){return ['purchasePrice','buyerPremium','postage','preparationCost','repairCost','partsCost','consumables','externalService','marketplaceFees','shippingToBuyer','otherCost'].reduce((n,k)=>n+(Number(b[k])||0),0);}
 export function investment(b){return cashOut(b);} export function salePrice(b={}){return Number(b.actualSale)||Number(b.targetSale)||0;} export function cashProfit(b={}){const sale=salePrice(b);return sale?sale-cashOut(b):0;} export function profitAfterLabour(b={}){return cashProfit(b)-labourCost(b);} export function roi(b={}){const out=cashOut(b);return out?cashProfit(b)/out:0;}
@@ -45,6 +45,11 @@ function mergeResources(primary=[],legacy=[]){
 export function canonicalInventory(value={}){
   const source=value&&typeof value==='object'?value:{};
   return {parts:Array.isArray(source.parts)?source.parts:[],tools:Array.isArray(source.tools)?source.tools:[],consumables:Array.isArray(source.consumables)?source.consumables:[],donors:Array.isArray(source.donors)?source.donors:[]};
+}
+function attachInventoryAliases(state){
+  Object.defineProperty(state,'tools',{get(){return state.inventory.tools;},set(value){state.inventory.tools=Array.isArray(value)?value:[];},enumerable:false,configurable:true});
+  Object.defineProperty(state,'partsStock',{get(){return state.inventory.parts;},set(value){state.inventory.parts=Array.isArray(value)?value:[];},enumerable:false,configurable:true});
+  return state;
 }
 
 export function migratePersistedState(raw={}){
@@ -72,7 +77,8 @@ export function migratePersistedState(raw={}){
 export function canonicalState(raw={}){
   const migrated=migratePersistedState(raw);
   const {workRecords:_retiredWorkRecords,partsStock:_retiredPartsStock,tools:_retiredTools,...state}=migrated;
-  return {...state,schemaVersion:STORE_SCHEMA_VERSION,items:Array.isArray(state.items)?state.items:[],work:Array.isArray(state.work)?state.work:[],inventory:canonicalInventory(state.inventory),ledger:Array.isArray(state.ledger)?state.ledger:[],incoming:Array.isArray(state.incoming)?state.incoming:[],purchaseReview:Array.isArray(state.purchaseReview)?state.purchaseReview:[],partFitEvidence:Array.isArray(state.partFitEvidence)?state.partFitEvidence:[],referenceFacts:Array.isArray(state.referenceFacts)?state.referenceFacts:[],referenceDocuments:Array.isArray(state.referenceDocuments)?state.referenceDocuments:[],currentItemId:String(state.currentItemId||''),currentWorkId:String(state.currentWorkId||'')};
+  const canonical={...state,schemaVersion:STORE_SCHEMA_VERSION,items:Array.isArray(state.items)?state.items:[],work:Array.isArray(state.work)?state.work:[],inventory:canonicalInventory(state.inventory),ledger:Array.isArray(state.ledger)?state.ledger:[],incoming:Array.isArray(state.incoming)?state.incoming:[],purchaseReview:Array.isArray(state.purchaseReview)?state.purchaseReview:[],partFitEvidence:Array.isArray(state.partFitEvidence)?state.partFitEvidence:[],referenceFacts:Array.isArray(state.referenceFacts)?state.referenceFacts:[],referenceDocuments:Array.isArray(state.referenceDocuments)?state.referenceDocuments:[],currentItemId:String(state.currentItemId||''),currentWorkId:String(state.currentWorkId||'')};
+  return attachInventoryAliases(canonical);
 }
 export async function loadState(){const stored=await get('state');const state=canonicalState(stored||{});if(!stored||Number(stored.schemaVersion)!==STORE_SCHEMA_VERSION||Array.isArray(stored.workRecords)||Array.isArray(stored.tools)||Array.isArray(stored.partsStock))await put('state',state);return state;}
 export async function saveState(raw){const state=canonicalState(raw);state._syncUpdatedAt=new Date().toISOString();await put('state',state);return state;}
