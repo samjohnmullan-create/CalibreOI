@@ -75,6 +75,20 @@ export const PAGE_HOME = Object.freeze({
   'settings.html':'calibre'
 });
 
+// Transitional route ownership for the existing watch pages. This maps old routes
+// into the stable Work / Item / Commerce workspace without making the old route
+// names part of Core. New screens should target these areas directly.
+export const ITEM_WORKSPACE_ROUTES = Object.freeze({
+  'service.html':{area:'work',section:'Service'},
+  'timegrapher.html':{area:'work',section:'Timing'},
+  'suppliers.html':{area:'work',section:'Parts'},
+  'passport.html':{area:'item',section:'Passport'},
+  'summary.html':{area:'item',section:'History'},
+  'documents.html':{area:'item',section:'Documents'},
+  'business.html':{area:'commerce',section:'Costs'},
+  'sales.html':{area:'commerce',section:'Sale'}
+});
+
 export function sectionsForItem(type='other'){
   return ITEM_SECTIONS[type]||ITEM_SECTIONS.default;
 }
@@ -85,6 +99,10 @@ export function primaryHomeForPage(page='index.html'){
 
 export function primaryDestination(id='home'){
   return PRIMARY_NAV.find(entry=>entry.id===id)||PRIMARY_NAV[0];
+}
+
+export function itemWorkspaceForPage(page=''){
+  return ITEM_WORKSPACE_ROUTES[page]||null;
 }
 
 export function breadcrumb(parts=[]){
