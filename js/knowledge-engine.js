@@ -2,7 +2,6 @@
 // Core Items reference knowledge; this module never copies reference datasets into Core state.
 // The compact v25 pack is the offline/instant fallback; Supabase can hydrate the same public API.
 import {V25_MOVEMENTS,V25_TECHNICAL_DOCUMENTS} from './knowledge-v25-pack.js?v=1';
-import {supabaseClient,session} from './cloud.js';
 
 const normalise=v=>String(v??'').trim().toLowerCase().replace(/[\s._/]+/g,'-');
 const movementKey=(maker,calibre)=>`${normalise(maker)}:${normalise(calibre)}`;
@@ -62,9 +61,11 @@ export function getKnowledgeStatus(){return {...knowledgeStatus};}
 
 export async function hydrateKnowledgeFromCloud({force=false}={}){
   if(knowledgeStatus.hydrated&&!force)return getKnowledgeStatus();
-  const s=await session();
-  if(!s?.user||s.localOnly){knowledgeStatus={...knowledgeStatus,source:'static-v25',hydrated:false,error:''};return getKnowledgeStatus();}
   try{
+    // Dynamic import keeps this module testable in Node and avoids loading the browser CDN client until needed.
+    const {supabaseClient,session}=await import('./cloud.js');
+    const s=await session();
+    if(!s?.user||s.localOnly){knowledgeStatus={...knowledgeStatus,source:'static-v25',hydrated:false,error:''};return getKnowledgeStatus();}
     const sb=supabaseClient();
     const [profilesResult,docsResult]=await Promise.all([
       sb.from('calibre_kb_movement_profiles').select('*').order('maker',{ascending:true}).order('calibre',{ascending:true}),
@@ -84,8 +85,8 @@ export async function hydrateKnowledgeFromCloud({force=false}={}){
   }
 }
 
-// Warm in the background. Existing synchronous callers continue to work immediately from the bundled pack.
-export const knowledgeDatabaseReady=hydrateKnowledgeFromCloud();
+// Warm only in a browser. Existing synchronous callers work immediately from the bundled pack.
+export const knowledgeDatabaseReady=typeof window!=='undefined'?hydrateKnowledgeFromCloud():Promise.resolve(getKnowledgeStatus());
 
 export function listSeedMovements(){return liveMovements.map(cloneMovement);}
 export const listVerifiedMovements=listSeedMovements;
