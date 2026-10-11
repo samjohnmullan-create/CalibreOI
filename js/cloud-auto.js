@@ -7,6 +7,7 @@ laterImport('./qr-global-runtime.js?v=1','Calibre QR scanner entry unavailable')
 if(here==='item.html')laterImport('./item-qr-runtime.js?v=1','Calibre Item QR tools unavailable');
 if(here==='passport.html')laterImport('./passport-media.js?v=5','Calibre Passport media unavailable');
 if(['passport.html','timegrapher.html','work.html','workbench.html','suppliers.html'].includes(here))laterImport('./knowledge-ui-runtime.js?v=1','Calibre knowledge suggestions unavailable');
+if(['work.html','workbench.html'].includes(here))laterImport('./workbench-intelligence-runtime.js?v=1','Calibre proactive Workbench intelligence unavailable');
 if(here==='sales.html'){laterImport('./publish-controls.js?v=1','Calibre public publishing controls unavailable');laterImport('./square-storefront-runtime.js?v=1','Calibre Square storefront controls unavailable');}
 if(here==='index.html')laterImport('./available-cash.js?v=2','Calibre cash position unavailable');
 if(here==='suppliers.html')laterImport('./workshop-assets-link.js?v=1','Calibre workshop IDs link unavailable');
