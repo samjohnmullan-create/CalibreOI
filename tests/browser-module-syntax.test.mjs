@@ -9,7 +9,9 @@ const modules=[
   'js/qr-global-runtime.js',
   'js/workbench-runtime.js',
   'js/work-ui-runtime.js',
-  'js/item-ui-runtime.js'
+  'js/item-ui-runtime.js',
+  'js/reference-intelligence.js',
+  'js/reference-ui-runtime.js'
 ];
 
 for(const file of modules){

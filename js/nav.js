@@ -68,12 +68,21 @@ if(here==='item.html'){
   }
 }
 
-if(here==='suppliers.html'&&!document.querySelector('script[data-calibre-parts-intelligence]')){
-  const partsUi=document.createElement('script');
-  partsUi.type='module';
-  partsUi.src='js/parts-ui-runtime.js?v=1';
-  partsUi.dataset.calibrePartsIntelligence='1';
-  document.head.appendChild(partsUi);
+if(here==='suppliers.html'){
+  if(!document.querySelector('script[data-calibre-parts-intelligence]')){
+    const partsUi=document.createElement('script');
+    partsUi.type='module';
+    partsUi.src='js/parts-ui-runtime.js?v=1';
+    partsUi.dataset.calibrePartsIntelligence='1';
+    document.head.appendChild(partsUi);
+  }
+  if(!document.querySelector('script[data-calibre-reference-intelligence]')){
+    const refUi=document.createElement('script');
+    refUi.type='module';
+    refUi.src='js/reference-ui-runtime.js?v=1';
+    refUi.dataset.calibreReferenceIntelligence='1';
+    document.head.appendChild(refUi);
+  }
 }
 
 const savedTheme=localStorage.getItem('calibre-theme');
