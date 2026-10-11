@@ -1,28 +1,26 @@
 # Calibre & Co. — Architecture
 
-_Last revised: 9 October 2026_
+_Last revised: 11 October 2026_
 
 ## Product definition
 
-Calibre is no longer only a watchmaking job-card application.
-
-It is an item lifecycle system for watches, jewellery, accessories, clocks, collectibles and other small resale items, with an advanced watchmaking layer for watches and clocks.
+Calibre is an item lifecycle and workshop operating system for watches, clocks, jewellery, accessories and small collectibles, with a specialist horology layer for watches and clocks.
 
 The broad lifecycle is:
 
-**Acquire → Identify → Inspect → Research → Prepare / Service → Value → List → Sell → Preserve history**
+**Acquire → Identify → Research → Inspect → Work → Document → Value → Sell → Preserve**
 
-Watch-capable items additionally support:
+Watch and clock Items additionally support:
 
-**Diagnose → Service → Parts → Time → Final QC → Watch Passport**
+**Diagnose → Service → Parts → Measure → Time → QC → Passport**
 
 ---
 
-# Core architectural rule
+# Core rule
 
-## Item is the permanent centre of the system
+## Item is permanent
 
-An **Item** is the physical thing being owned, researched, restored, serviced, listed or sold.
+An Item is the physical thing.
 
 Examples:
 - wristwatch
@@ -34,42 +32,43 @@ Examples:
 - cufflinks
 - lighter
 - pen
-- small antique or collectible
+- small collectible
 
-The Item survives every workflow performed on it.
+The Item survives acquisition, restoration, service, listing, sale and future history.
 
-## Work records activity, not identity
+## Work is activity
 
-A **Work record** describes something done to an Item.
+A Work record describes something done to an Item.
 
 Examples:
-- full watch service
+- full service
 - regulation
 - inspection
 - cleaning
-- jewellery preparation
 - restoration
+- preparation
 - photography preparation
 - listing preparation
 
 An Item may have no Work records, one Work record or many Work records over its lifetime.
 
-A traditional watch Job Card becomes one specialised kind of Work record rather than the permanent identity of the watch.
+There is no active architectural role for a legacy Job object in Core v2.
 
 ---
 
-# Canonical object model
+# Canonical Core v2 object model
 
 ```text
 item
 ├── id
 ├── type
+├── purpose
 ├── title
 ├── status
 ├── identity
 ├── condition
 ├── research[]
-├── mediaAssets[]
+├── mediaAssetIds[]
 ├── commercial
 ├── sale
 ├── workIds[]
@@ -79,7 +78,6 @@ item
     ├── passport
     ├── movement
     ├── timingHistory[]
-    ├── serviceHistory[]
     └── publicPassport
 
 work
@@ -87,247 +85,162 @@ work
 ├── itemId
 ├── number
 ├── type
+├── title
 ├── status
 ├── diagnosis
 ├── faults[]
 ├── diagnosticFaults[]
 ├── stages[]
-├── parts[]
+├── measurements[]
+├── partIds[]
 ├── labour
 ├── timingRuns[]
 ├── repairPerformed
 ├── decision
+├── nextAction
+├── blocker
 └── finalQC
+
+mediaAsset
+├── id
+├── itemId
+├── workId?                 # optional work context
+├── category
+├── source
+├── storageKey / URL
+├── thumbnailURL
+├── metadata
+├── caption / evidence note
+└── visibility
 
 inventory
 ├── parts[]
 ├── tools[]
 ├── consumables[]
-└── donor relationships
+└── donors[]
 
-knowledge
-├── research evidence
-├── source records
-├── movement/calibre knowledge
-├── compatibility evidence
-├── repair outcomes
-└── identification evidence
+compatibilityEvidence[]
+incoming[]
+knowledge[]
+settings
 ```
 
----
-
-# Item types
-
-Initial canonical types:
-
-- `watch`
-- `clock`
-- `jewellery`
-- `accessory`
-- `collectible`
-- `other`
-
-The type controls which specialist tools and tabs become available.
-
-A watch should never be forced through a generic-only workflow, and a brooch should never be forced through a watch Job Card.
-
----
-
-# Shared Item data
-
-Every saleable Item can share:
-
-## Identity
-- maker / brand
-- model / title
-- country
-- era / year
-- materials
-- marks / hallmarks / signatures
-- reference / serial where applicable
-- dimensions
-- weight
-- research notes
-
-## Condition
-- as acquired
-- faults / defects
-- cleaning or restoration needs
-- final condition
-
-## Commercial record
-- purchase price
-- buyer premium
-- postage
-- preparation cost
-- repair cost
-- parts
-- consumables
-- external work
-- labour value
-- target sale
-- minimum sale
-- actual sale
-- marketplace fees
-- buyer shipping
-- source
-- sale channel
-- dates
-
-## Media
-- intake/original photos
-- identity/evidence photos
-- preparation/restoration photos
-- listing photos
-- documents
-
-## Sale
-- listing title
-- description
-- listing photo pack
-- channel
-- asking price
-- offers
-- sold result
-
----
-
-# Watch extension
-
-Watch and clock Items unlock the specialist horology layer.
-
-## Passport
-Permanent watch identity and history:
-- maker
-- model
-- reference
-- serial
-- calibre
-- calibre family
-- movement maker
-- jewels
-- escapement
-- beat rate
-- case material
-- dimensions
-- hallmarks
-- provenance
-- evidence and confidence
-
-## Work / Service Job
-A service job records:
-- intake
-- pre-service timing
-- diagnosis
-- dismantling
-- cleaning
-- repair / replacement parts
-- lubrication and reassembly
-- train / escapement
-- balance / beat
-- casing
-- regulation
-- final QC
-
-The Passport belongs to the Item, not to a single service job.
-
-## Timing
-Timing runs belong to a Work record while also contributing to the permanent watch history.
-
-## Parts compatibility
-Compatibility evidence belongs to the Knowledge layer and references:
-- target Item / calibre
-- source stock or donor
-- part
-- result: verified / used / ruled out
-- bench notes
+`js/core-v2.js` is the executable schema contract for the new model.
 
 ---
 
 # Navigation architecture
 
-## Primary navigation
-
-Target labels:
+Calibre has exactly five primary destinations:
 
 **Home · Items · Workbench · Business · Calibre**
 
-### Home
-What needs attention now?
+## Home
 
-### Items
-Everything owned, incoming, retained, listed or sold.
+Attention only: what needs action now?
 
-Expected filters:
-- All
-- Watches
-- Jewellery
-- Accessories
-- Collectibles
-- Donors / spares
-- Sold
+## Items
 
-Tools and loose parts remain inventory resources, not sale Items unless deliberately converted into an Item.
+Everything physical owned or previously owned.
 
-### Workbench
-Active work.
+Filters may include Watches, Clocks, Jewellery, Accessories, Collectibles, Donors and Sold.
 
-The contextual tabs depend on Item type.
+## Workbench
 
-### Business
-Portfolio-level financial and sourcing intelligence across all Items.
+Active or deliberately queued Work only.
 
-### Calibre
-Assistant, inbound automation, activity and system controls.
+Workbench groups:
 
----
+**Now · Next · Waiting · Ready · Queue**
 
-# Contextual tabs
+## Business
 
-## Watch / clock Item
+Portfolio financial, sourcing and sales intelligence.
 
-Target direction:
+## Calibre
 
-**Service · Passport · Timing · Parts · Costs · Sale · Record**
+Assistant, Inbox, Capture, Knowledge and Settings.
 
-- **Service** — diagnosis, stages, repair and final QC
-- **Passport** — permanent watch identity and research
-- **Timing** — timegrapher and timing history
-- **Parts** — parts required, stock and donors
-- **Costs** — acquisition and work economics for this Item
-- **Sale** — listing preparation and sale workflow
-- **Record** — permanent history, documents, photos and completed work
+New features attach to one of these places. They do not automatically create new top-level destinations.
 
-During migration the existing Summary and Documents pages may remain separate until Record can safely replace them.
-
-## Jewellery / accessory / collectible Item
-
-Target direction:
-
-**Identity · Condition · Research · Prep · Costs · Sale · Record**
-
-Specialist fields may be introduced by category, for example hallmark/material fields for jewellery.
+`js/navigation-model.js` is the executable navigation contract.
 
 ---
 
-# Calibre system tabs
+# Item workspace
 
-Target labels:
+Every Item uses three high-level areas.
 
-**Assistant · Inbox · Activity · Settings**
+## Work
 
-- **Assistant** — research, interpretation and decision support
-- **Inbox** — pushed job cards, purchases, email-derived intake, arrivals and external handoff
-- **Activity** — meaningful system/import/sync events
-- **Settings** — account, cloud, backup, theme and system configuration
+What am I physically doing?
+
+Watch / clock:
+
+**Diagnosis · Service · Measurements · Timing · Parts · QC**
+
+Jewellery:
+
+**Inspect · Clean · Restore · Measurements · QC**
+
+Other Items use an appropriate reduced Work set.
+
+## Item
+
+What is it?
+
+**Identity · Passport where applicable · Research · Media · History · Documents**
+
+## Commerce
+
+What did it cost and how do I sell it?
+
+**Costs · Valuation · Listing · Sale**
+
+The three areas are the mental model. Individual sections should not become top-level application navigation.
+
+---
+
+# Device modes
+
+One application supports four interface densities/modes:
+
+- **Automatic** — default responsive selection
+- **Workstation** — DeX, monitor, desktop, keyboard/mouse; compact and information-dense
+- **Touch** — phone/bench; large targets, reduced simultaneous controls
+- **Capture** — Galaxy Tab/microscope station; capture-first and minimal
+
+Device mode changes presentation, not the underlying data model.
+
+---
+
+# Search and commands
+
+Calibre will have one global find/command layer.
+
+It must be capable of locating Items and Work by useful identifiers such as name, maker, calibre, serial, status, tag, part or workflow state.
+
+It may also expose contextual commands such as:
+
+- start Work
+- capture image
+- add part
+- time watch
+- mark waiting
+- print label
+- create listing
+
+Desktop target shortcut: **Ctrl/Cmd + K**.
 
 ---
 
 # Business intelligence
 
-Business analytics must operate across all resale Items, not watches only.
+Business analytics operate across all resale Items, not only watches.
 
 Useful outputs include:
+
+- available cash
 - cash profit
 - profit after labour
 - ROI
@@ -340,107 +253,142 @@ Useful outputs include:
 - realised vs projected profit
 - average days to sale
 - preparation/restoration uplift
-- watches vs jewellery vs accessories performance
 
-Tool costs and stock/inventory costs remain separate from Item profitability unless explicitly allocated.
+Tool costs and inventory-resource costs remain separate from Item profitability unless explicitly allocated.
 
 ---
 
-# Storage model
+# Media
 
-## Current reality
+Media is a first-class record.
 
-The existing application is job-first and stores watch identity, commercial data, timing and work data together in legacy Job records.
+A MediaAsset always belongs to an Item and may optionally belong to a Work record.
 
-The current cloud model synchronises a large state document for simplicity and offline reliability.
+Typical categories:
 
-## Migration rule
+- original/intake
+- identity
+- movement
+- workshop
+- fault/damage
+- part
+- progress
+- finished
+- sale/listing
+- document
 
-Do **not** perform a destructive migration.
+The Galaxy Tab microscope workflow uses the same MediaAsset model; there is no special Job attachment path.
 
-The migration must be progressive and reversible.
+---
 
-### Stage A — compatibility layer
+# Storage direction
 
-- introduce canonical Item definitions
-- derive Item views from existing watch Jobs
-- continue writing existing Job records
-- do not break existing job cards or cloud state
+The active Core v2 state uses canonical collections only.
 
-### Stage B — first-class Items
-
-- add `state.items[]`
-- allow non-watch Items to be created directly
-- link existing watch Jobs to stable `itemId`
-- existing Job remains valid work data
-
-### Stage C — separate Work records
-
-- new watch service jobs reference `itemId`
-- move permanent Passport identity to Item
-- preserve legacy reads during transition
-
-### Stage D — structured cloud tables
-
-When justified by scale and stability, move from one large state payload toward relational records such as:
+Target local/cloud collections:
 
 ```text
 items
 work
-passports
-commercial_records
-media_assets
-timing_runs
-parts
-compatibility_evidence
+mediaAssets
+inventory
+compatibilityEvidence
 incoming
+knowledge
+settings
 ```
 
-IndexedDB remains the local/offline cache.
+IndexedDB remains useful for offline/local-first behaviour. Supabase remains the cloud/auth platform unless there is a reason to change it.
+
+Persistence should become simpler over time: storage code stores and syncs canonical records; specialist business logic belongs outside the store layer.
 
 ---
 
-# Current compatibility implementation
+# Legacy cutover
 
-`js/item-model.js` is the first non-destructive architecture layer.
+The old progressive compatibility strategy is retired.
 
-It provides:
-- canonical Item types
-- canonical Item statuses
-- common commercial and identity shapes
-- watch extension shape
-- `legacyJobToItem()`
-- `legacyJobToWork()`
-- `allItems(state)` for combining future Items with legacy watch Jobs
+## Before cutover
 
-This file intentionally does not alter existing storage yet.
+1. export the full existing legacy state
+2. keep the export as a frozen archive
+3. run a one-shot converter into Core v2
+4. preserve useful identity, Passport, research, commercial, media, faults, parts, timing and service information where it maps cleanly
+5. log anything skipped or ambiguous
+6. validate the converted Core v2 state
+
+## After cutover
+
+The active runtime does not load or write `state.jobs`.
+
+Retire:
+
+- `currentId` as current Job
+- `legacyJobId`
+- `specialistJobId`
+- Job → Item mirroring
+- Job → Work mirroring
+- bridge/reconciliation code whose only purpose is dual-model compatibility
+
+Replace with:
+
+- `currentItemId`
+- `currentWorkId`
+- direct `work.itemId`
+- Work-derived history
+
+Legacy conversion code may remain only as explicit archive/import tooling until no longer useful.
 
 ---
 
-# Immediate implementation order
+# UI system
 
-1. Establish Item model and migration contract without changing existing Job storage.
-2. Rename top-level UI concepts to Item-first language where safe.
-3. Expand the existing Collection screen into Items and support non-watch sale records.
-4. Add stable `itemId` links to watch Jobs.
-5. Create non-watch Item creation/edit workflow.
-6. Make Business analytics consume Items plus legacy watch-derived Items.
-7. Separate permanent watch Passport from service Job data.
-8. Introduce reusable Work records for service, cleaning, restoration and preparation.
-9. Consolidate Summary/Documents into Record after the underlying model is stable.
-10. Only then consider relational cloud-table migration.
+The visual direction remains quiet sage + graphite: modern, restrained and instrument-like.
+
+Rules:
+
+- design tokens live in shared CSS
+- runtime JavaScript must not introduce a competing palette
+- Workstation uses tighter rows, tables, panes and sticky context
+- Touch uses stacked content, large targets and fewer simultaneous controls
+- breadcrumbs show context, e.g. `Items › Olma Caravelle › Work › Full Service`
+- avoid creating a giant card for every piece of information
 
 ---
 
 # Non-negotiable rules
 
-1. Existing watch data must remain readable throughout migration.
-2. A physical Item gets one permanent identity.
-3. Work records never become the permanent identity of the Item.
-4. Watch-only fields must not pollute jewellery/general Item workflows.
-5. Shared financial logic should work across every resale category.
-6. Media assets should reference Items and Work rather than be duplicated.
+1. One physical object gets one permanent Item identity.
+2. Work never becomes the permanent identity of an Item.
+3. Passport belongs to the Item, not a single service.
+4. Watch-only fields do not pollute generic Item workflows.
+5. Shared financial logic works across all resale categories.
+6. Media references Item and optional Work directly.
 7. Research claims remain evidence-aware and reviewable.
-8. Offline use remains a first-class requirement.
-9. No destructive data migration without backup and rollback.
-10. Calibre should learn from confirmed bench and sales evidence over time.
+8. Offline use remains first-class.
+9. No new active feature should depend on the legacy Job model.
+10. Adding a feature does not automatically add a navigation destination.
+11. The user should be able to find important objects and commands quickly.
+12. Calibre should learn from confirmed bench and sales evidence over time.
+
+---
+
+# Implementation sequence
+
+1. Core v2 schema
+2. canonical navigation model
+3. Item workspace: Work / Item / Commerce
+4. Workbench around Work only
+5. global search/command palette
+6. frozen legacy export + converter
+7. runtime cutover from Jobs
+8. simplified persistence/store layer
+9. CSS/design consolidation
+10. Workstation / Touch / Capture modes
+11. microscope Capture workflow
+12. diagnostics / next action / QC intelligence
+13. donor / compatibility intelligence
+14. finance and intake automation
+15. print bridge
+16. timegrapher hardware validation
+17. listing/public Passport/customer layer
