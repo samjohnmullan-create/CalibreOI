@@ -11,7 +11,6 @@ const laterImport=(path,label)=>idle(()=>import(path).catch(err=>console.warn(la
 
 import("./canonical-nav-runtime.js?v=1").catch(err=>console.warn("Canonical navigation unavailable",err));
 laterImport("./qr-global-runtime.js?v=1","Calibre QR scanner entry unavailable");
-if(here==="workbench.html")laterImport("./workbench-parts-intel-runtime.js?v=1","Calibre Workbench parts intelligence unavailable");
 if(here==="item.html")laterImport("./item-qr-runtime.js?v=1","Calibre Item QR tools unavailable");
 if(here==="passport.html")laterImport("./passport-media.js?v=5","Calibre Passport media unavailable");
 if(here==="sales.html"){
@@ -19,11 +18,7 @@ if(here==="sales.html"){
   laterImport("./square-storefront-runtime.js?v=1","Calibre Square storefront controls unavailable");
 }
 if(here==="index.html")laterImport("./available-cash.js?v=2","Calibre cash position unavailable");
-if(here==="suppliers.html"){
-  laterImport("./parts-intelligence-runtime.js?v=2","Calibre parts intelligence unavailable");
-  laterImport("./workshop-assets-link.js?v=1","Calibre workshop IDs link unavailable");
-}
-if(here==="suppliers.html"||here==="inventory.html")laterImport("./parts-workflow.js?v=3","Calibre parts workflow unavailable");
+if(here==="suppliers.html")laterImport("./workshop-assets-link.js?v=1","Calibre workshop IDs link unavailable");
 if(here==="settings.html")laterImport("./settings-media-health.js?v=1","Calibre media queue health unavailable");
 if(here==="inventory.html"){
   laterImport("./collection-dashboard.js?v=2","Calibre collection dashboard unavailable");
