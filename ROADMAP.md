@@ -22,45 +22,7 @@ Calibre has one Core. Product generations such as “Core v2” are not part of 
 
 The canonical contract lives in `js/core.js`.
 
-```text
-Item
-├── Identity
-├── Condition
-├── Research
-├── Commercial
-├── Sale
-├── Media references
-├── Work references
-└── Watch extension?
-    ├── Passport
-    ├── Movement
-    ├── Timing history
-    └── Public Passport
-
-Work
-├── Item ID
-├── Type / status
-├── Diagnosis
-├── Faults
-├── Stages
-├── Measurements
-├── Parts references
-├── Labour
-├── Timing runs
-├── Repair performed
-├── Next action / blocker
-└── Final QC
-```
-
-Other Core collections:
-
-- MediaAsset
-- Inventory resources — parts, tools, consumables, donors and storage locations
-- Compatibility evidence
-- Incoming
-- Knowledge
-- Ledger
-- Settings
+Other Core collections include MediaAsset, Inventory resources/locations, Compatibility evidence, Incoming, Knowledge, Ledger and Settings.
 
 ## Navigation rule
 
@@ -72,118 +34,39 @@ Calibre has five primary destinations only:
 4. **Business** — portfolio money, sourcing and sales intelligence.
 5. **Calibre** — assistant, inbox, capture, knowledge and settings.
 
-New features do not automatically get new destinations. They attach to Item, Work, Business or Calibre.
+New features do not automatically get new destinations.
 
 ## Item workspace
 
 Every Item is organised into three mental models:
 
-### Work
-What am I physically doing?
-
-Watch / clock: Diagnosis · Service · Measurements · Timing · Parts · QC
-
-Jewellery: Inspect · Clean · Restore · Measurements · QC
-
-### Item
-What is it?
-
-Identity · Passport where applicable · Research · Media · History · Documents
-
-### Commerce
-What did it cost and how do I sell it?
-
-Costs · Valuation · Listing · Sale
-
-## Workbench
-
-Workbench is task-oriented, not an inventory dashboard.
-
-- **Now** — on bench / high priority
-- **Next** — ready to start / awaiting inspection
-- **Waiting** — parts / external work / research
-- **Ready** — QC / photos / listing
-- **Queue** — intentionally parked
-
-Every row/card should answer:
-
-- What is it?
-- What Work is happening?
-- What is next?
-- What is blocking it?
-
-## Global find / command layer
-
-Calibre will gain one global search/command surface usable from keyboard and touch.
-
-Target examples:
-
-- open an Item by name, calibre, serial or tag
-- filter awaiting parts / sold / donors
-- start Work
-- capture image
-- add part
-- time watch
-- print label
-- create listing
-
-Desktop target shortcut: **Ctrl/Cmd + K**.
-
-## Device modes
-
-The same app will support:
-
-- **Automatic** — default responsive mode
-- **Workstation** — DeX / monitor / keyboard and mouse; compact and information-dense
-- **Touch** — phone / bench; large targets and reduced simultaneous controls
-- **Capture** — Galaxy Tab / microscope station; minimal capture-first UI
-
-## Legacy cutover status
-
-The active runtime has been cut over from legacy Jobs to Item + Work.
-
-Current rules:
-
-- `state.jobs` is not part of active runtime state
-- `currentItemId` and `currentWorkId` own selection
-- Work history replaces Job-derived service history
-- active runtime must not reintroduce Job fields
-- compatibility/import tooling remains isolated from normal runtime
+- **Work** — what am I physically doing?
+- **Item** — what is it?
+- **Commerce** — what did it cost and how do I sell it?
 
 ## Foundation Lock — COMPLETE
 
-Foundation Lock has completed the persisted/runtime convergence work:
+Foundation Lock completed the persisted/runtime convergence work through schema 6. Active Parts, Tools, Workshop IDs, Reference and Incoming UI now use canonical owners directly; old field names remain only at explicit migration/archive boundaries.
 
-- schema 2: Work persistence converged on canonical `work`
-- schema 3: loose parts/tools converged under `inventory`
-- schema 4: bench fit evidence converged under `compatibilityEvidence`; sourced facts/documents under typed `knowledge`
-- schema 5: purchase review converged under typed `incoming`; `ledger` made intentional Core data
-- schema 6: legacy Workshop IDs converged into `inventory.locations`, `inventory.tools` and `inventory.parts`
-- active Parts, Tools, Workshop IDs, Reference and Incoming UI now read/write canonical collections directly
-- temporary runtime compatibility aliases/proxies have been removed
-- architecture documentation now describes one Core + schema versions
+## Reliability — COMPLETE
 
-Old field names remain supported only at explicit forward-migration/archive boundaries.
+The practical reliability layer now protects canonical data without adding another Core model:
 
-## Reliability foundation — COMPLETE
-
-The first safety layer now protects canonical data without adding another Core model:
-
-- the Job-era Backup screen has been replaced by canonical **Recovery & health**
-- portable backups include schema metadata plus a corruption-detection checksum
-- backup restore validates before replacement and refuses unsupported newer schema
-- Calibre keeps up to five browser-local safety snapshots outside Core state
-- autosave creates a throttled recovery point before overwrites
-- explicit cloud pull/push and restore create forced pre-operation safety points
-- system health checks canonical Item → Work → MediaAsset ownership, duplicate IDs, missing storage references and stale current selections
-- normal cloud writes refuse to silently overwrite a remote copy changed since the device last saw it
-- failed/conflicted cloud pushes keep the local save intact
-- safe cloud pull merges canonical collections; safe cloud push is an explicit intentional override
-- meaningful reliability events are retained in a bounded audit trail under Settings
-
-Known remaining hardening: the remote freshness check and write are two operations, so full atomic compare-and-swap still needs a database-side revision guard.
+- canonical Recovery & health screen
+- schema-aware checked portable backups
+- up to five browser-local recovery snapshots outside Core state
+- forced safety points before restore/cloud pull/cloud push
+- canonical Item → Work → MediaAsset integrity checks
+- bounded reliability audit trail
+- failed/conflicted cloud pushes keep local work intact
+- **atomic database revision guard** on `calibre_state`
+- normal writes use an authenticated compare-and-swap RPC rather than direct upsert
+- stale devices receive `CALIBRE_SYNC_CONFLICT` rather than overwriting newer cloud data
+- safe pull records the revision seen; explicit safe push writes against the current revision and still fails safely if another write races it
 
 See `docs/RELIABILITY.md`.
+
+Later reliability additions such as off-device scheduled backup, recovery drills and safe repair helpers can be added as needed rather than blocking intelligence work.
 
 ## Current state
 
@@ -199,37 +82,30 @@ Substantially complete:
 - Capture Station
 - canonical Parts matching and donor evidence
 - canonical Workshop IDs and storage locations
-- Reference Intelligence
-- CSV/JSON reference import
-- technical PDF import
-- scanned-PDF OCR review
-- Reference Library
-- deployment freshness guard
+- Reference Intelligence and Reference Library
+- CSV/JSON/PDF/OCR reference import
 - Timegrapher sample-clock engine and saved-run comparison
 - Knowledge Engine foundation
-- Foundation Lock persistence/runtime convergence
-- Reliability foundation: checked backups, recovery snapshots, integrity health, audit events and cloud overwrite protection
+- Foundation Lock
+- Reliability including atomic cloud concurrency protection
 
 ## Current build order
 
-1. **Reliability hardening** — database-side atomic revision guard, recovery-drill tests, prominent unresolved conflict status and optional off-device backup destination.
-2. **Integrate Knowledge Engine** — Passport, Timegrapher defaults, Parts, Workbench and technical documents should consume the same sourced knowledge.
-3. **Build Movement Finder** — evidence-ranked identification by maker/calibre markings, measurements, mechanical traits and visual architecture.
-4. **Build proactive Workbench intelligence** — next action, blockers, relevant documents, part/donor candidates and QC prompts.
-5. **Expand Parts + Donor intelligence** — physical storage locations, verified fit history, donor sacrifice economics and compatibility alerts.
-6. **Device experience** — Automatic / Workstation / Touch / Capture behaviour for phone, DeX monitor and Galaxy Tab microscope use.
-7. **Hardware layer** — validate the USB Timegrapher microphone, then add printer/Windows bridge and QR/bin label workflows.
-8. **Global search / command** — Ctrl/Cmd+K on workstation plus touch-friendly search/actions.
-9. **Business brain** — potential/realised profit, ROI, profit per labour hour, stock age, capital tied up and “what should I work on next?” prioritisation.
-10. **Acquisition engine** — auction triage, max bid, resale potential and donor usefulness against current Items/Work.
-11. **Listing engine** — turn Item identity + research + Work + condition + media + commerce into channel-ready listings.
-12. **Customer/output layer** — public Passport, QR provenance, customer-facing presentation, COA/service outputs and storefront integration.
-13. **Continuous learning loop** — confirmed bench, timing, compatibility and sale outcomes improve future recommendations without overwriting provenance.
+1. **Integrate Knowledge Engine** — Passport, Timegrapher defaults, Parts, Workbench and technical documents should consume the same sourced knowledge.
+2. **Build Movement Finder** — evidence-ranked identification by maker/calibre markings, measurements, mechanical traits and visual architecture.
+3. **Build proactive Workbench intelligence** — next action, blockers, relevant documents, part/donor candidates and QC prompts.
+4. **Expand Parts + Donor intelligence** — verified fit history, donor sacrifice economics and compatibility alerts.
+5. **Device experience** — Automatic / Workstation / Touch / Capture behaviour for phone, DeX monitor and Galaxy Tab microscope use.
+6. **Hardware layer** — validate the USB Timegrapher microphone, then add printer/Windows bridge and QR/bin label workflows.
+7. **Global search / command** — Ctrl/Cmd+K on workstation plus touch-friendly search/actions.
+8. **Business brain** — potential/realised profit, ROI, profit per labour hour, stock age, capital tied up and “what should I work on next?” prioritisation.
+9. **Acquisition engine** — auction triage, max bid, resale potential and donor usefulness against current Items/Work.
+10. **Listing engine** — turn Item identity + research + Work + condition + media + commerce into channel-ready listings.
+11. **Customer/output layer** — public Passport, QR provenance, customer-facing presentation, COA/service outputs and storefront integration.
+12. **Continuous learning loop** — confirmed bench, timing, compatibility and sale outcomes improve future recommendations without overwriting provenance.
 
 ## Near-term sequence
 
-The next practical run is:
+**Knowledge Engine integration → Movement Finder → proactive Workbench intelligence**
 
-**Reliability hardening → Knowledge Engine integration → Movement Finder → proactive Workbench intelligence**
-
-Timegrapher detector maths should not be expanded until the incoming USB microphone is validated against known watches/rates. Knowledge integration can still preload verified BPH/frequency/lift-angle defaults in the meantime.
+Timegrapher detector maths should not be expanded until the incoming USB microphone is validated against known watches/rates. Knowledge integration can preload verified BPH/frequency/lift-angle defaults in the meantime.
