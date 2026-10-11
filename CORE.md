@@ -15,6 +15,7 @@ The Core owns only durable domain objects and references:
 - Compatibility evidence
 - Incoming records
 - Knowledge records
+- Ledger — actual business money movements used for real cash position
 - Settings
 
 Passport, movement and permanent watch identity belong to the watch/clock Item extension. Timing performed during service belongs to Work and may contribute to permanent Item history.
@@ -24,13 +25,14 @@ Passport, movement and permanent watch identity belong to the watch/clock Item e
 1. **One source of truth.** Do not duplicate the same fact across Item, Work and a page-specific record.
 2. **No parallel domain models.** New features extend the existing primitives or live in a clearly owned specialist module; they do not create a second Item/Work system.
 3. **Schema versions, not Core generations.** Persisted changes increment `schemaVersion` and require a migration.
-4. **No silent compatibility forever.** Import/conversion code is temporary tooling and is not part of the normal runtime after cutover.
-5. **Derived data is derived.** Dashboards, service history summaries, totals and status groupings should be computed from canonical records rather than copied into another persistent store.
+4. **No silent compatibility forever.** Import/conversion code is boundary tooling and is not part of normal runtime behaviour after cutover.
+5. **Derived data is derived.** Dashboards, service history summaries, projections, totals and status groupings should be computed from canonical records rather than copied into another persistent store.
 6. **References are explicit.** Work uses `itemId`; MediaAsset uses `itemId` and optional `workId`.
-7. **Storage stays boring.** Persistence loads, validates, migrates and saves canonical records. Diagnosis, finance, donors, printing and UI behaviour do not become store wrappers.
+7. **Storage stays boring.** Persistence loads, validates, migrates, merges and saves canonical records. Diagnosis, finance, donors, printing and UI behaviour do not become store wrappers.
 8. **Navigation is not a data model.** Pages and tabs may change without forcing schema changes.
 9. **Unknown top-level state is rejected.** New top-level collections require an intentional Core contract change and migration rather than becoming a junk drawer.
-10. **Legacy Job fields are forbidden in canonical Core state.**
+10. **Legacy Job fields and retired runtime aliases are forbidden in canonical Core state.**
+11. **Cash is not projected profit.** Available Cash comes from actual Ledger movements; Item targets and projected sale profit remain derived business intelligence.
 
 ## Change process
 
