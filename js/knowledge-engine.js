@@ -37,7 +37,8 @@ export function getTimegrapherDefaults(maker,calibre){
 
 export function passportPatchForMovement(maker,calibre){
   const m=findMovementSpec(maker,calibre);if(!m)return null;
-  return {movementMaker:m.maker,maker:m.maker,calibre:m.calibre,year:m.year??'',movementType:m.movementType||'',jewels:m.jewels??'',movementMm:m.diameter??'',powerReserve:m.powerReserve??'',beatRate:m.bph??'',settingType:m.settingType||'',dimensions:{diameterMm:m.diameter??null,heightMm:m.height??null},frequencyHz:m.frequency??null,liftAngle:m.liftAngle??null,aliases:(m.aliases||[]).map(aliasTuple),knowledgeSource:m.source,knowledgeNotes:m.notes||''};
+  // Movement knowledge may fill movement fields, but must never infer watch maker/model/year.
+  return {movementMaker:m.maker,calibre:m.calibre,movementType:m.movementType||'',jewels:m.jewels??'',movementMm:m.diameter??'',powerReserve:m.powerReserve??'',beatRate:m.bph??'',settingType:m.settingType||'',movementLaunchYear:m.year??null,dimensions:{diameterMm:m.diameter??null,heightMm:m.height??null},frequencyHz:m.frequency??null,liftAngle:m.liftAngle??null,aliases:(m.aliases||[]).map(aliasTuple),knowledgeSource:m.source,knowledgeNotes:m.notes||''};
 }
 
 export function getPartReferences(maker,calibre){
