@@ -1,8 +1,9 @@
 import * as base from './store-base.js?v=6';
+import {buildBackupPayload,validateBackupPayload} from './reliability.js?v=1';
 import {readCloudState,writeCloudState,markCloudSeen} from './cloud.js?v=3';
 export * from './store-base.js?v=6';
 
-const DB='calibre-co-v1',STORE='kv';let dbp;
+const DB='calibre-co-v1',STORE='kv',SNAPSHOT_KEY='reliability:snapshots',SNAPSHOT_LIMIT=5,AUTO_SNAPSHOT_MS=6*60*60*1000;let dbp,lastAutoSnapshotAt=0;
 function openDB(){if(dbp)return dbp;dbp=new Promise((resolve,reject)=>{const req=indexedDB.open(DB,1);req.onupgradeneeded=()=>{if(!req.result.objectStoreNames.contains(STORE))req.result.createObjectStore(STORE);};req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);});return dbp;}
 function getLocal(key){return openDB().then(db=>new Promise((resolve,reject)=>{const req=db.transaction(STORE).objectStore(STORE).get(key);req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);}));}
 function putLocal(key,value){return openDB().then(db=>new Promise((resolve,reject)=>{const tx=db.transaction(STORE,'readwrite');tx.objectStore(STORE).put(value,key);tx.oncomplete=()=>resolve();tx.onerror=()=>reject(tx.error);}));}
@@ -18,8 +19,24 @@ function purchaseKey(p={}){return String(p.sourceKey||p.pushId||[p.source,p.orde
 function normalisePurchase(p={}){const now=new Date().toISOString();return {id:p.id||base.uid('buy'),sourceKey:purchaseKey(p),source:p.source||'',orderId:p.orderId||'',itemName:p.itemName||p.name||'Incoming item',category:cleanCategory(p.category),variant:p.variant||'',quantity:Number(p.quantity)||1,amount:p.amount===''||p.amount==null?'':String(p.amount),currency:p.currency||'AUD',status:p.status||'Ordered',orderedAt:p.orderedAt||p.purchaseDate||'',tracking:p.tracking||'',eta:p.eta||'',sourceRef:p.sourceRef||'',notes:p.notes||'',receivedAt:p.receivedAt||'',createdAt:p.createdAt||now,updatedAt:p.updatedAt||now};}
 function importPurchase(state,raw){const list=Array.isArray(raw.items)?raw.items:[raw];let added=0,updated=0;for(const source of list){const p=normalisePurchase({...source,sourceKey:source.sourceKey||raw.sourceKey||raw.pushId}),key=purchaseKey(p),idx=state.incoming.findIndex(x=>x.recordType!=='purchase-review'&&purchaseKey(x)===key);if(idx>=0){state.incoming[idx]={...state.incoming[idx],...p,id:state.incoming[idx].id,createdAt:state.incoming[idx].createdAt,updatedAt:new Date().toISOString()};updated++;}else{state.incoming.unshift(p);added++;}}return {added,updated};}
 
+async function snapshotRows(){const rows=await getLocal(SNAPSHOT_KEY);return Array.isArray(rows)?rows:[];}
+export async function listSafetySnapshots(){return (await snapshotRows()).map(row=>structuredClone(row));}
+export async function createSafetySnapshot(reason='manual',rawState=null,{force=true}={}){
+  const source=rawState||await getLocal('state');if(!source)return null;
+  const now=Date.now(),rows=await snapshotRows(),latest=rows[0];
+  if(!force){const latestAt=stamp(latest?.exportedAt);if((lastAutoSnapshotAt&&now-lastAutoSnapshotAt<AUTO_SNAPSHOT_MS)||(latestAt&&now-latestAt<AUTO_SNAPSHOT_MS))return latest||null;}
+  const payload=buildBackupPayload(source,{reason,exportedAt:new Date(now).toISOString()});
+  const next=[payload,...rows.filter(row=>row?.checksum!==payload.checksum)].slice(0,SNAPSHOT_LIMIT);await putLocal(SNAPSHOT_KEY,next);if(!force)lastAutoSnapshotAt=now;return payload;
+}
+export async function restoreSafetySnapshot(checksum=''){
+  const rows=await snapshotRows(),payload=rows.find(row=>String(row?.checksum)===String(checksum))||rows[0];if(!payload)throw new Error('No safety snapshot is available.');
+  const checked=validateBackupPayload(payload);if(!checked.ok)throw new Error(checked.errors.join(' '));
+  await createSafetySnapshot('pre-snapshot-restore',await getLocal('state'),{force:true});
+  await putLocal('state',checked.state);return checked.state;
+}
+
 export async function loadState(){let local=await getLocal('state');if(!local){local=await base.loadState();await putLocal('state',local);}const state=normalise(local);if(Number(local?.schemaVersion)!==base.STORE_SCHEMA_VERSION||Array.isArray(local?.tools)||Array.isArray(local?.partsStock)||Array.isArray(local?.partFitEvidence)||Array.isArray(local?.referenceFacts)||Array.isArray(local?.referenceDocuments)||Array.isArray(local?.purchaseReview)||Array.isArray(local?.workshopAssets))await putLocal('state',state);return state;}
-export async function saveState(raw){const state=normalise(raw);state._syncUpdatedAt=new Date().toISOString();await putLocal('state',state);try{const pushed=await writeCloudState(state);state._cloud={signedIn:!!pushed.signedIn,lastPush:pushed.updatedAt||null,error:''};}catch(err){state._cloud={signedIn:true,lastPush:null,error:err?.message||'Cloud sync failed'};console.warn('Calibre cloud push failed; local save kept',err);}return state;}
+export async function saveState(raw){const previous=await getLocal('state');if(previous)await createSafetySnapshot('autosave',previous,{force:false});const state=normalise(raw);state._syncUpdatedAt=new Date().toISOString();await putLocal('state',state);try{const pushed=await writeCloudState(state);state._cloud={signedIn:!!pushed.signedIn,lastPush:pushed.updatedAt||null,error:'',conflict:false};}catch(err){state._cloud={signedIn:true,lastPush:null,error:err?.message||'Cloud sync failed',conflict:err?.code==='CALIBRE_SYNC_CONFLICT',remoteUpdatedAt:err?.remoteUpdatedAt||''};console.warn('Calibre cloud push failed; local save kept',err);}await putLocal('state',state);return state;}
 export async function importInboxItems(items){const state=normalise(await getLocal('state')||{});let added=0,updated=0;const importedIds=[];for(const item of Array.isArray(items)?items:[]){try{const raw=item?.job_data;if(!raw)continue;if(raw.type==='calibrepurchase'||raw.type==='calibreincoming'){const result=importPurchase(state,raw);added+=result.added;updated+=result.updated;}else continue;if(item.id)importedIds.push(item.id);}catch(err){console.warn('Skipped invalid Calibre inbox item',item?.id,err);}}if(added||updated)await saveState(state);return {state,added,updated,importedIds};}
-export async function forceCloudPull(){const local=normalise(await getLocal('state')||{}),cloud=await readCloudState();if(!cloud.signedIn)throw new Error('Sign in to Calibre Cloud first.');if(!cloud.state)return local;const merged=mergeStates(local,cloud.state);await putLocal('state',merged);markCloudSeen(cloud.updatedAt);return merged;}
-export async function forceCloudPush(){const state=normalise(await getLocal('state')||{});const result=await writeCloudState(state);if(!result.signedIn)throw new Error('Sign in to Calibre Cloud first.');return result;}
+export async function forceCloudPull(){const local=normalise(await getLocal('state')||{});await createSafetySnapshot('pre-cloud-pull',local,{force:true});const cloud=await readCloudState();if(!cloud.signedIn)throw new Error('Sign in to Calibre Cloud first.');if(!cloud.state)return local;const merged=mergeStates(local,cloud.state);merged._cloud={signedIn:true,lastPull:cloud.updatedAt||new Date().toISOString(),lastPush:null,error:'',conflict:false};await putLocal('state',merged);markCloudSeen(cloud.updatedAt);return merged;}
+export async function forceCloudPush(){const state=normalise(await getLocal('state')||{});await createSafetySnapshot('pre-cloud-push',state,{force:true});const result=await writeCloudState(state,{force:true});if(!result.signedIn)throw new Error('Sign in to Calibre Cloud first.');state._cloud={signedIn:true,lastPush:result.updatedAt||new Date().toISOString(),error:'',conflict:false};await putLocal('state',state);return result;}

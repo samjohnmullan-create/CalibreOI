@@ -165,6 +165,26 @@ Foundation Lock has completed the persisted/runtime convergence work:
 
 Old field names remain supported only at explicit forward-migration/archive boundaries.
 
+## Reliability foundation — COMPLETE
+
+The first safety layer now protects canonical data without adding another Core model:
+
+- the Job-era Backup screen has been replaced by canonical **Recovery & health**
+- portable backups include schema metadata plus a corruption-detection checksum
+- backup restore validates before replacement and refuses unsupported newer schema
+- Calibre keeps up to five browser-local safety snapshots outside Core state
+- autosave creates a throttled recovery point before overwrites
+- explicit cloud pull/push and restore create forced pre-operation safety points
+- system health checks canonical Item → Work → MediaAsset ownership, duplicate IDs, missing storage references and stale current selections
+- normal cloud writes refuse to silently overwrite a remote copy changed since the device last saw it
+- failed/conflicted cloud pushes keep the local save intact
+- safe cloud pull merges canonical collections; safe cloud push is an explicit intentional override
+- meaningful reliability events are retained in a bounded audit trail under Settings
+
+Known remaining hardening: the remote freshness check and write are two operations, so full atomic compare-and-swap still needs a database-side revision guard.
+
+See `docs/RELIABILITY.md`.
+
 ## Current state
 
 Substantially complete:
@@ -188,10 +208,11 @@ Substantially complete:
 - Timegrapher sample-clock engine and saved-run comparison
 - Knowledge Engine foundation
 - Foundation Lock persistence/runtime convergence
+- Reliability foundation: checked backups, recovery snapshots, integrity health, audit events and cloud overwrite protection
 
 ## Current build order
 
-1. **Reliability layer** — sync/conflict handling, automated backup/export, migration recovery, integrity checks and a lightweight audit/event history.
+1. **Reliability hardening** — database-side atomic revision guard, recovery-drill tests, prominent unresolved conflict status and optional off-device backup destination.
 2. **Integrate Knowledge Engine** — Passport, Timegrapher defaults, Parts, Workbench and technical documents should consume the same sourced knowledge.
 3. **Build Movement Finder** — evidence-ranked identification by maker/calibre markings, measurements, mechanical traits and visual architecture.
 4. **Build proactive Workbench intelligence** — next action, blockers, relevant documents, part/donor candidates and QC prompts.
@@ -209,6 +230,6 @@ Substantially complete:
 
 The next practical run is:
 
-**Reliability → Knowledge Engine integration → Movement Finder → proactive Workbench intelligence**
+**Reliability hardening → Knowledge Engine integration → Movement Finder → proactive Workbench intelligence**
 
 Timegrapher detector maths should not be expanded until the incoming USB microphone is validated against known watches/rates. Knowledge integration can still preload verified BPH/frequency/lift-angle defaults in the meantime.
