@@ -2,10 +2,13 @@ import {inventoryMatches,donorMatches,recordFitEvidence,fitHistory} from './part
 
 function donorSources(state={}){
   return (state.items||[]).filter(item=>item&&item.purpose==='donor'&&item.status!=='Archived').map(item=>{
-    const watch=item.watch||{},passport=watch.passport||{},movement=watch.movement||{};
+    const watch=item.watch||{},passport=watch.passport||{},movement=watch.movement||{},candidate=passport.knowledgeCandidate||{};
     return {
       id:String(item.id),
       title:item.title||'Donor Item',
+      knowledgeId:Number(movement.knowledgeId||candidate.knowledgeId)||null,
+      maker:movement.maker||passport.movementMaker||passport.maker||item.identity?.maker||'',
+      calibre:movement.calibre||passport.calibre||'',
       passport:{
         ...passport,
         maker:passport.maker||item.identity?.maker||'',
@@ -13,7 +16,8 @@ function donorSources(state={}){
         calibre:passport.calibre||movement.calibre||'',
         calibreFamily:passport.calibreFamily||movement.calibreFamily||'',
         movementMm:passport.movementMm||movement.movementMm||'',
-        movementMaker:passport.movementMaker||movement.maker||item.identity?.maker||''
+        movementMaker:passport.movementMaker||movement.maker||item.identity?.maker||'',
+        knowledgeId:Number(movement.knowledgeId||candidate.knowledgeId)||null
       },
       sparesParts:Array.isArray(watch.sparesParts)?watch.sparesParts:[],
       fitsNote:watch.fitsNote||'',
