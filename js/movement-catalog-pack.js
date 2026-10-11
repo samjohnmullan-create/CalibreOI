@@ -9,7 +9,8 @@ import c7 from './movement-catalog-chunk-7.js';
 
 export const MOVEMENT_CATALOG_COUNT=3458;
 export const MOVEMENT_CATALOG_PACK_LENGTH=15316;
-const PACK=[c0,c1,c2,c3,c4,c5,c6,c7].join('');
+const CHUNK_LENGTH=1915;
+const PACK=[c0,c1,c2,c3,c4,c5,c6].map(chunk=>chunk.slice(0,CHUNK_LENGTH)).join('')+c7.slice(0,1911);
 let cache=null;
 
 export async function loadMovementCatalog(){
