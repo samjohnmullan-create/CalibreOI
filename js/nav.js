@@ -68,6 +68,14 @@ if(here==='item.html'){
   }
 }
 
+if(here==='suppliers.html'&&!document.querySelector('script[data-calibre-parts-intelligence]')){
+  const partsUi=document.createElement('script');
+  partsUi.type='module';
+  partsUi.src='js/parts-ui-runtime.js?v=1';
+  partsUi.dataset.calibrePartsIntelligence='1';
+  document.head.appendChild(partsUi);
+}
+
 const savedTheme=localStorage.getItem('calibre-theme');
 if(savedTheme==='dark')document.documentElement.dataset.theme='dark';
 else document.documentElement.removeAttribute('data-theme');
