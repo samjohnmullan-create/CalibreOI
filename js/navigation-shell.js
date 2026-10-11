@@ -26,4 +26,8 @@ export function renderPrimaryNavigation(root=document,page=pageName(location.pat
     nav.innerHTML=primaryNavMarkup(page);
     nav.dataset.navigationContract='core';
   });
+  if(page==='movement-finder.html'&&typeof document!=='undefined'&&!document.documentElement.dataset.fullFinderRuntime){
+    document.documentElement.dataset.fullFinderRuntime='loading';
+    import('./movement-finder-full-runtime.js?v=1').then(()=>{document.documentElement.dataset.fullFinderRuntime='ready';}).catch(error=>{document.documentElement.dataset.fullFinderRuntime='failed';console.error('Full v25 Movement Finder unavailable',error);});
+  }
 }
