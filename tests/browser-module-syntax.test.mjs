@@ -12,6 +12,8 @@ const modules=[
   'js/item-ui-runtime.js',
   'js/reference-intelligence.js',
   'js/reference-import.js',
+  'js/reference-pdf-import.js',
+  'js/reference-pdf-ui-runtime.js',
   'js/reference-ui-runtime.js'
 ];
 
