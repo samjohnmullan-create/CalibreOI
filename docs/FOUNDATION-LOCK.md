@@ -20,6 +20,7 @@ Canonical top-level Core fields are:
 - `compatibilityEvidence`
 - `incoming`
 - `knowledge`
+- `ledger`
 - `settings`
 - `updatedAt`
 
@@ -27,22 +28,17 @@ Unknown top-level Core fields are rejected. Persisted-shape changes require a sc
 
 ## Transitional store boundary
 
-The local/cloud store currently preserves additional collections that predate or sit beside the strict Core contract. They are live data and must not be deleted merely because they are not yet represented by `js/core.js`.
+No live top-level business/intake side buckets remain after schema 5.
 
-Current transitional collections are:
+`workRecords` is no longer a live transitional collection. Schema 2 migrates it forward to canonical `work`.
 
-- `ledger` — business cash events; ownership/model must be resolved before migration
-- `purchaseReview` — review/intake workflow state; determine whether derived, Incoming-owned or specialist state
+`tools` and `partsStock` are no longer persisted top-level collections. Schema 3 migrates them into canonical `inventory.tools` and `inventory.parts`.
 
-These fields are **migration debt, not a licence to add more top-level buckets**.
+`partFitEvidence`, `referenceFacts` and `referenceDocuments` are no longer persisted top-level collections. Schema 4 migrates bench fit outcomes to canonical `compatibilityEvidence` and sourced facts/documents to typed canonical `knowledge` records.
 
-`workRecords` is no longer a live transitional collection. Schema 2 migrates it forward to canonical `work`, local and cloud persistence save only `work`, and the strict Core rejects `workRecords` after the migration boundary.
+`purchaseReview` is no longer persisted as a side bucket. Schema 5 moves purchase suggestions into canonical `incoming` records using `recordType: purchase-review`. The cash `ledger` is now an intentional durable Core collection because Available Cash and business activity depend on actual money movements rather than projections.
 
-`tools` and `partsStock` are no longer persisted top-level collections. Schema 3 migrates them into canonical `inventory.tools` and `inventory.parts` while preserving resource IDs and existing canonical inventory entries.
-
-`partFitEvidence`, `referenceFacts` and `referenceDocuments` are no longer persisted top-level collections. Schema 4 migrates bench fit outcomes to canonical `compatibilityEvidence` and migrates sourced facts/documents to typed canonical `knowledge` records. Bench evidence remains explicitly marked `bench-fit` / `bench`; external facts remain `reference-fact` / `external`; source documents remain `reference-document` / `source-document`.
-
-Temporary non-enumerable runtime compatibility views keep older Parts and Reference UI code functional while persistence remains canonical. Those views are migration scaffolding and should be removed during FL-6 cleanup.
+Temporary non-enumerable runtime compatibility views keep older Parts, Reference and purchase-review UI code functional while persistence remains canonical. Those views are migration scaffolding and should be removed during FL-6 cleanup.
 
 ## Rules during Foundation Lock
 
@@ -57,41 +53,32 @@ Temporary non-enumerable runtime compatibility views keep older Parts and Refere
 
 ## Planned convergence
 
-Foundation Lock should proceed in small migrations:
-
 ### FL-1 — document and guard — COMPLETE
-- update roadmap terminology
-- document the canonical/transitional boundary
-- add regression protection so transitional debt cannot grow silently
+- canonical/transitional boundary documented
+- regression protection added
 
 ### FL-2 — Work/store convergence — COMPLETE
-- persisted schema 2 uses canonical `work`
-- existing `workRecords` migrate forward without changing Work IDs or `currentWorkId`
-- local/cloud merge and active Work selectors use `work`
-- retired `workRecords` is rejected by strict Core after migration
+- schema 2 uses canonical `work`
+- `workRecords` retired
 
 ### FL-3 — Inventory convergence — COMPLETE
-- persisted schema 3 moves loose parts and tools under canonical `inventory`
-- existing `partsStock` migrates into `inventory.parts`
-- existing `tools` migrates into `inventory.tools`
-- existing IDs are preserved and duplicate IDs are not re-added
-- cloud reconciliation merges parts, tools, consumables and donors independently
+- schema 3 moves loose parts/tools under canonical `inventory`
+- cloud reconciliation merges inventory resources independently
 
 ### FL-4 — Evidence/Knowledge convergence — COMPLETE
-- persisted schema 4 moves bench fit history into canonical `compatibilityEvidence`
+- schema 4 moves bench fit history into canonical `compatibilityEvidence`
 - sourced reference facts and technical documents move into typed canonical `knowledge`
-- source document IDs, URLs, confidence and bench verdict fields are preserved
 - bench and external evidence remain explicitly distinguishable
-- cloud reconciliation merges canonical evidence and knowledge records independently
-- temporary compatibility views preserve current Parts / Reference workflows during cleanup
 
-### FL-5 — Business/intake ownership
-- resolve `ledger` and `purchaseReview`
-- keep Available Cash based on actual ledger money
-- avoid duplicating commercial totals onto multiple records
+### FL-5 — Business/intake ownership — COMPLETE
+- schema 5 makes `ledger` an intentional Core collection
+- purchase suggestions move into canonical `incoming` as `purchase-review` records
+- Available Cash remains based only on actual ledger movements
+- cloud reconciliation merges ledger entries and Incoming records independently
+- Accepted suggestions are removed from the active review queue
 
 ### FL-6 — runtime/design cleanup
-- remove temporary inventory/evidence/reference compatibility views after active UI reads canonical collections directly
+- remove temporary inventory/evidence/reference/purchase-review compatibility views after active UI reads canonical collections directly
 - move reusable styling out of runtime JavaScript
 - retire duplicate/obsolete active pages and aliases only after route usage is audited
 - update architecture/tests/docs to the final persisted contract
