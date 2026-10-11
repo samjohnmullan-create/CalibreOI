@@ -1,4 +1,4 @@
-import './item-workspace-shell.js?v=1';
+import './item-workspace-shell.js?v=2';
 import { loadState,current } from './store.js?v=8';
 import { privateMediaThumbnailObjectUrl } from './media.js?v=4';
 
