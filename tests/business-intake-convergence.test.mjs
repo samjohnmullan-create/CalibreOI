@@ -13,17 +13,16 @@ test('schema 4 purchase review migrates into canonical incoming',()=>{
   assert.equal(migrated.ledger[0].id,'ledger-1');
 });
 
-test('purchase review compatibility view writes through canonical incoming',()=>{
-  const state=canonicalState({schemaVersion:5,items:[],work:[],inventory:{parts:[],tools:[],consumables:[],donors:[]},compatibilityEvidence:[],knowledge:[],incoming:[],ledger:[]});
-  state.purchaseReview.unshift({id:'review-new',itemName:'Watch lot',status:'Suggested'});
-  assert.equal(state.incoming.find(x=>x.id==='review-new')?.recordType,'purchase-review');
-  assert.equal(Object.keys(state).includes('purchaseReview'),false);
-  state.purchaseReview[0]={...state.purchaseReview[0],status:'Accepted'};
+test('purchase review records live directly inside canonical incoming',()=>{
+  const state=canonicalState({schemaVersion:6,items:[],work:[],inventory:{parts:[],tools:[],consumables:[],donors:[],locations:[]},compatibilityEvidence:[],knowledge:[],incoming:[{id:'review-new',recordType:'purchase-review',intakeClass:'suggestion',itemName:'Watch lot',status:'Suggested'}],ledger:[]});
+  const review=state.incoming.find(x=>x.recordType==='purchase-review');
+  review.status='Accepted';
   assert.equal(state.incoming.find(x=>x.id==='review-new')?.status,'Accepted');
+  assert.equal('purchaseReview' in state,false);
 });
 
 test('ledger is intentional canonical state',()=>{
-  const state=canonicalState({schemaVersion:5,items:[],work:[],inventory:{parts:[],tools:[],consumables:[],donors:[]},compatibilityEvidence:[],knowledge:[],incoming:[],ledger:[{id:'cash-1',kind:'out',amount:42}]});
+  const state=canonicalState({schemaVersion:6,items:[],work:[],inventory:{parts:[],tools:[],consumables:[],donors:[],locations:[]},compatibilityEvidence:[],knowledge:[],incoming:[],ledger:[{id:'cash-1',kind:'out',amount:42}]});
   assert.deepEqual(state.ledger,[{id:'cash-1',kind:'out',amount:42}]);
   assert.equal(Object.keys(state).includes('ledger'),true);
 });
