@@ -35,3 +35,20 @@ test('Workbench actions mutate the correct underlying record',()=>{
   assert.equal(mutateWorkbenchEntry(current,rows.find(row=>row.kind==='work'),'bench'),true);
   assert.equal(current.workRecords[0].workbenchHidden,true);
 });
+
+test('legacy Job mirror is represented once using its canonical Work ID',()=>{
+  const current=state();
+  current.items.push({
+    id:'item-watch',type:'watch',purpose:'resale',title:'Omega manual',status:'On bench',identity:{},condition:'',research:[],preparation:{},mediaAssets:[],commercial:{purchasePrice:'100',targetSale:'350'},sale:{},workIds:['work-job-2'],tags:[],notes:'',watch:{passport:{},movement:{},timingHistory:[],serviceHistory:[],publicPassport:{}},createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()
+  });
+  current.jobs.push({id:'job-2',workId:'work-job-2',itemId:'item-watch',jobId:'C-002',watchName:'Omega manual',status:'On bench',parts:[],business:{purchasePrice:'100',targetSale:'350'},createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()});
+  current.workRecords.push({id:'work-job-2',itemId:'item-watch',legacy:true,legacyJobId:'job-2',sourceJobId:'job-2',type:'service',title:'Service C-002',status:'In progress',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()});
+
+  const rows=workbenchEntries(current);
+  const omega=rows.filter(row=>row.itemId==='item-watch');
+  assert.equal(omega.length,1);
+  assert.equal(omega[0].kind,'legacy-job');
+  assert.equal(omega[0].workId,'work-job-2');
+  assert.equal(omega[0].key,'work:work-job-2');
+  assert.equal(omega[0].openHref,'service.html?id=job-2');
+});
