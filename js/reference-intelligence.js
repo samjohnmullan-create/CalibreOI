@@ -21,6 +21,7 @@ export const REFERENCE_RELATIONS=[
 export function normaliseReferenceFact(raw={}){
   return {
     id:String(raw.id||id()),
+    documentId:String(raw.documentId||''),
     source:String(raw.source||'other'),
     sourceName:String(raw.sourceName||''),
     sourceUrl:String(raw.sourceUrl||''),
