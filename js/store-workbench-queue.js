@@ -1,11 +1,14 @@
 import * as base from './store-local-fast.js?v=3';
 import {currentWork} from './work-model.js?v=2';
+import {readCloudState} from './cloud.js?v=5';
 export * from './store-local-fast.js?v=3';
 
+const ITEM_PAGES=new Set(['item.html','passport.html','business.html','sales.html','documents.html']);
 const pageName=loc=>{if(!loc)return '';try{return (loc.pathname.split('/').pop()||'').split('?')[0];}catch{return '';}};
-const itemIdFromLocation=loc=>{if(!loc)return '';try{const p=new URLSearchParams(loc.search||'');return p.get('item')||p.get('itemId')||(['passport.html','business.html','sales.html'].includes(pageName(loc))?p.get('id'):'')||'';}catch{return '';}};
+const itemIdFromLocation=loc=>{if(!loc)return '';try{const p=new URLSearchParams(loc.search||'');const page=pageName(loc);return p.get('item')||p.get('itemId')||(ITEM_PAGES.has(page)?p.get('id'):'')||'';}catch{return '';}};
 const itemById=(state,id)=>Array.isArray(state?.items)?state.items.find(item=>String(item?.id)===String(id)):null;
 const fill=(obj,key,value)=>{if((obj[key]===undefined||obj[key]===null||String(obj[key]).trim()==='')&&value!==undefined&&value!==null&&String(value).trim()!=='')obj[key]=value;};
+
 function exposeItemAliases(item){
   if(!item)return null;
   item.watch=item.watch&&typeof item.watch==='object'?item.watch:{};
@@ -14,15 +17,16 @@ function exposeItemAliases(item){
   item.commercial=item.commercial&&typeof item.commercial==='object'?item.commercial:{};
   item.sale=item.sale&&typeof item.sale==='object'?item.sale:{};
   const p=item.watch.passport,identity=item.identity||{};
-  fill(p,'maker',identity.maker);fill(p,'model',identity.model);fill(p,'year',identity.year||identity.era);fill(p,'country',identity.country);fill(p,'serial',identity.serial);fill(p,'reference',identity.reference);fill(p,'caseMaterial',identity.materials);fill(p,'notes',identity.notes);fill(p,'waterMark',/waterproof/i.test(identity.notes||'')?'Waterproof (historic marking only)':'');
+  fill(p,'maker',identity.maker);fill(p,'model',identity.model);fill(p,'year',identity.year||identity.era);fill(p,'country',identity.country);fill(p,'serial',identity.serial);fill(p,'reference',identity.reference);fill(p,'caseMaterial',identity.materials);fill(p,'notes',identity.notes);
   item.passport=p;
   item.photos=item.watch.passportPhotos;
   item.business=item.commercial;
   item.offers=Array.isArray(item.sale.offers)?item.sale.offers:[];
-  item.channel=item.commercial.saleChannel||item.channel||'Not listed';
+  item.channel=item.commercial.saleChannel||'Not listed';
   item.watchName=item.title||item.identity?.title||[item.identity?.maker,item.identity?.model].filter(Boolean).join(' ')||'Watch dossier';
   return item;
 }
+
 function syncItemAliases(state){
   for(const item of Array.isArray(state?.items)?state.items:[]){
     if(!item||typeof item!=='object')continue;
@@ -38,15 +42,45 @@ function syncItemAliases(state){
     if(Array.isArray(item.offers))item.sale.offers=item.offers;
   }
 }
+
+function mergeCanonical(local,remote){
+  if(!remote||typeof remote!=='object')return local;
+  if(Array.isArray(remote.items))local.items=remote.items;
+  if(Array.isArray(remote.work))local.work=remote.work;
+  if(remote.currentItemId!==undefined)local.currentItemId=remote.currentItemId||'';
+  if(remote.currentWorkId!==undefined)local.currentWorkId=remote.currentWorkId||'';
+  return local;
+}
+
 export function current(state,loc=typeof location!=='undefined'?location:null){
-  const page=pageName(loc),requestedItem=itemIdFromLocation(loc)||state?.currentItemId||'';
-  if(['passport.html','business.html','sales.html'].includes(page)&&requestedItem){
-    const item=itemById(state,requestedItem);
-    if(item)return exposeItemAliases(item);
+  const page=pageName(loc);
+  if(ITEM_PAGES.has(page)){
+    const requestedItem=itemIdFromLocation(loc)||state?.currentItemId||'';
+    return requestedItem?exposeItemAliases(itemById(state,requestedItem)):null;
   }
+  if(['work.html','timegrapher.html','suppliers.html','workbench.html'].includes(page))return currentWork(state,loc);
   return currentWork(state,loc)||base.current(state);
 }
-export async function loadState(){const state=await base.loadState();if(!state)return {items:[],work:[]};state.items=Array.isArray(state.items)?state.items:[];state.work=Array.isArray(state.work)?state.work:[];return state;}
-// Canonical Work is authoritative, while legacy Passport/Commerce screens are bridged to Item data.
-export async function saveState(state){state.items=Array.isArray(state.items)?state.items:[];state.work=Array.isArray(state.work)?state.work:[];syncItemAliases(state);return base.saveState(state);}
+
+export async function loadState(){
+  let state=await base.loadState();
+  if(!state)state={items:[],work:[]};
+  state.items=Array.isArray(state.items)?state.items:[];
+  state.work=Array.isArray(state.work)?state.work:[];
+  const page=pageName(typeof location!=='undefined'?location:null);
+  if(ITEM_PAGES.has(page)){
+    try{
+      const cloud=await readCloudState();
+      if(cloud?.signedIn&&cloud.state)state=mergeCanonical(state,cloud.state);
+    }catch(err){console.warn('Canonical Item cloud read deferred',err);}
+  }
+  return state;
+}
+
+export async function saveState(state){
+  state.items=Array.isArray(state.items)?state.items:[];
+  state.work=Array.isArray(state.work)?state.work:[];
+  syncItemAliases(state);
+  return base.saveState(state);
+}
 export async function importInboxItems(items){return base.importInboxItems(items);}
