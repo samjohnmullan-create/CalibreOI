@@ -9,6 +9,13 @@ const itemIdFromLocation=loc=>{if(!loc)return '';try{const p=new URLSearchParams
 const itemById=(state,id)=>Array.isArray(state?.items)?state.items.find(item=>String(item?.id)===String(id)):null;
 const fill=(obj,key,value)=>{if((obj[key]===undefined||obj[key]===null||String(obj[key]).trim()==='')&&value!==undefined&&value!==null&&String(value).trim()!=='')obj[key]=value;};
 
+function retireLegacyState(state){
+  if(!state||typeof state!=='object')return state;
+  delete state.jobs;
+  delete state.currentId;
+  return state;
+}
+
 function exposeItemAliases(item){
   if(!item)return null;
   item.watch=item.watch&&typeof item.watch==='object'?item.watch:{};
@@ -44,12 +51,12 @@ function syncItemAliases(state){
 }
 
 function mergeCanonical(local,remote){
-  if(!remote||typeof remote!=='object')return local;
+  if(!remote||typeof remote!=='object')return retireLegacyState(local);
   if(Array.isArray(remote.items))local.items=remote.items;
   if(Array.isArray(remote.work))local.work=remote.work;
   if(remote.currentItemId!==undefined)local.currentItemId=remote.currentItemId||'';
   if(remote.currentWorkId!==undefined)local.currentWorkId=remote.currentWorkId||'';
-  return local;
+  return retireLegacyState(local);
 }
 
 export function current(state,loc=typeof location!=='undefined'?location:null){
@@ -65,6 +72,7 @@ export function current(state,loc=typeof location!=='undefined'?location:null){
 export async function loadState(){
   let state=await base.loadState();
   if(!state)state={items:[],work:[]};
+  retireLegacyState(state);
   state.items=Array.isArray(state.items)?state.items:[];
   state.work=Array.isArray(state.work)?state.work:[];
   const page=pageName(typeof location!=='undefined'?location:null);
@@ -74,10 +82,11 @@ export async function loadState(){
       if(cloud?.signedIn&&cloud.state)state=mergeCanonical(state,cloud.state);
     }catch(err){console.warn('Canonical Item cloud read deferred',err);}
   }
-  return state;
+  return retireLegacyState(state);
 }
 
 export async function saveState(state){
+  retireLegacyState(state);
   state.items=Array.isArray(state.items)?state.items:[];
   state.work=Array.isArray(state.work)?state.work:[];
   syncItemAliases(state);
