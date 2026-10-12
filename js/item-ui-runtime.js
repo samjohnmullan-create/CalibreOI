@@ -1,5 +1,5 @@
 import {loadState} from './store.js?v=26';
-import {submitResearchRequest} from './research-request.js?v=2';
+import {submitResearchRequest} from './research-request.js?v=3';
 
 const tabs=document.getElementById('itemTabs');
 const head=document.querySelector('.item-head');
