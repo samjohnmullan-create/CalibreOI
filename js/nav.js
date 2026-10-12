@@ -36,6 +36,7 @@ if(here==='work.html'){
 if(here==='item.html'){
   if(!document.querySelector('link[data-calibre-item-workspace]')){const itemCss=document.createElement('link');itemCss.rel='stylesheet';itemCss.href='css/item-workspace.css?v=1';itemCss.dataset.calibreItemWorkspace='1';document.head.appendChild(itemCss);}
   if(!document.querySelector('script[data-calibre-item-workspace]')){const itemUi=document.createElement('script');itemUi.type='module';itemUi.src='js/item-ui-runtime.js?v=3';itemUi.dataset.calibreItemWorkspace='1';document.head.appendChild(itemUi);}
+  if(!document.querySelector('script[data-calibre-item-commerce]')){const commerceUi=document.createElement('script');commerceUi.type='module';commerceUi.src='js/item-commerce-runtime.js?v=1';commerceUi.dataset.calibreItemCommerce='1';document.head.appendChild(commerceUi);}
 }
 if(here==='suppliers.html'){
   if(!document.querySelector('script[data-calibre-parts-intelligence]')){const partsUi=document.createElement('script');partsUi.type='module';partsUi.src='js/parts-ui-runtime.js?v=1';partsUi.dataset.calibrePartsIntelligence='1';document.head.appendChild(partsUi);}
