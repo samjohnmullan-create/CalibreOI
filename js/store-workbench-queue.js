@@ -5,6 +5,7 @@ export * from './store-local-fast.js?v=3';
 const pageName=loc=>{if(!loc)return '';try{return (loc.pathname.split('/').pop()||'').split('?')[0];}catch{return '';}};
 const itemIdFromLocation=loc=>{if(!loc)return '';try{const p=new URLSearchParams(loc.search||'');return p.get('item')||p.get('itemId')||(['passport.html','business.html','sales.html'].includes(pageName(loc))?p.get('id'):'')||'';}catch{return '';}};
 const itemById=(state,id)=>Array.isArray(state?.items)?state.items.find(item=>String(item?.id)===String(id)):null;
+const fill=(obj,key,value)=>{if((obj[key]===undefined||obj[key]===null||String(obj[key]).trim()==='')&&value!==undefined&&value!==null&&String(value).trim()!=='')obj[key]=value;};
 function exposeItemAliases(item){
   if(!item)return null;
   item.watch=item.watch&&typeof item.watch==='object'?item.watch:{};
@@ -12,7 +13,9 @@ function exposeItemAliases(item){
   item.watch.passportPhotos=item.watch.passportPhotos&&typeof item.watch.passportPhotos==='object'?item.watch.passportPhotos:{};
   item.commercial=item.commercial&&typeof item.commercial==='object'?item.commercial:{};
   item.sale=item.sale&&typeof item.sale==='object'?item.sale:{};
-  item.passport=item.watch.passport;
+  const p=item.watch.passport,identity=item.identity||{};
+  fill(p,'maker',identity.maker);fill(p,'model',identity.model);fill(p,'year',identity.year||identity.era);fill(p,'country',identity.country);fill(p,'serial',identity.serial);fill(p,'reference',identity.reference);fill(p,'caseMaterial',identity.materials);fill(p,'notes',identity.notes);fill(p,'waterMark',/waterproof/i.test(identity.notes||'')?'Waterproof (historic marking only)':'');
+  item.passport=p;
   item.photos=item.watch.passportPhotos;
   item.business=item.commercial;
   item.offers=Array.isArray(item.sale.offers)?item.sale.offers:[];
@@ -30,6 +33,8 @@ function syncItemAliases(state){
     if(item.photos&&typeof item.photos==='object')item.watch.passportPhotos=item.photos;
     if(item.business&&typeof item.business==='object')item.commercial={...item.commercial,...item.business};
     if(item.channel)item.commercial.saleChannel=item.channel;
+    if(item.commercial.soldDate&&!item.commercial.soldAt)item.commercial.soldAt=item.commercial.soldDate;
+    if(Number(item.commercial.actualSale)>0&&item.commercial.soldAt)item.status='Sold';
     if(Array.isArray(item.offers))item.sale.offers=item.offers;
   }
 }
