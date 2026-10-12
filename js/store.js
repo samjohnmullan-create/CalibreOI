@@ -1,2 +1,2 @@
 // Calibre's single public data entrypoint.
-export * from "./store-cloud.js?v=9";
+export * from "./store-cloud.js?v=10";
