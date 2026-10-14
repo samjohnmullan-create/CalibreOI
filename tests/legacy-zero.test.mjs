@@ -6,8 +6,9 @@ import {join,relative} from 'node:path';
 const ROOT=new URL('../',import.meta.url).pathname;
 const ACTIVE_EXT=/\.(?:js|html)$/;
 const EXCLUDE_PREFIXES=['tests/','cards/','docs/'];
-// Core deliberately names retired fields only so validation can reject them.
-const EXCLUDE_FILES=new Set(['backup.html','js/core.js']);
+// Core and the explicit persistence boundary deliberately name retired fields so
+// validation/migration can reject or strip them. Normal runtime must not.
+const EXCLUDE_FILES=new Set(['backup.html','js/core.js','js/persistence-boundary.js']);
 const BANNED=[
   ['state.jobs',/\bstate\.jobs\b/],
   ['currentId',/\bcurrentId\b/],
