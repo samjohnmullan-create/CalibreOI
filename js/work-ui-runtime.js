@@ -1,3 +1,6 @@
+import {loadState,saveState} from './store.js?v=26';
+import {cancelWork} from './item-lifecycle.js?v=1';
+
 function enhanceWorkWorkspace(){
   if((location.pathname.split('/').pop()||'')!=='work.html')return;
   const progressHost=document.getElementById('stageProgress');
@@ -17,6 +20,34 @@ function enhanceWorkWorkspace(){
     const passport=document.getElementById('menuPassport');
     if(passport)workMenu.insertBefore(capture,passport);else workMenu.appendChild(capture);
   }
+
+  const removeButton=document.getElementById('remove');
+  if(removeButton&&!removeButton.dataset.lifecycleSafe){
+    removeButton.dataset.lifecycleSafe='1';
+    removeButton.textContent='Cancel work';
+    removeButton.title='Close this Work record without deleting its history';
+    removeButton.addEventListener('click',async event=>{
+      // work.html still contains the older delete handler. Capture this action first
+      // so cancelling a Work record can never silently erase workshop history.
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      if(!workId||!confirm('Cancel this Work record? Its workshop history will be kept.'))return;
+      const original=removeButton.textContent;
+      removeButton.disabled=true;removeButton.textContent='Cancelling…';
+      try{
+        const state=await loadState();
+        cancelWork(state,workId,{reason:'Work cancelled from Work workspace'});
+        await saveState(state);
+        location.href='workbench.html';
+      }catch(error){
+        console.warn('Work cancellation failed',error);
+        const msg=document.getElementById('msg');
+        if(msg)msg.textContent=error?.message||'Work could not be cancelled.';
+        removeButton.disabled=false;removeButton.textContent=original;
+      }
+    },true);
+  }
+
   const wrap=document.createElement('div');
   wrap.innerHTML='<div class="work-ui-section-label">Workflow completion</div><div class="work-ui-progress" aria-hidden="true"><i></i></div><div class="work-ui-progress-copy"><span data-work-progress-label>0 of 0 stages</span><span data-work-progress-percent>0%</span></div>';
   progressHost.replaceWith(wrap);
