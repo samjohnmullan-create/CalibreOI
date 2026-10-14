@@ -2,6 +2,7 @@ import {loadState,saveState,escapeHtml} from './store.js?v=26';
 import {resolveSaleContext,saleReadiness,listingSnapshot,ensureSale} from './sale-workspace.js?v=1';
 import {mountListingPack} from './listing-pack.js?v=3';
 import {mountChannelStrategy} from './channel-strategy.js?v=3';
+import './sold-public-sync.js?v=1';
 
 const esc=escapeHtml,params=new URLSearchParams(location.search);
 let state=await loadState(),context=resolveSaleContext(state,{itemId:params.get('item')||params.get('id')||'',workId:params.get('work')||''}),item=context.item,work=context.work;
