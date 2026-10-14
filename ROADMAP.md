@@ -20,14 +20,14 @@ For watches and clocks:
 
 ## Phase 1 — Foundation Lock finalisation
 
-Goal: make the current Core boring, trustworthy and difficult to regress.
+Goal: finish removing the remaining compatibility scaffolding without destabilising the working Core.
 
 Remaining work:
 
-- finish migrating Item-page consumers away from compatibility property names
+- finish migrating consumers away from legacy convenience names such as `passport` / `business`
 - keep those compatibility properties non-enumerable and non-persisted until the last consumer is migrated
+- remove or archive stale unused Job-era browser modules
 - audit explicit import/archive boundaries for retired Job-era data
-- keep repository tests green
 - keep both internal and public deployments blocked on failed tests
 - maintain `STATUS.md` as the repo-confirmed scoreboard
 - add browser-level smoke tests for critical journeys
@@ -47,75 +47,60 @@ Run one representative watch through:
 The acceptance watch should deliberately exercise:
 
 - queued stock versus active Work
-- remove from Workbench
+- remove from Workbench / cancel Work
 - Awaiting Parts
-- donor/parts suggestions
+- donor/parts suggestions and actual fitting
 - write-off / donor-spares behaviour
 - media upload and reload
 - timegrapher run history
 - commercial values and labour
-- Final QC
+- Final QC completion gate
 - listing photo pack
 - public output
-- Sold state and history preservation
+- Sold state, ledger and history preservation
 
 Every friction point becomes either a defect, a workflow simplification or a roadmap item.
 
 ---
 
-## Phase 3 — Workshop completion
+## Phase 3 — Workshop refinement
 
-Goal: turn stage paths into a dependable workshop operating procedure without making the bench bureaucratic.
+Goal: turn the working stage paths into a dependable, versioned workshop operating procedure without making the bench bureaucratic.
 
-Build:
+Remaining work:
 
 - versioned **Work Templates** for manual, automatic, pocket watch, quartz, clock, inspection and focused repair paths
 - task state: **Done · Skipped · Blocked**
-- required versus optional tasks
-- structured observations and measurements
-- consistent parts-used capture
-- consistent labour capture
-- explicit blockers and next action
-- Final QC gate with required evidence before Work can be completed
+- required versus optional tasks beyond the existing Final QC gate
+- more structured observations and measurements where they improve later evidence
+- consistent labour capture throughout Work
 - template version retained on completed Work so old service history remains interpretable
 
 Do not introduce a new Job object.
 
 ---
 
-## Phase 4 — Acquisition Engine
+## Phase 4 — Acquisition Engine expansion
 
-Goal: make Calibre useful **before** money is spent.
+Goal: turn the shipped Acquisition Engine v1 into a low-friction research and auction-intake workflow.
 
-For an auction lot or private purchase, calculate and explain:
+V1 already handles saved opportunities, explicit assumptions, resale scenarios, donor/stock usefulness, explainable BUY/WATCH/PASS, maximum bid and Purchased → Item conversion. See [`STATUS.md`](STATUS.md).
 
-- likely identity and confidence
-- visible condition
-- probable repair risk
-- missing information
-- buyer's premium
-- postage / collection cost
-- likely parts and consumables
-- expected labour
-- platform/payment fees
-- likely resale range
-- donor usefulness against owned Items and parts
-- capital-at-risk
-- projected cash profit
-- projected profit after labour
-- ROI
-- maximum sensible bid
-- **BUY · WATCH · PASS** recommendation
+Remaining work:
 
-The recommendation must show its assumptions rather than returning a mysterious score.
-
-### Auction intake workflow
+- durable lot-photo/media ownership for Incoming opportunities
+- paste/import workflow for auction title, lot text, URL, house, lot number and closing time
+- ChatGPT/research handoff using the opportunity's photos and lot text
+- evidence/provenance behind identity, visible condition, repair-risk and resale assumptions
+- clearer missing-information prompts before bidding
+- category-specific risk/value models for jewellery, accessories and small collectibles
+- closing-time/watchlist workflow and optional alerts
+- capture auction/source performance from realised purchase, labour, sale price and time-to-sale
+- use confirmed outcomes to improve future acquisition ranking without overwriting evidence
 
 Target flow:
 
-**Photos / lot text → identify → compare with current stock → estimate risk/value → calculate max bid → save watchlist decision → convert purchase to Item**
-
-Support watches first, then jewellery/accessories/small collectibles using category-specific rules.
+**Photos / lot text → identify → compare with current stock → estimate risk/value → calculate max bid → save decision → purchase → Item**
 
 ---
 
@@ -136,11 +121,11 @@ Add explicit movements for:
 - stocktake
 - write-off
 
-Track storage location and cost basis where relevant.
+The existing parts-fit flow already consumes stock/donor sources; this phase generalises that into an auditable transaction history. Track storage location and cost basis where relevant.
 
 ### Finance
 
-Separate:
+Finish separating and reconciling:
 
 - projected versus realised values
 - Item costs versus workshop/tool costs
@@ -156,26 +141,18 @@ Build reconciliation views that explain why a portfolio total equals the underly
 
 ---
 
-## Phase 6 — Canonical Listing Engine
+## Phase 6 — Listing refinement
 
-Goal: turn recorded evidence into sellable copy without manual re-entry or unsupported claims.
+Goal: deepen the shipped canonical Listing/Sale engine without duplicating Item data.
 
-Input:
+Remaining work:
 
-**Item identity + research + condition + Media + completed Work + timing + commerce**
-
-Output:
-
-- own-site listing
-- eBay-ready draft
-- Facebook Marketplace draft
-- shorter social/enquiry copy
-- evidence-safe condition wording
-- selected hero/gallery set
-- pricing and fee view
-- customer-facing service summary
-
-The Listing Engine should never invent provenance, service claims, water resistance, originality or timing evidence.
+- stronger evidence-safe wording rules by category
+- channel-specific title/length constraints where useful
+- richer pricing/fee guidance from realised channel performance
+- customer-facing service summaries and care notes
+- prevent unsupported provenance, originality, water-resistance or condition claims by construction
+- browser-level end-to-end coverage for photo selection → listing → publish
 
 ---
 
@@ -192,7 +169,7 @@ Sequence:
 5. Verified payment records the order.
 6. Item becomes **Sold**.
 7. Checkout is disabled/closed.
-8. Ledger is updated.
+8. Ledger is updated/reconciled.
 9. Customer confirmation is sent through Resend.
 10. Public Passport/history remains available according to publication settings.
 
@@ -291,11 +268,12 @@ Add a small Playwright suite around the highest-value journeys:
 
 1. create Item → start Work
 2. capture/upload media → save → reload
-3. Needs Parts → donor/parts matching
+3. Needs Parts → donor/parts matching → fit → resume
 4. Final QC → listing snapshot / publish readiness
-5. cloud/reload or mocked sync conflict path
+5. acquisition candidate → Purchased → Item
+6. cloud/reload or mocked sync conflict path
 
-The existing unit/source tests remain useful; browser tests prove the pieces work together.
+The existing unit/source/syntax tests remain useful; browser tests prove the pieces work together.
 
 ---
 

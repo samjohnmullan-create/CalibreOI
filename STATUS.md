@@ -1,7 +1,7 @@
 # Calibre & Co. — Current Status
 
 **Last reviewed:** 14 October 2026  
-**Baseline:** `main` after PR #84, commercial acceptance hardening.  
+**Baseline:** `main` after PR #86, Acquisition Engine v1.  
 **Rule:** a feature is only marked shipped here when it is present on `main` and the repository test suite is green.
 
 ## Release state
@@ -12,7 +12,7 @@
 - CI: **green**
 - Internal deployment: **test-gated**
 - Public catalogue deployment: **test-gated**
-- Current maturity: **internal alpha / operational workshop system**
+- Current maturity: **internal alpha / operational workshop and resale system**
 
 ## Shipped and repo-confirmed
 
@@ -72,7 +72,8 @@
 - hardware capability layer
 
 ### Business and commercial lifecycle
-- Item economics
+- canonical Item Costs / Valuation page
+- Item-first economics and profit intelligence
 - finance dashboard
 - Business Brain prioritisation
 - potential and realised profit calculations
@@ -90,6 +91,23 @@
 - Sold updates the permanent Item and creates one idempotent sale ledger receipt
 - manually marking Sold closes public availability and removes public checkout
 - public `for_sale` publication is blocked until canonical sale readiness passes
+
+### Acquisition Engine v1
+- Acquisition lives beneath **Business**, not as a new primary system
+- auction / private / marketplace / dealer opportunities persist as canonical Incoming records
+- watches-first intake with support for clock, jewellery, accessory, collectible and other categories
+- explicit assumptions for buyer premium, postage/collection, parts, consumables, outside work and repair contingency
+- explicit labour estimate and labour value
+- explicit selling fee and outbound shipping assumptions
+- low / expected / high resale scenarios
+- capital-at-risk, cash profit, profit-after-labour and ROI calculations
+- conservative / expected / optimistic maximum hammer-bid calculations
+- explainable **BUY · WATCH · PASS** recommendation
+- high repair risk and low identity confidence remain visible decision warnings rather than hidden score adjustments
+- candidate calibre/maker compared against owned Items, active Work, donors and loose parts for usefulness
+- saved acquisition watchlist / decision records
+- Purchased converts a candidate into a permanent Item while preserving the acquisition snapshot
+- purchase conversion is idempotent and deliberately does **not** create Work automatically
 
 ### Search and usability
 - canonical navigation shell
@@ -117,13 +135,14 @@
 - tune detector behaviour only from real microphone evidence
 - retain BPH/rate/beat-error evidence history
 
-### Acquisition engine
-- auction-lot intake
-- buyer's premium and postage-aware max bid
-- repair risk and labour estimate
-- donor usefulness against owned stock
-- expected resale and profit range
-- Buy / Watch / Pass recommendation
+### Acquisition Engine — next slices
+- attach durable lot photographs/media to Incoming opportunities
+- create a research handoff so lot photos/text can be identified and enriched without retyping
+- record evidence/provenance behind identity, condition and resale assumptions
+- import or paste auction listings with less manual field entry
+- auction closing-time / watchlist workflow and optional alerts
+- category-specific risk/value rules for jewellery, accessories and other small collectibles
+- feed realised purchase, labour and sale outcomes back into acquisition-source performance
 
 ### Commerce automation
 - secure server-created Square checkout
@@ -152,8 +171,8 @@
 ## Immediate priority order
 
 1. Run a real physical end-to-end acceptance watch on the deployed build and log every friction point.
-2. Build the Acquisition Engine.
-3. Make inventory and finance fully transactional/reconcilable.
+2. Make inventory and finance fully transactional/reconcilable.
+3. Extend Acquisition with photo/research intake and lower-friction auction capture.
 4. Complete secure Square checkout creation + verified webhook automation.
 5. Introduce versioned Work Templates and richer task states.
 6. Scale persistence beneath the existing Core only when usage/data volume justifies it.
