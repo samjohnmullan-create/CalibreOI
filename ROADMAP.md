@@ -1,159 +1,315 @@
-# Calibre & Co. — Canonical Roadmap
+# Calibre & Co. — Roadmap
 
-_Last revised: 12 October 2026_
+_Last revised: 14 October 2026_
 
-## Product direction
+This file contains **future work only**. Shipped capability belongs in [`STATUS.md`](STATUS.md); stable system rules belong in [`ARCHITECTURE.md`](ARCHITECTURE.md).
 
-Calibre is an item lifecycle and workshop operating system for watches, clocks, jewellery, accessories and small collectibles.
+Calibre's governing rule remains:
 
 **Item is permanent. Work is activity.**
 
 The broad lifecycle is:
 
-**Acquire → Identify → Research → Inspect → Work → Document → Value → Sell → Preserve**
+**Acquire → Identify → Research → Inspect → Work → Document → Value → List → Sell → Preserve**
 
-Watch and clock Items additionally support:
+For watches and clocks:
 
 **Diagnose → Service → Parts → Measure → Time → QC → Passport**
 
-## Canonical Core
+---
 
-Calibre has one Core. Persisted data uses `schemaVersion`; stored-shape changes require explicit forward migrations. Reference knowledge remains read-only/shared rather than being copied into every Item.
+## Phase 1 — Foundation Lock finalisation
 
-The canonical contract lives in `js/core.js`.
+Goal: make the current Core boring, trustworthy and difficult to regress.
 
-## Navigation rule
+Remaining work:
 
-Calibre has five primary destinations only: **Home · Items · Workbench · Business · Calibre**. New features attach beneath these destinations rather than automatically becoming new primary navigation.
+- finish migrating Item-page consumers away from compatibility property names
+- keep those compatibility properties non-enumerable and non-persisted until the last consumer is migrated
+- audit explicit import/archive boundaries for retired Job-era data
+- keep repository tests green
+- keep both internal and public deployments blocked on failed tests
+- maintain `STATUS.md` as the repo-confirmed scoreboard
+- add browser-level smoke tests for critical journeys
 
-## Foundation Lock — COMPLETE
+Exit condition: no normal-runtime Job architecture, no persisted compatibility aliases, documentation matches `main`, critical journeys have automated browser coverage.
 
-Foundation Lock completed persisted/runtime convergence through schema 6. Old field names remain only at explicit migration/archive boundaries.
+---
 
-## Reliability — COMPLETE
+## Phase 2 — Real end-to-end acceptance
 
-Calibre now has checked portable backups, local recovery snapshots, canonical integrity checks, a bounded audit trail and atomic cloud compare-and-swap revision protection. Stale devices fail with `CALIBRE_SYNC_CONFLICT` rather than silently overwriting newer cloud data.
+Goal: prove Calibre on a real watch rather than judging the system page by page.
 
-See `docs/RELIABILITY.md`.
+Run one representative watch through:
 
-## Knowledge Engine integration — LIVE
+**Intake → Identity → Research → Work → Capture → Diagnosis → Parts → Repair → Timing → Final QC → Value → Listing → Publish → Sold → Passport/history**
 
-The Knowledge Engine is now part of workshop flow rather than an isolated reference module:
+The acceptance watch should deliberately exercise:
 
-- the full v25 reference dataset is normalized in Supabase rather than copied into Core state
-- 3,458 calibre records, 736 normalized part references, 1,172 calibre-part links and 9,165 compatibility edges are available server-side
-- verified v25 movement specifications feed Passport suggestions
-- Passport fills **missing movement-owned fields only**; movement launch year never becomes watch year automatically
-- Timegrapher preloads documented BPH/frequency/lift angle without changing detector maths
-- missing lift angle stays unset; Calibre never invents it
-- Work / Workbench / Parts surfaces sourced part references and technical documents
-- exact documented part references remain distinguishable from family-reported references
-- 18 rich verified movement records remain the lightweight workshop/offline pack for Passport, Timegrapher and immediate reference use
-- normal app hydration deliberately loads only those 18 rich profiles; large catalogue searches stay server-side
+- queued stock versus active Work
+- remove from Workbench
+- Awaiting Parts
+- donor/parts suggestions
+- write-off / donor-spares behaviour
+- media upload and reload
+- timegrapher run history
+- commercial values and labour
+- Final QC
+- listing photo pack
+- public output
+- Sold state and history preservation
 
-## Knowledge Editor / Research Inbox — LIVE
+Every friction point becomes either a defect, a workflow simplification or a roadmap item.
 
-Knowledge can now grow incrementally without rebuilding or re-importing the full v25 dataset.
+---
 
-- Knowledge Editor lives under the existing **Calibre** destination
-- normal signed-in accounts retain shared read-only Knowledge access
-- only explicitly allow-listed Knowledge editors can stage or apply changes
-- research is saved as **Draft** or **Ready** before it can affect shared Knowledge
-- applying a submission is an explicit second action, never an automatic side effect of form entry
-- supported record types are Source, Family, Calibre, Part, Calibre↔Part link and Compatibility evidence
-- evidence is labelled **Confirmed**, **Supported** or **Candidate**
-- existing calibres can be looked up by Knowledge ID and corrected without deleting/recreating them
-- applied changes preserve before/after data in an audit log
-- production Knowledge tables now allocate new IDs automatically, so individual records can be added safely without a bulk import
-- family/dimensional similarity remains evidence, never proof of interchangeability
+## Phase 3 — Workshop completion
 
-## Movement Finder — FULL CATALOGUE LIVE
+Goal: turn stage paths into a dependable workshop operating procedure without making the bench bureaucratic.
 
-Movement Finder is a Calibre tool, not a sixth primary destination.
+Build:
 
-Current capabilities:
+- versioned **Work Templates** for manual, automatic, pocket watch, quartz, clock, inspection and focused repair paths
+- task state: **Done · Skipped · Blocked**
+- required versus optional tasks
+- structured observations and measurements
+- consistent parts-used capture
+- consistent labour capture
+- explicit blockers and next action
+- Final QC gate with required evidence before Work can be completed
+- template version retained on completed Work so old service history remains interpretable
 
-- evidence-ranked matching across the **full 3,458-calibre v25 catalogue** when signed in
-- server-side ranking by maker, calibre markings/aliases, diameter, height, BPH, winding type and jewel count
-- the original 18 rich verified movements remain an automatic offline/signed-out fallback
-- every result explains the evidence that contributed to its rank
-- scores represent evidence fit, not certainty
-- current Item can prefill observed clues
-- explicit **Use as probable** action writes a candidate only as `Probable`, never `Confirmed`
-- selected candidates retain the canonical Knowledge database ID so duplicate maker/calibre labels remain distinguishable
-- rich verified records retain source URLs and provenance; broader catalogue records may contain less detail and are labelled accordingly
+Do not introduce a new Job object.
 
-A source audit of the current 65 `identification_signals` found structured measurement/specification clues (diameter, height, jewels, BPH, winding/movement type), not bridge-shape or other photo-architecture descriptors. Therefore visual recognition is deliberately **not** claimed or scheduled as complete until richer visual signal data exists.
+---
 
-## Proactive Workbench intelligence — COMPLETE
+## Phase 4 — Acquisition Engine
 
-Work and Workbench now surface a compact **Calibre Suggestions** rail derived from the current Item, Work and sourced Knowledge.
+Goal: make Calibre useful **before** money is spent.
 
-- maximum three suggestions at a time
-- explicit blocker stays highest priority
-- missing identity can point to Movement Finder
-- parts waits can surface references/search
-- relevant technical documents can surface in context
-- missing timing can prompt a baseline run
-- near-complete Work can prompt Final QC
-- suggestions remain derived and non-persistent
+For an auction lot or private purchase, calculate and explain:
 
-## Parts + Donor intelligence — FULL KNOWLEDGE LIVE
+- likely identity and confidence
+- visible condition
+- probable repair risk
+- missing information
+- buyer's premium
+- postage / collection cost
+- likely parts and consumables
+- expected labour
+- platform/payment fees
+- likely resale range
+- donor usefulness against owned Items and parts
+- capital-at-risk
+- projected cash profit
+- projected profit after labour
+- ROI
+- maximum sensible bid
+- **BUY · WATCH · PASS** recommendation
 
-Calibre now combines **reference compatibility evidence**, **owned stock**, **bench history** and **donor sacrifice economics**.
+The recommendation must show its assumptions rather than returning a mysterious score.
 
-- each real Work part requirement can query the full server-side Knowledge catalogue on demand
-- exact factory part references and serial-aware movement applications rank first
-- documented shared factory part numbers and explicit compatibility edges become donor evidence
-- dimensional candidates remain low-confidence measure/modify leads
-- same-family movements remain **lead only**, never proof of interchangeability
-- owned loose parts are promoted when their recorded reference matches documented Knowledge evidence
-- owned donor Items inherit documented calibre/part compatibility by canonical Knowledge ID or exact maker/calibre identity
-- high-value or apparently complete donors are still protected when fit is not bench-verified
-- comparable loose stock is preferred when it avoids donor sacrifice
-- bench-verified low-risk donors can be promoted as sensible donor choices
-- donor risk considers recorded value/investment and whether the donor is already documented as parted
-- same-calibre owned donor Items can create a **combine opportunity** alert
-- physical/bench verification still outranks family/name similarity
+### Auction intake workflow
 
-## Current state
+Target flow:
 
-Substantially complete:
+**Photos / lot text → identify → compare with current stock → estimate risk/value → calculate max bid → save watchlist decision → convert purchase to Item**
 
-- canonical Item + Work runtime
-- five-destination navigation
-- Item workspace: Work · Item · Commerce
-- Workbench around canonical Work
-- structured workshop stages
-- desktop/DeX Work workspace
-- Business Item dashboard
-- Capture Station
-- canonical Parts matching, donor evidence and storage locations
-- Reference Intelligence / Reference Library / PDF-OCR ingestion
-- Timegrapher sample-clock engine and saved-run comparison
-- Foundation Lock
-- Reliability including atomic cloud concurrency protection
-- normalized full v25 Knowledge database in Supabase
-- live Knowledge Engine workshop integration
-- Knowledge Editor / Research Inbox with allow-listed writes and audit history
-- full-catalogue server-side Movement Finder with offline fallback
-- proactive Workbench intelligence
-- full-catalogue Parts + Donor intelligence with donor-protection economics
+Support watches first, then jewellery/accessories/small collectibles using category-specific rules.
 
-## Current build order
+---
 
-1. **Device experience** — Automatic / Workstation / Touch / Capture behaviour for phone, DeX monitor and Galaxy Tab microscope use.
-2. **Hardware layer** — validate the USB Timegrapher microphone, then add printer/Windows bridge and QR/bin label workflows.
-3. **Global search / command** — Ctrl/Cmd+K on workstation plus touch-friendly search/actions.
-4. **Business brain** — potential/realised profit, ROI, profit per labour hour, stock age, capital tied up and “what should I work on next?” prioritisation.
-5. **Acquisition engine** — auction triage, max bid, resale potential and donor usefulness against current Items/Work.
-6. **Listing engine** — turn Item identity + research + Work + condition + media + commerce into channel-ready listings.
-7. **Customer/output layer** — public Passport, QR provenance, customer-facing presentation, COA/service outputs and storefront integration.
-8. **Continuous learning loop** — confirmed bench, timing, compatibility and sale outcomes improve future recommendations without overwriting provenance.
-9. **Movement Finder visual expansion** — revisit when the Knowledge dataset contains genuine architecture/photo descriptors suitable for evidence-ranked visual identification.
+## Phase 5 — Operational inventory and finance
 
-## Near-term sequence
+Goal: make the numbers trustworthy enough to run the business from.
 
-**Device experience → hardware layer → global search/command**
+### Inventory transactions
 
-Timegrapher detector maths remains frozen until the USB microphone is validated against known watches/rates.
+Add explicit movements for:
+
+- receive
+- consume
+- fit to Work
+- remove from donor
+- return to stock
+- adjustment
+- stocktake
+- write-off
+
+Track storage location and cost basis where relevant.
+
+### Finance
+
+Separate:
+
+- projected versus realised values
+- Item costs versus workshop/tool costs
+- marketplace/payment fees
+- postage in and postage out
+- refunds
+- consumables
+- external service
+- labour cost/value
+- actual sale proceeds
+
+Build reconciliation views that explain why a portfolio total equals the underlying transactions.
+
+---
+
+## Phase 6 — Canonical Listing Engine
+
+Goal: turn recorded evidence into sellable copy without manual re-entry or unsupported claims.
+
+Input:
+
+**Item identity + research + condition + Media + completed Work + timing + commerce**
+
+Output:
+
+- own-site listing
+- eBay-ready draft
+- Facebook Marketplace draft
+- shorter social/enquiry copy
+- evidence-safe condition wording
+- selected hero/gallery set
+- pricing and fee view
+- customer-facing service summary
+
+The Listing Engine should never invent provenance, service claims, water resistance, originality or timing evidence.
+
+---
+
+## Phase 7 — Commerce automation
+
+Goal: remove the manual gap between publish, payment and sold-state bookkeeping.
+
+Sequence:
+
+1. Calibre Sale requests checkout server-side.
+2. Secure Supabase/server function talks to Square.
+3. Checkout is created with an idempotency key.
+4. Square webhook is signature-verified.
+5. Verified payment records the order.
+6. Item becomes **Sold**.
+7. Checkout is disabled/closed.
+8. Ledger is updated.
+9. Customer confirmation is sent through Resend.
+10. Public Passport/history remains available according to publication settings.
+
+A browser redirect alone must never be authoritative proof of payment.
+
+---
+
+## Phase 8 — Persistence scale
+
+Goal: improve queryability and multi-device behaviour without changing the user's mental model.
+
+Progressively move operational collections from the single synced state document into structured Supabase records such as:
+
+- items
+- work
+- media_assets
+- inventory_transactions
+- ledger_entries
+- incoming
+- compatibility evidence
+
+IndexedDB remains the offline cache. Core Item/Work semantics do not change.
+
+Do this progressively; there is no justification for another architecture rewrite.
+
+---
+
+## Phase 9 — Customer outputs and provenance
+
+Build:
+
+- service certificate
+- Certificate of Authenticity / researched-item certificate where appropriate
+- richer public Watch Passport
+- QR provenance/history entry point
+- safe service-history summary
+- before/after imagery
+- customer care notes
+
+Public output must distinguish sourced facts, workshop observations and uncertain identification.
+
+---
+
+## Phase 10 — Controlled learning
+
+Calibre should become smarter from confirmed outcomes while preserving provenance.
+
+Useful learning signals include:
+
+- verified part fit / non-fit
+- donor success
+- repair outcome
+- actual labour time
+- timing before/after service
+- realised sale price
+- days to sale
+- acquisition source performance
+
+Learning may influence future ranking and recommendations, but must not overwrite factory/reference truth or erase the evidence behind a conclusion.
+
+---
+
+## Hardware validation track
+
+Hardware work runs alongside the roadmap where it can be validated physically.
+
+### Timegrapher microphone
+
+- test the direct USB microphone on Android, DeX and desktop
+- compare repeated runs against a known/reference timegrapher where possible
+- record noise floor, missed beats, false beats, BPH lock stability, rate stability and beat-error stability
+- do not change detector maths until real evidence identifies a problem
+
+### Printing
+
+- validate what can print directly from Android/DeX
+- where the label/demo printer is desktop-only, use a small Windows/PC print bridge rather than forcing unsupported mobile drivers
+- keep label generation device-independent
+
+### QR workshop layer
+
+Target physical workflow:
+
+- Item QR on bag/tag
+- tray/bin QR
+- donor QR
+- scan Item → open Item / active Work
+- scan donor while Work is active → compatibility context
+- scan tray → contents
+
+---
+
+## Browser-level acceptance tests
+
+Add a small Playwright suite around the highest-value journeys:
+
+1. create Item → start Work
+2. capture/upload media → save → reload
+3. Needs Parts → donor/parts matching
+4. Final QC → listing snapshot / publish readiness
+5. cloud/reload or mocked sync conflict path
+
+The existing unit/source tests remain useful; browser tests prove the pieces work together.
+
+---
+
+## Release gate for primary business use
+
+Calibre becomes the primary business operating system when:
+
+- repository tests are green
+- failed tests block deployment
+- backup export and restore are proven
+- cloud conflict handling is proven
+- two-device sync is proven
+- a real acceptance watch passes end-to-end
+- phone / DeX / desktop smoke checks pass
+- finance totals reconcile against real transactions
+- no normal-runtime Job architecture remains
+- project documentation reflects actual `main`
