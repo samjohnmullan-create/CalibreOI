@@ -22,9 +22,7 @@ export function resolveSaleContext(state={},requested={}){
 }
 
 export function saleMediaCandidates(item={}){
-  return (Array.isArray(item.mediaAssets)?item.mediaAssets:[]).filter(asset=>asset&&!asset.deletedAt&&(String(asset.mimeType||'').startsWith('image/')||asset.url||asset.thumbnailUrl||asset.storageKey)).map(asset=>({
-    id:String(asset.id||''),src:asset.thumbnailUrl||asset.url||'',label:asset.caption||asset.originalName||asset.role||asset.category||'Photo',role:asset.role||'',category:asset.category||''
-  })).filter(row=>row.id&&row.src);
+  return (Array.isArray(item.mediaAssets)?item.mediaAssets:[]).filter(asset=>asset&&!asset.deletedAt&&(String(asset.mimeType||'').startsWith('image/')||asset.url||asset.thumbnailUrl||asset.storageKey)).map(asset=>({id:String(asset.id||''),src:asset.thumbnailUrl||asset.url||'',label:asset.caption||asset.originalName||asset.role||asset.category||'Photo',role:asset.role||'',category:asset.category||''})).filter(row=>row.id&&row.src);
 }
 
 export function ensureSale(item={}){
@@ -41,27 +39,19 @@ export function listingPackStatus(item={}){
   if(pack.hero&&!valid.has(String(pack.hero)))pack.hero='';
   for(const role of Object.keys(pack.roles))if(!valid.has(String(pack.roles[role])))delete pack.roles[role];
   const selected=pack.selected.length,hero=!!pack.hero,complete=hero&&selected>=3;
-  const recommendedMissing=[!pack.roles.front?'front/dial':null,!pack.roles.movement?'movement':null,!pack.roles.caseback?'caseback':null].filter(Boolean);
-  return {pack,list,selected,hero,total:list.length,complete,recommendedMissing};
+  return {pack,list,selected,hero,total:list.length,complete,recommendedMissing:[!pack.roles.front?'front/dial':null,!pack.roles.movement?'movement':null,!pack.roles.caseback?'caseback':null].filter(Boolean)};
 }
 
-export function latestFinalTiming(work={}){
-  return timingRuns(work).find(timingRunUsable)||null;
-}
+export function latestFinalTiming(work={}){return timingRuns(work).find(timingRunUsable)||null;}
 
 export function listingSnapshot(item={},work={}){
   const identity=item.identity||{},watch=item.watch||{},passport=watch.passport||{},commercial=item.commercial||{},pack=listingPackStatus(item).pack,timing=latestFinalTiming(work);
-  return {
-    at:now(),itemId:String(item.id||''),workId:String(work?.id||''),
-    identity:{title:item.title||'',maker:identity.maker||passport.maker||'',model:identity.model||passport.model||'',year:identity.year||passport.year||'',calibre:passport.calibre||watch.movement?.calibre||'',jewels:passport.jewels||'',movementMaker:passport.movementMaker||watch.movement?.maker||'',caseMaterial:passport.caseMaterial||identity.materials||'',caseStyle:passport.caseStyle||'',serial:identity.serial||passport.serial||passport.caseNumber||'',dimensions:identity.dimensions||'',width:passport.width||'',thickness:passport.thickness||'',lugWidth:passport.lugWidth||''},
-    condition:item.preparation?.finalCondition||item.condition||'',diagnosis:work?.diagnosis||'',repairPerformed:work?.repairPerformed||'',
-    timing:timing?{rateSecondsPerDay:timing.rateSecondsPerDay,beatErrorMs:timing.beatErrorMs,position:timing.position,phase:timing.phase,savedAt:timing.savedAt}:null,
-    targetSale:commercial.targetSale||'',minimumSale:commercial.minSale||'',photos:{hero:pack.hero,selected:[...pack.selected],roles:{...pack.roles}}
-  };
+  return {at:now(),itemId:String(item.id||''),workId:String(work?.id||''),identity:{title:item.title||'',maker:identity.maker||passport.maker||'',model:identity.model||passport.model||'',year:identity.year||passport.year||'',calibre:passport.calibre||watch.movement?.calibre||'',jewels:passport.jewels||'',movementMaker:passport.movementMaker||watch.movement?.maker||'',caseMaterial:passport.caseMaterial||identity.materials||'',caseStyle:passport.caseStyle||'',serial:identity.serial||passport.serial||passport.caseNumber||'',dimensions:identity.dimensions||'',width:passport.width||'',thickness:passport.thickness||'',lugWidth:passport.lugWidth||''},condition:item.preparation?.finalCondition||item.condition||'',diagnosis:work?.diagnosis||'',repairPerformed:work?.repairPerformed||'',timing:timing?{rateSecondsPerDay:timing.rateSecondsPerDay,beatErrorMs:timing.beatErrorMs,position:timing.position,phase:timing.phase,savedAt:timing.savedAt}:null,targetSale:commercial.targetSale||'',minimumSale:commercial.minSale||'',photos:{hero:pack.hero,selected:[...pack.selected],roles:{...pack.roles}}};
 }
 
 export function saleReadiness(item={},work={},state={}){
-  const identity=item.identity||{},passport=item.watch?.passport||{},commercial=item.commercial||{},pack=listingPackStatus(item),condition=text(item.preparation?.finalCondition||item.condition),completion=work?workCompletionReadiness(work,state,item):{ready:false,issues:['No completed Work record is linked.']},timing=work?latestFinalTiming(work):null;
+  const identity=item.identity||{},passport=item.watch?.passport||{},commercial=item.commercial||{},sale=ensureSale(item),pack=listingPackStatus(item),condition=text(item.preparation?.finalCondition||item.condition),completion=work?workCompletionReadiness(work,state,item):{ready:false,issues:['No completed Work record is linked.']},timing=work?latestFinalTiming(work):null;
+  const hasListing=!!text(sale.listingTitle)&&!!text(sale.listingText);
   const checks=[
     {id:'work',label:'Completed Work',ok:!!work&&work.status==='Complete'&&completion.ready,detail:work?completion.ready?'Workshop completion verified':completion.issues[0]||'Work is not complete':'No Work linked',required:true},
     {id:'identity',label:'Identity',ok:!!text(identity.maker||identity.model||item.title),detail:text([identity.maker,identity.model].filter(Boolean).join(' '))||item.title||'Add identity',required:true},
@@ -69,6 +59,7 @@ export function saleReadiness(item={},work={},state={}){
     {id:'repair',label:'Service / repair record',ok:!!text(work?.repairPerformed||work?.diagnosis),detail:text(work?.repairPerformed||work?.diagnosis)||'Record workshop outcome',required:true},
     {id:'timing',label:'Final timing',ok:!!timing,detail:timing?`${timing.rateSecondsPerDay>=0?'+':''}${Number(timing.rateSecondsPerDay).toFixed(1)} s/day · ${timing.position||'position not set'}`:'No usable final timing run',required:false},
     {id:'photos',label:'Listing photo pack',ok:pack.complete,detail:pack.complete?`${pack.selected} selected · hero chosen`:`${pack.selected} selected · ${pack.hero?'hero chosen':'choose a hero'} · minimum 3`,required:true},
+    {id:'listing',label:'Listing copy',ok:hasListing,detail:hasListing?'Title and full listing saved':'Generate or write the listing title and description',required:true},
     {id:'price',label:'Sale target',ok:num(commercial.targetSale)>0,detail:num(commercial.targetSale)>0?`Target $${num(commercial.targetSale).toFixed(2)}`:'Set a target sale price',required:true},
     {id:'calibre',label:'Movement / calibre',ok:!!text(passport.calibre||item.watch?.movement?.calibre),detail:text(passport.calibre||item.watch?.movement?.calibre)||'Movement not recorded',required:false}
   ];
@@ -77,9 +68,7 @@ export function saleReadiness(item={},work={},state={}){
 }
 
 export function saleMetrics(item={}){
-  const c=item.commercial||{};
-  const costKeys=['purchasePrice','buyerPremium','postage','preparationCost','repairCost','partsCost','consumables','externalService','marketplaceFees','shippingToBuyer','otherCost'];
-  const invested=costKeys.reduce((sum,key)=>sum+num(c[key]),0),target=num(c.targetSale),actual=num(c.actualSale);
+  const c=item.commercial||{},costKeys=['purchasePrice','buyerPremium','postage','preparationCost','repairCost','partsCost','consumables','externalService','marketplaceFees','shippingToBuyer','otherCost'],invested=costKeys.reduce((sum,key)=>sum+num(c[key]),0),target=num(c.targetSale),actual=num(c.actualSale);
   return {invested,target,minimum:num(c.minSale),actual,projectedProfit:target?target-invested:0,actualProfit:actual?actual-invested:0};
 }
 
