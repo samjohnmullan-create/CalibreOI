@@ -1,112 +1,103 @@
 # Calibre & Co.
 
-Calibre is an intelligent item lifecycle and watchmaker's workbench application for watches, jewellery, accessories, clocks, collectibles and other small resale items.
+Calibre is an intelligent item-lifecycle and workshop operating system for watches, clocks, jewellery, accessories, collectibles and other small resale items.
 
-It is built around the broad lifecycle:
+The broad lifecycle is:
 
-**Acquire → Identify → Inspect → Research → Prepare / Service → Value → List → Sell → Preserve history**
+**Acquire → Identify → Research → Inspect → Work → Document → Value → List → Sell → Preserve**
 
 Watch and clock Items unlock a deeper horology workflow:
 
-**Diagnose → Service → Parts → Time → Final QC → Watch Passport**
+**Diagnose → Service → Parts → Measure → Time → Final QC → Passport**
 
-## Product principle
+## Core model
 
-The **Item** is the permanent centre of the system. A physical item keeps one identity throughout acquisition, research, restoration/service, sale and later history.
+**Item is permanent. Work is activity.**
 
-A **Work record** describes something done to that Item. A traditional watch Job Card is therefore one specialised Work record rather than the permanent identity of the watch.
+An **Item** is the physical object and remains the same record through acquisition, research, service, listing, sale and later history.
 
-For watches, the Passport remains the permanent watch identity/history layer and service Jobs describe work performed on it.
+A **Work** record describes a bounded activity performed on an Item. One Item may have no Work records, one Work record or many Work records over its lifetime.
 
-See [`ARCHITECTURE.md`](ARCHITECTURE.md) for the target object model and non-destructive migration plan.
+Media, Inventory, Knowledge, Incoming and Ledger are first-class parts of the same Core. There is no active architectural role for the old Job object.
 
-## Current capabilities
+The executable domain contract lives in [`js/core.js`](js/core.js). Persisted-shape changes use forward `schemaVersion` migrations rather than parallel Core generations.
 
-- Structured watch jobs with repair-stage workflows
-- Watch Passport / identity records with confidence and evidence support
-- Intake faults, diagnostic notes and repair guidance
-- Photos attached to jobs, stages and Passport records
-- Parts and supplier tracking
-- Donor and loose-parts compatibility evidence
-- Business, cost, sale and profitability data
-- Timing runs with rate, BPH, beat-error estimate, confidence and position metadata
-- AudioWorklet-based Timegrapher with improved transient/interval analysis
-- Collection/inventory views
-- Incoming purchase tracking
-- Tool and loose-parts libraries
-- Listing photo-pack and sale handoff workflow
-- Job handoff and Calibre assistant tooling
-- Local/offline data with Supabase cloud sync
-- Account sign-in and password-reset flow
-- Approved Calibre brand system
+## Current product structure
 
-## Architecture transition
-
-The existing app is still largely **job-first**: a watch Job currently carries Passport, commercial, timing and work data together.
-
-The migration is deliberately non-destructive.
-
-The first compatibility layer is `js/item-model.js`, which introduces canonical Item types and can derive Item/Work views from existing watch Job data without rewriting the current database.
-
-The intended progression is:
-
-1. establish the Item model and compatibility layer
-2. add first-class non-watch Items
-3. link watch Jobs to stable Item IDs
-4. separate permanent Item/Passport identity from Work records
-5. move shared Business analytics to Item-level data
-6. progressively separate structured cloud records once the model is stable
-
-Existing watch records must remain readable throughout the transition.
-
-## Target navigation
-
-Primary product concepts:
+Calibre has exactly five primary destinations:
 
 **Home · Items · Workbench · Business · Calibre**
 
-Watch/clock context:
+- **Home** — attention and next actions
+- **Items** — everything physical owned or previously owned
+- **Workbench** — active and deliberately queued Work
+- **Business** — portfolio finance, sourcing and sales intelligence
+- **Calibre** — Assistant, Capture, Knowledge, Inbox and Settings
 
-**Service · Passport · Timing · Parts · Costs · Sale · Record**
+New capabilities attach beneath these destinations rather than creating more top-level navigation.
 
-General resale Item context:
+## Repo-confirmed capabilities
 
-**Identity · Condition · Research · Prep · Costs · Sale · Record**
+Current `main` includes:
 
-Calibre system context:
+- canonical Item + Work runtime
+- watch, clock and general-item lifecycle support
+- Workbench queues and specialist repair workflows
+- Passport / identity records with evidence and confidence
+- Capture Station and first-class Item/Work media
+- diagnostic, parts and donor intelligence
+- full-catalogue Movement Finder with offline fallback
+- normalized Knowledge Engine, Reference Library and Research Inbox
+- bench measurements and timing-run history
+- AudioWorklet Timegrapher foundation
+- global search / command layer
+- device modes for workstation, touch and capture use
+- QR / workshop identity foundations
+- Business Brain prioritisation and profitability analysis
+- public catalogue and public Watch Passport pages
+- Square Payment Link support
+- local-first IndexedDB storage with Supabase cloud sync
+- atomic cloud conflict protection, safety snapshots and portable backup
+- test-gated internal and public deployments
 
-**Assistant · Inbox · Activity · Settings**
+See [`STATUS.md`](STATUS.md) for the current repo-confirmed state. A feature is treated as shipped there only when it is present on `main` and the test suite is green.
 
-The UI will move toward these labels progressively as the underlying pages are adapted.
+## Compatibility boundary
+
+Foundation Lock removed the legacy Job architecture from normal runtime.
+
+A small number of Item pages still use compatibility property names such as `passport` and `business` while those pages are migrated to direct canonical ownership. These are exposed as **non-enumerable, non-persisted views** over canonical Item fields. Persisted state remains canonical.
+
+Legacy shapes may be handled only at explicit migration, import or archive boundaries.
 
 ## Platform direction
 
-The `calibreco.com.au` domain expands Calibre beyond a repository-hosted PWA.
-
 The intended platform split is:
 
-- **`app.calibreco.com.au`** — private workshop and item-management application
-- **Supabase** — accounts, structured data, relationships and permissions
-- **Calibre web hosting** — web delivery plus media/document storage where technically suitable
-- **Resend** — branded authentication and transactional email
-- **`passport.calibreco.com.au`** — deliberate public watch-history pages
-- **`calibreco.com.au`** — small public Calibre & Co. presence
-- **GitHub** — source repository and application change history
+- **private Calibre app** — workshop and item-management application
+- **Supabase** — authentication, cloud state today and progressively more queryable structured records
+- **IndexedDB** — offline/local-first cache and working state
+- **Calibre public site** — catalogue and public Watch Passport presentation
+- **Square** — checkout/payment path
+- **Resend** — transactional email
+- **GitHub** — source, CI and deployment history
 
-Photos and documents should progressively move out of large synced state payloads into proper file storage, with Calibre storing URLs/keys and metadata rather than embedded file data.
+The Core contract should remain stable while persistence becomes more structured underneath it.
 
-## Active build direction
+## Current priority
 
-Current priority is the architecture transition while preserving the working app:
+The project is no longer in an architecture-design phase. The priority is now to **stabilise, prove the end-to-end workflow, then expand the business engine**.
 
-1. define and stabilise the Item/Work model
-2. expand Collection into an Item-first inventory for watches and non-watch stock
-3. add non-watch purchase/research/preparation/sale records
-4. link legacy watch Jobs to stable Items
-5. make finance/business intelligence work across all Item categories
-6. continue media-storage and backup foundations
-7. separate permanent Watch Passport data from service Work records
-8. resume Timegrapher hardware validation when real contact-mic testing is available
-9. build public Passport/domain features after the internal data model is stable
+Current order:
 
-See [`ROADMAP.md`](ROADMAP.md) for the broader roadmap, [`ARCHITECTURE.md`](ARCHITECTURE.md) for the current target architecture, [`docs/PHASE-1.md`](docs/PHASE-1.md) for the established foundation and [`docs/PHASE-2.md`](docs/PHASE-2.md) for Timegrapher signal intelligence.
+1. finish Foundation Lock / documentation reconciliation
+2. run a real Item end-to-end acceptance journey
+3. complete versioned Work Templates and Final QC rules
+4. build the Acquisition Engine
+5. complete canonical Listing Engine and commerce automation
+6. improve operational inventory and finance reconciliation
+7. progressively normalize persistence beneath the existing Core
+8. expand customer outputs and controlled learning
+9. validate hardware workflows, especially the USB Timegrapher microphone and printing bridge
+
+See [`ROADMAP.md`](ROADMAP.md) for future work and [`ARCHITECTURE.md`](ARCHITECTURE.md) for the stable system rules.

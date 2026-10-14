@@ -1,7 +1,7 @@
 # Calibre & Co. — Current Status
 
 **Last reviewed:** 14 October 2026  
-**Baseline:** `main` after release-hardening PR #77  
+**Baseline:** `main` after release hardening; this file is updated through the Foundation Lock finalisation branch.  
 **Rule:** a feature is only marked shipped here when it is present on `main` and the repository test suite is green.
 
 ## Release state
@@ -9,7 +9,7 @@
 - Canonical domain: **Item + Work + Media + Inventory + Knowledge + Ledger**
 - Persisted schema: **6**
 - Primary navigation: **Home · Items · Workbench · Business · Calibre**
-- CI: **green after PR #77**
+- CI: **green**
 - Internal deployment: **test-gated**
 - Public catalogue deployment: **test-gated**
 - Current maturity: **internal alpha / operational workshop system**
@@ -22,9 +22,14 @@
 - first-class Media ownership by Item with optional Work context
 - canonical Inventory, Knowledge, Incoming and Ledger collections
 - schema migrations through version 6
+- no normal-runtime `state.jobs` architecture
+- explicit persistence boundary for retired Job-era top-level fields
+- protection against silently discarding Job-only legacy data
+- non-persisted compatibility views for older Item-page consumers
 - integrity checks and recovery tooling
 - atomic cloud revision protection
 - local safety snapshots and portable backup
+- test-gated deployment
 
 ### Workshop
 - Workbench based on canonical Work
@@ -75,10 +80,10 @@
 
 ## In progress / incomplete
 
-### Foundation Lock final pass
-- persistence boundary still needs a final audit for retired Job-era fields
-- some compatibility aliases remain and should be removed only when their consumers have been migrated
-- old documentation still describes parts of the app as job-first
+### Foundation cleanup
+- migrate the remaining Item-page consumers from convenience names such as `passport` / `business` to direct canonical ownership
+- remove the compatibility views once no consumer needs them
+- add browser-level regression coverage for the most important journeys
 
 ### Workshop completion
 - convert stage paths into explicit versioned Work Templates
@@ -93,7 +98,7 @@
 - retain BPH/rate/beat-error evidence history
 
 ### Listing engine
-- remove remaining Job-shaped assumptions from listing code
+- remove remaining Job-shaped naming/assumptions from listing code
 - build canonical Item + Work + Media + Commerce listing input
 - generate channel-ready eBay / Facebook / public-site copy
 - evidence-safe claims and condition wording
@@ -114,24 +119,31 @@
 - checkout disablement
 - transactional customer email
 
+### Operational inventory and finance
+- inventory receive / consume / fit / return / adjustment / stocktake / write-off transactions
+- exact cost basis and location history where useful
+- marketplace/payment fees, postage, refunds and ledger reconciliation
+- explicit separation of projected and realised financial values
+
 ### Persistence scale
 - progressively move large operational collections from one state blob to queryable Supabase tables
 - preserve the existing Core contract and IndexedDB offline behaviour
 
 ### Acceptance testing
-- complete one real watch end-to-end through acquisition/intake, Work, media, diagnosis, repair, timing, QC, valuation, listing, publish and sold flow
+- complete one real watch end-to-end through intake, Work, media, diagnosis, repair, timing, QC, valuation, listing, publish and sold flow
 - add browser-level smoke tests for the critical user journeys
 
 ## Immediate priority order
 
-1. Finish Release Hardening / Foundation Lock audit.
-2. Reconcile `README.md`, `ROADMAP.md`, `ARCHITECTURE.md` and this status file.
-3. Run one end-to-end acceptance watch and log every friction point.
-4. Complete workshop templates and QC rules.
-5. Build Acquisition Engine.
-6. Complete canonical Listing Engine and commerce automation.
+1. Merge Foundation Lock finalisation with green CI.
+2. Run one end-to-end acceptance watch and log every friction point.
+3. Complete workshop templates and QC rules.
+4. Build Acquisition Engine.
+5. Complete canonical Listing Engine and commerce automation.
+6. Make operational inventory and finance transactional/reconcilable.
 7. Scale persistence beneath the existing Core.
 8. Expand customer outputs and controlled learning.
+9. Validate physical hardware workflows.
 
 ## Release gate for primary business use
 

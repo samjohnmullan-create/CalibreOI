@@ -1,10 +1,10 @@
 # Calibre & Co. — Architecture
 
-_Last revised: 11 October 2026_
+_Last revised: 14 October 2026_
 
 ## Product definition
 
-Calibre is an item lifecycle and workshop operating system for watches, clocks, jewellery, accessories and small collectibles, with a specialist horology layer for watches and clocks.
+Calibre is an item-lifecycle and workshop operating system for watches, clocks, jewellery, accessories and small collectibles, with a specialist horology layer for watches and clocks.
 
 The broad lifecycle is:
 
@@ -99,7 +99,7 @@ ledger[]
 settings
 ```
 
-`js/core.js` is the executable domain contract. `js/store-base.js` owns local persisted-shape migration and normalisation; `js/store-cloud-core.js` owns cloud reconciliation of canonical collections.
+`js/core.js` is the executable domain contract. Local/cloud persistence code owns migration, normalisation, reconciliation and sync metadata; business/workshop logic belongs in domain modules.
 
 Current persisted schema: **6**.
 
@@ -111,7 +111,7 @@ Migration history:
 - schema 5: purchase review suggestions → typed `incoming`; ledger made intentional Core data
 - schema 6: `workshopAssets` → canonical inventory parts/tools/locations
 
-Legacy names may remain inside migration/archive code only. Active runtime code must use canonical owners directly.
+Legacy names may remain only inside explicit migration/import/archive boundaries. Normal runtime must use canonical owners directly.
 
 ---
 
@@ -122,12 +122,15 @@ Calibre has exactly five primary destinations:
 **Home · Items · Workbench · Business · Calibre**
 
 ## Home
+
 Attention only: what needs action now?
 
 ## Items
+
 Everything physical owned or previously owned.
 
 ## Workbench
+
 Active or deliberately queued Work only.
 
 Workbench groups:
@@ -135,9 +138,11 @@ Workbench groups:
 **Now · Next · Waiting · Ready · Queue**
 
 ## Business
+
 Portfolio financial, sourcing and sales intelligence.
 
 ## Calibre
+
 Assistant, Inbox, Capture, Knowledge and Settings.
 
 New features attach to one of these places. They do not automatically create new top-level destinations.
@@ -151,6 +156,7 @@ New features attach to one of these places. They do not automatically create new
 Every Item uses three high-level areas.
 
 ## Work
+
 What am I physically doing?
 
 Watch / clock: **Diagnosis · Service · Measurements · Timing · Parts · QC**
@@ -158,16 +164,18 @@ Watch / clock: **Diagnosis · Service · Measurements · Timing · Parts · QC**
 Jewellery: **Inspect · Clean · Restore · Measurements · QC**
 
 ## Item
+
 What is it?
 
 **Identity · Passport where applicable · Research · Media · History · Documents**
 
 ## Commerce
+
 What did it cost and how do I sell it?
 
 **Costs · Valuation · Listing · Sale**
 
-The three areas are the mental model. Individual sections should not become top-level application navigation.
+These are the mental model. Individual sections should not become top-level application navigation.
 
 ---
 
@@ -175,13 +183,15 @@ The three areas are the mental model. Individual sections should not become top-
 
 Bench-confirmed evidence and sourced external claims are deliberately different.
 
-- `compatibilityEvidence` contains workshop evidence such as `recordType: bench-fit`.
-- `knowledge` contains sourced/reference records such as `reference-fact` and `reference-document`.
+- `compatibilityEvidence` contains workshop evidence such as bench-fit results.
+- `knowledge` contains sourced/reference records.
 - source URL, document ID, confidence, evidence class and verdict remain explicit.
-- family membership or dimensional similarity may suggest a candidate, but do not prove interchangeability.
+- family membership or dimensional similarity may suggest a candidate but do not prove interchangeability.
 - exact factory/shared part references and serial-range-specific evidence outrank general family inference.
 
 Items may reference Knowledge but should not duplicate entire shared Knowledge records.
+
+A learned bench result adds evidence; it does not rewrite factory/reference truth.
 
 ---
 
@@ -197,6 +207,8 @@ Physical workshop resources use one Inventory owner.
 
 QR/Workshop IDs reference these canonical resources. There is no separate `workshopAssets` runtime collection.
 
+Operational inventory will progressively gain transaction history for receive, consume, fit, remove from donor, return, adjustment, stocktake and write-off.
+
 ---
 
 # Device modes
@@ -205,8 +217,8 @@ One application supports four interface densities/modes:
 
 - **Automatic** — default responsive selection
 - **Workstation** — DeX, monitor, desktop, keyboard/mouse; compact and information-dense
-- **Touch** — phone/bench; large targets, reduced simultaneous controls
-- **Capture** — Galaxy Tab/microscope station; capture-first and minimal
+- **Touch** — phone/bench; large targets and fewer simultaneous controls
+- **Capture** — capture/microscope station; capture-first and minimal
 
 Device mode changes presentation, not the underlying data model.
 
@@ -214,9 +226,9 @@ Device mode changes presentation, not the underlying data model.
 
 # Search and commands
 
-Calibre will have one global find/command layer capable of locating Items and Work by name, maker, calibre, serial, status, tag, part or workflow state.
+Calibre has one global find/command layer for locating Items and Work and for fast contextual actions.
 
-Contextual commands may include start Work, capture image, add part, time watch, mark waiting, print label and create listing.
+The command layer belongs to the application shell; it is not another primary destination.
 
 Desktop target shortcut: **Ctrl/Cmd + K**.
 
@@ -224,11 +236,23 @@ Desktop target shortcut: **Ctrl/Cmd + K**.
 
 # Business intelligence
 
-Business analytics operate across all resale Items, not only watches.
+Business analytics operate across resale Items rather than only watches.
 
-Useful outputs include available cash, cash profit, profit after labour, ROI, profit per labour hour, stock age, capital tied up, category/source/channel profitability, realised vs projected profit, average days to sale and restoration uplift.
+Useful outputs include:
 
-`ledger` records real business money movements. Available Cash is derived from ledger movements only; projected Item profit does not alter cash position.
+- projected and realised cash profit
+- profit after labour
+- ROI
+- profit per labour hour
+- stock age
+- capital tied up
+- category/source/channel profitability
+- average days to sale
+- restoration uplift
+- sale readiness
+- best-next-work prioritisation
+
+`ledger` is reserved for real business money movements. Projected Item profit does not alter real cash position.
 
 Tool costs and inventory-resource costs remain separate from Item profitability unless explicitly allocated.
 
@@ -236,15 +260,17 @@ Tool costs and inventory-resource costs remain separate from Item profitability 
 
 # Media
 
-Media is a first-class record. A MediaAsset always belongs to an Item and may optionally belong to a Work record.
+Media is a first-class record. A MediaAsset belongs to an Item and may optionally belong to a Work record.
 
-The Galaxy Tab microscope workflow uses the same MediaAsset model; there is no special Job attachment path.
+Capture, microscope and workshop photography all use the same ownership model; there is no special Job attachment path.
+
+Older Item-page photo convenience structures may remain temporarily while their UI consumers are migrated, but the long-term owner is first-class MediaAsset data.
 
 ---
 
-# Storage direction
+# Persistence
 
-Canonical local/cloud collections are:
+Canonical business collections are:
 
 ```text
 items
@@ -258,23 +284,65 @@ ledger
 settings
 ```
 
-IndexedDB remains useful for offline/local-first behaviour. Supabase remains the cloud/auth platform unless there is a reason to change it.
+IndexedDB remains the local/offline layer. Supabase remains the cloud/auth platform and will progressively hold more queryable structured records.
 
-Persistence code should stay boring: load, migrate, normalise, merge and save. Specialist workshop/business logic belongs in domain modules.
+Persistence code should stay boring:
 
-Foundation Lock removed runtime compatibility aliases used during schema convergence. Old shapes are accepted only at explicit migration/import boundaries.
+**load → migrate → normalise → reconcile → validate → save**
+
+Cloud revision protection uses compare-and-swap semantics so stale devices fail rather than silently overwrite newer state.
+
+Large operational collections may move from the current synced state document to structured Supabase tables later. That is a persistence change beneath Core, not a new Core generation.
 
 ---
 
-# Legacy cutover
+# Compatibility boundary
 
-The active runtime does not load or write `state.jobs`.
+Foundation Lock removed the legacy Job architecture from normal runtime.
 
-Retired active concepts include `currentId` as current Job, legacy/specialist Job IDs, Job mirroring, `workRecords`, top-level `partsStock` / `tools`, `partFitEvidence`, `referenceFacts` / `referenceDocuments`, `purchaseReview`, and `workshopAssets`.
+The active runtime does not read or write `state.jobs` and does not use a Job `currentId`.
 
-Current ownership uses `currentItemId`, `currentWorkId`, direct `work.itemId`, Work-derived history and canonical Inventory / Evidence / Knowledge / Incoming.
+Retired active concepts include:
 
-Legacy conversion code may remain only as explicit archive/import/migration tooling.
+- Job as permanent identity
+- Job mirroring
+- legacy/specialist Job IDs
+- `workRecords`
+- top-level `partsStock` / `tools`
+- `partFitEvidence`
+- `referenceFacts` / `referenceDocuments`
+- `purchaseReview`
+- `workshopAssets`
+
+An explicit persistence boundary may name retired fields only to reject or strip them safely. A Job-only legacy state must never be silently discarded.
+
+Some Item pages still consume convenience property names such as `passport`, `business`, `offers`, `channel` and `watchName`. While those consumers are migrated, these names are exposed as **non-enumerable compatibility views** over canonical Item ownership and are removed before persistence. They are not a second data model.
+
+---
+
+# Work Templates
+
+Current stage paths are the basis for the next workshop hardening step.
+
+Future Work Templates must be versioned and retained on completed Work so historical service records remain understandable after templates evolve.
+
+Task semantics should support:
+
+**Done · Skipped · Blocked**
+
+Templates may define required/optional steps and required Final QC evidence, but should not make routine bench work bureaucratic.
+
+---
+
+# Public catalogue and commerce
+
+The public catalogue is a projection of canonical Item data, not a separate CMS truth source.
+
+Target commerce flow:
+
+**Item → publish → Square checkout → verified webhook → Sold → ledger/history → customer confirmation**
+
+A browser redirect is never authoritative evidence of payment. Payment state must come from verified server-side Square events.
 
 ---
 
@@ -287,11 +355,11 @@ Rules:
 - design tokens live in shared CSS
 - runtime JavaScript must not introduce a competing palette
 - Workstation uses tighter rows, tables, panes and sticky context
-- Touch uses stacked content, large targets and fewer simultaneous controls
+- Touch uses stacked content, larger targets and fewer simultaneous controls
 - breadcrumbs show context
-- avoid creating a giant card for every piece of information
+- avoid giant cards for every piece of information
 
-Runtime-injected component styles may exist during feature development, but reusable styles should migrate into shared CSS when the component stabilises.
+Reusable component styling should migrate into shared CSS once a component stabilises.
 
 ---
 
@@ -301,27 +369,31 @@ Runtime-injected component styles may exist during feature development, but reus
 2. Work never becomes the permanent identity of an Item.
 3. Passport belongs to the Item, not a single service.
 4. Watch-only fields do not pollute generic Item workflows.
-5. Shared financial logic works across all resale categories.
+5. Shared financial logic works across resale categories.
 6. Media references Item and optional Work directly.
 7. Research claims remain evidence-aware and reviewable.
 8. Offline use remains first-class.
-9. No new active feature should depend on the legacy Job model or retired runtime aliases.
+9. No new active feature may depend on the legacy Job model or retired runtime aliases.
 10. Adding a feature does not automatically add a navigation destination.
-11. The user should be able to find important objects and commands quickly.
-12. Calibre should learn from confirmed bench and sales evidence over time.
+11. Important objects and commands must be quick to find.
+12. Calibre may learn from confirmed bench and sales evidence without overwriting provenance.
+13. Persistence changes must not require another product-level architecture rewrite.
+14. Data loss must fail loudly rather than happen silently.
 
 ---
 
-# Current implementation sequence
+# Current implementation direction
 
-Foundation Lock is complete. Next priorities are:
+Architecture design is no longer the main task. Current implementation priorities are:
 
-1. reliability layer: sync/conflict recovery, backups, integrity checks and audit history
-2. Knowledge Engine integration across Passport, Timegrapher, Parts, Workbench and technical documents
-3. Movement Finder
-4. proactive Workbench intelligence
-5. parts/donor intelligence expansion
-6. device modes and hardware workflows
-7. global search/command
-8. Business prioritisation and acquisition intelligence
-9. listing/public Passport/customer layer
+1. finish Foundation Lock consumer cleanup and browser-level regression coverage
+2. prove one real Item end-to-end
+3. version Work Templates and strengthen Final QC
+4. build Acquisition Engine
+5. complete canonical Listing Engine and commerce automation
+6. make inventory/finance transactional and reconcilable
+7. progressively normalize persistence beneath the existing Core
+8. expand customer outputs and controlled learning
+9. validate physical hardware workflows with real devices
+
+See [`STATUS.md`](STATUS.md) for what is shipped and [`ROADMAP.md`](ROADMAP.md) for future work.
