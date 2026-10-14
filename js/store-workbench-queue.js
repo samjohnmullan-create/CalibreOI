@@ -1,6 +1,7 @@
 import * as base from './store-local-fast.js?v=3';
 import {currentWork} from './work-model.js?v=2';
 import {readCloudState} from './cloud.js?v=5';
+import {stripRetiredTopLevel} from './persistence-boundary.js?v=1';
 export * from './store-local-fast.js?v=3';
 
 const ITEM_PAGES=new Set(['item.html','passport.html','business.html','sales.html','documents.html']);
@@ -62,7 +63,7 @@ function mergeCanonical(local,remote){
   if(Array.isArray(remote.work))local.work=remote.work;
   if(remote.currentItemId!==undefined)local.currentItemId=remote.currentItemId||'';
   if(remote.currentWorkId!==undefined)local.currentWorkId=remote.currentWorkId||'';
-  return local;
+  return stripRetiredTopLevel(local);
 }
 
 export function current(state,loc=typeof location!=='undefined'?location:null){
@@ -76,7 +77,7 @@ export function current(state,loc=typeof location!=='undefined'?location:null){
 }
 
 export async function loadState(){
-  let state=await base.loadState();
+  let state=stripRetiredTopLevel(await base.loadState());
   if(!state)state={items:[],work:[]};
   state.items=Array.isArray(state.items)?state.items:[];
   state.work=Array.isArray(state.work)?state.work:[];
@@ -87,13 +88,13 @@ export async function loadState(){
       if(cloud?.signedIn&&cloud.state)state=mergeCanonical(state,cloud.state);
     }catch(err){console.warn('Canonical Item cloud read deferred',err);}
   }
-  return state;
+  return stripRetiredTopLevel(state);
 }
 
 export async function saveState(state){
   state.items=Array.isArray(state.items)?state.items:[];
   state.work=Array.isArray(state.work)?state.work:[];
   for(const item of state.items)normaliseItemCompatibility(item);
-  return base.saveState(state);
+  return base.saveState(stripRetiredTopLevel(state));
 }
 export async function importInboxItems(items){return base.importInboxItems(items);}
