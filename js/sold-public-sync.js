@@ -27,5 +27,7 @@ export async function syncSoldPublicRecord(){
   }finally{syncing=false;}
 }
 
-window.addEventListener('calibre:sale-updated',()=>syncSoldPublicRecord().catch(error=>console.warn('Sold public sync failed',error)));
+const requestSync=()=>syncSoldPublicRecord().catch(error=>console.warn('Sold public sync failed',error));
+document.addEventListener('calibre:sale-updated',requestSync);
+window.addEventListener('calibre:sale-updated',requestSync);
 setTimeout(()=>syncSoldPublicRecord().catch(()=>{}),300);
