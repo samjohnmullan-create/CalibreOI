@@ -1,6 +1,6 @@
 # Calibre & Co. — Roadmap
 
-_Last revised: 14 October 2026_
+_Last revised: 15 October 2026_
 
 This file contains **future work only**. Shipped capability belongs in [`STATUS.md`](STATUS.md); stable system rules belong in [`ARCHITECTURE.md`](ARCHITECTURE.md).
 
@@ -18,21 +18,30 @@ For watches and clocks:
 
 ---
 
-## Phase 1 — Foundation Lock finalisation
+## Phase 1 — Foundation Lock finalisation and live-schema reconciliation
 
-Goal: finish removing the remaining compatibility scaffolding without destabilising the working Core.
+Goal: make GitHub, the deployed app and the live `Calibre v2` Supabase project agree before further feature expansion.
+
+The live database is currently ahead of the repo baseline. It already contains bench sessions, Work-step media links, safe inventory archive/restore primitives and append-only ledger hardening. Those capabilities must be reconciled deliberately rather than treated as untracked backend state.
 
 Remaining work:
 
+- pin a generated TypeScript database-type snapshot from the live Supabase v2 project
+- audit live migration history against app assumptions and document the authoritative schema boundary
+- connect `work_sessions`, `start_work_session(...)` and `finish_work_session(...)` into Work/Workbench only after regression coverage exists
+- expose `archive_inventory_entity(...)` and `restore_inventory_entity(...)` through a clear Archive / Trash experience for Item, Part, Tool and Consumable inventory
+- archived records must disappear from normal operational lists, matching and search unless the user explicitly opens Archive
+- restoration must preserve identity, cost, provenance and history
+- avoid destructive delete for records with historical, financial or provenance value
 - finish migrating consumers away from legacy convenience names such as `passport` / `business`
-- keep those compatibility properties non-enumerable and non-persisted until the last consumer is migrated
+- keep compatibility properties non-enumerable and non-persisted until the last consumer is migrated
 - remove or archive stale unused Job-era browser modules
 - audit explicit import/archive boundaries for retired Job-era data
 - keep both internal and public deployments blocked on failed tests
-- maintain `STATUS.md` as the repo-confirmed scoreboard
+- maintain `STATUS.md` as the repo-confirmed scoreboard, with live-database capability called out separately until reconciled
 - add browser-level smoke tests for critical journeys
 
-Exit condition: no normal-runtime Job architecture, no persisted compatibility aliases, documentation matches `main`, critical journeys have automated browser coverage.
+Exit condition: repo documentation matches the deployed system, live database primitives are either consumed or intentionally parked, no normal-runtime Job architecture remains, no persisted compatibility aliases remain, and critical journeys have automated browser coverage.
 
 ---
 
@@ -51,7 +60,9 @@ The acceptance watch should deliberately exercise:
 - Awaiting Parts
 - donor/parts suggestions and actual fitting
 - write-off / donor-spares behaviour
+- archive and restore behaviour without deleting history
 - media upload and reload
+- bench-session / labour capture
 - timegrapher run history
 - commercial values and labour
 - Final QC completion gate
@@ -73,7 +84,7 @@ Remaining work:
 - task state: **Done · Skipped · Blocked**
 - required versus optional tasks beyond the existing Final QC gate
 - more structured observations and measurements where they improve later evidence
-- consistent labour capture throughout Work
+- consistent labour capture throughout Work, using bench sessions where practical
 - template version retained on completed Work so old service history remains interpretable
 
 Do not introduce a new Job object.
@@ -120,6 +131,7 @@ Add explicit movements for:
 - adjustment
 - stocktake
 - write-off
+- archive / restore events where they affect operational availability
 
 The existing parts-fit flow already consumes stock/donor sources; this phase generalises that into an auditable transaction history. Track storage location and cost basis where relevant.
 
@@ -269,9 +281,11 @@ Add a small Playwright suite around the highest-value journeys:
 1. create Item → start Work
 2. capture/upload media → save → reload
 3. Needs Parts → donor/parts matching → fit → resume
-4. Final QC → listing snapshot / publish readiness
-5. acquisition candidate → Purchased → Item
-6. cloud/reload or mocked sync conflict path
+4. archive inventory entity → disappears from active lists → restore → history intact
+5. start bench session → finish session → labour/history preserved
+6. Final QC → listing snapshot / publish readiness
+7. acquisition candidate → Purchased → Item
+8. cloud/reload or mocked sync conflict path
 
 The existing unit/source/syntax tests remain useful; browser tests prove the pieces work together.
 
@@ -283,11 +297,13 @@ Calibre becomes the primary business operating system when:
 
 - repository tests are green
 - failed tests block deployment
+- repo and live Supabase schema/documentation agree
 - backup export and restore are proven
 - cloud conflict handling is proven
 - two-device sync is proven
 - a real acceptance watch passes end-to-end
 - phone / DeX / desktop smoke checks pass
 - finance totals reconcile against real transactions
+- archive/restore behaviour is proven and destructive delete is controlled
 - no normal-runtime Job architecture remains
-- project documentation reflects actual `main`
+- project documentation reflects actual deployed behaviour
