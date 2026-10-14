@@ -33,7 +33,7 @@ export function canonicalPartInventory(state={}){
 
 export function partMatchSummary(work,state={}){
   if(!work)return {inventory:[],donors:[],history:[]};
-  const stock=canonicalPartInventory(state).filter(part=>String(part.workId||'')!==String(work.id)&&part.status!=='used'&&Number(part.quantity)!==0);
+  const stock=canonicalPartInventory(state).filter(part=>!part.workId&&!['used','fitted'].includes(part.status)&&Number(part.quantity)!==0);
   return {
     inventory:inventoryMatches(work,stock,state),
     donors:donorMatches(work,donorSources(state),state),
