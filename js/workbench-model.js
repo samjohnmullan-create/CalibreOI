@@ -20,4 +20,22 @@ function stageProgress(work={}){
 }
 function needsParts(work={}){const blocker=String(work.blocker||'').toLowerCase();return work.status==='Waiting'&&(blocker.includes('part')||Array.isArray(work.partIds)&&work.partIds.length>0)||blocker.includes('part');}
 export function workbenchEntries(state={}){const items=allItems(state),entries=[],works=Array.isArray(state.work)?state.work:[];for(const raw of works){const work=normaliseWork(raw);if(!work.id||!work.itemId)continue;const item=items.find(candidate=>String(candidate.id)===String(work.itemId));if(!item)continue;const queued=!['Complete','Cancelled'].includes(work.status)&&work.workbenchHidden===true,commercial=item.commercial||{},stage=stageProgress(work);entries.push({key:`work:${work.id}`,kind:'work',sourceId:work.id,workId:work.id,itemId:item.id,title:itemDisplayName(item),subtitle:[work.title||'Work',work.status||'Planned'].filter(Boolean).join(' · '),workTitle:work.title||'Work',status:work.status||'Planned',group:queued?'Queue':(WORK_GROUP[work.status]||'Needs attention'),queued,priority:!!work.priority,nextAction:workNextAction(work),diagnosis:work.diagnosis||'',blockers:blockersFor(work),needsParts:needsParts(work),stageName:stage.stageName,stageIndex:stage.stageIndex,stageCount:stage.stageCount,doneStages:stage.doneStages,progressPct:stage.progressPct,cover:coverFor(item),cashIn:itemCost(item),targetSale:num(commercial.targetSale),potential:potentialProfit(item),ageDays:daysSince(commercial.acquiredAt||item.createdAt),openHref:`work.html?id=${encodeURIComponent(work.id)}`});}return entries;}
-export function mutateWorkbenchEntry(state={},entry,action){if(!entry?.workId&&!entry?.sourceId)return false;const id=entry.workId||entry.sourceId,target=(state.work||[]).find(work=>String(work.id)===String(id));if(!target)return false;if(action==='priority')target.priority=!target.priority;if(action==='bench')target.workbenchHidden=!target.workbenchHidden;if(action==='wait'){target.status='Waiting';if(!target.blocker)target.blocker='Waiting on parts';}target.updatedAt=new Date().toISOString();return true;}
+export function mutateWorkbenchEntry(state={},entry,action){
+  if(!entry?.workId&&!entry?.sourceId)return false;
+  const id=entry.workId||entry.sourceId,target=(state.work||[]).find(work=>String(work.id)===String(id));
+  if(!target)return false;
+  if(action==='priority')target.priority=!target.priority;
+  if(action==='bench'){
+    const wasQueued=target.workbenchHidden===true;
+    target.workbenchHidden=!wasQueued;
+    if(wasQueued&&target.status==='Planned')target.status='In progress';
+    else if(!wasQueued&&target.status==='In progress')target.status='Planned';
+  }
+  if(action==='wait'){
+    target.workbenchHidden=false;
+    target.status='Waiting';
+    if(!target.blocker)target.blocker='Waiting on parts';
+  }
+  target.updatedAt=new Date().toISOString();
+  return true;
+}
