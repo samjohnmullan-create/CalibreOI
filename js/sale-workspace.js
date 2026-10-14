@@ -22,7 +22,7 @@ export function resolveSaleContext(state={},requested={}){
 }
 
 export function saleMediaCandidates(item={}){
-  return (Array.isArray(item.mediaAssets)?item.mediaAssets:[]).filter(asset=>asset&&!asset.deletedAt&&(String(asset.mimeType||'').startsWith('image/')||asset.url||asset.thumbnailUrl||asset.storageKey)).map(asset=>({id:String(asset.id||''),src:asset.thumbnailUrl||asset.url||'',label:asset.caption||asset.originalName||asset.role||asset.category||'Photo',role:asset.role||'',category:asset.category||''})).filter(row=>row.id&&row.src);
+  return (Array.isArray(item.mediaAssets)?item.mediaAssets:[]).filter(asset=>asset&&!asset.deletedAt&&(String(asset.mimeType||'').startsWith('image/')||asset.url||asset.thumbnailUrl||asset.storageKey||asset.thumbnailStorageKey)).map(asset=>({id:String(asset.id||''),src:asset.thumbnailUrl||asset.url||'',label:asset.caption||asset.originalName||asset.role||asset.category||'Photo',role:asset.role||'',category:asset.category||'',asset})).filter(row=>row.id);
 }
 
 export function ensureSale(item={}){
