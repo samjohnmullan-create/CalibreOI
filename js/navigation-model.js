@@ -39,7 +39,7 @@ export const CALIBRE_SECTIONS = [
 ];
 
 export const PAGE_HOME = Object.freeze({
-  'index.html':'home','inventory.html':'items','item.html':'items','workbench.html':'workbench','work.html':'workbench','passport.html':'items','timegrapher.html':'workbench','suppliers.html':'workbench','business.html':'business','sales.html':'items','documents.html':'items','finance.html':'business','calibre.html':'calibre','assistant.html':'calibre','capture.html':'calibre','news.html':'calibre','knowledge-admin.html':'calibre','movement-finder.html':'calibre','reference-library.html':'calibre','settings.html':'calibre'
+  'index.html':'home','inventory.html':'items','item.html':'items','workbench.html':'workbench','work.html':'workbench','passport.html':'items','timegrapher.html':'workbench','suppliers.html':'workbench','business.html':'business','sales.html':'items','documents.html':'items','finance.html':'business','acquisition.html':'business','calibre.html':'calibre','assistant.html':'calibre','capture.html':'calibre','news.html':'calibre','knowledge-admin.html':'calibre','movement-finder.html':'calibre','reference-library.html':'calibre','settings.html':'calibre'
 });
 
 export const ITEM_WORKSPACE_ROUTES = Object.freeze({
