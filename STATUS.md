@@ -1,7 +1,7 @@
 # Calibre & Co. — Current Status
 
 **Last reviewed:** 14 October 2026  
-**Baseline:** `main` after release hardening; this file is updated through the Foundation Lock finalisation branch.  
+**Baseline:** `main` after PR #84, commercial acceptance hardening.  
 **Rule:** a feature is only marked shipped here when it is present on `main` and the repository test suite is green.
 
 ## Release state
@@ -31,15 +31,27 @@
 - local safety snapshots and portable backup
 - test-gated deployment
 
-### Workshop
+### Workshop lifecycle
 - Workbench based on canonical Work
-- watch/clock workflow routing
-- manual, automatic, pocket-watch, quartz, clock and inspection paths
-- bench measurements
-- diagnostic intelligence
+- newly planned Work defaults to Queue rather than active bench work
+- explicit Queue → Add to bench → In progress lifecycle
+- cancelling Work preserves workshop history
+- explicit Item write-off to Donor / Spares without deleting Work history
+- donor Items remain visible to compatibility intelligence
+- manual, automatic, pocket-watch, quartz, clock and inspection workflow routing
+- bench measurements and diagnostic intelligence
 - parts-needed workflow
 - donor intelligence and donor-combine leads
-- Final QC support
+- required-part lifecycle: Needed → Sourced → Received → Fitted
+- loose-stock consumption on fitting
+- donor-part usage recorded against the donor Item
+- fitted parts preserved on Work as parts-used history
+- successful fitted sources automatically become bench compatibility evidence
+- Waiting Work resumes only when all required parts are on hand
+- real Final QC completion gate
+- completion blocked by unanswered/failed QC, unfitted required parts, Waiting state or unresolved blockers
+- claimed final timing requires a usable saved timing run
+- both Complete and Status=Complete-save routes use the same completion gate
 - service-history / repair-timeline support
 
 ### Identification and knowledge
@@ -59,17 +71,25 @@
 - device-mode handling for phone / touch / workstation-style use
 - hardware capability layer
 
-### Business and commerce
+### Business and commercial lifecycle
 - Item economics
 - finance dashboard
 - Business Brain prioritisation
 - potential and realised profit calculations
 - labour-aware profit measures
 - stock age / capital tied-up signals
-- sale readiness
-- listing photo pack / sale handoff
-- public catalogue and public watch Passport pages
-- Square Payment Link support
+- canonical Sale workspace based on Item + Work rather than legacy Job ownership
+- Item-owned listing copy, pricing, offers, channel strategy and commercial state
+- Item-media listing photo pack with private archive thumbnail support
+- Sale readiness tied to completed Work/QC, final condition, workshop record, listing copy, photo pack and target price
+- channel-ready Facebook, eBay and Calibre & Co. website copy generation
+- public catalogue / public Passport publishing from Item data plus selected Work evidence
+- explicit public fact and photo controls
+- Square Payment Link support keyed to Item identity
+- legacy public rows keyed to Work ID are migrated when encountered
+- Sold updates the permanent Item and creates one idempotent sale ledger receipt
+- manually marking Sold closes public availability and removes public checkout
+- public `for_sale` publication is blocked until canonical sale readiness passes
 
 ### Search and usability
 - canonical navigation shell
@@ -81,27 +101,21 @@
 ## In progress / incomplete
 
 ### Foundation cleanup
-- migrate the remaining Item-page consumers from convenience names such as `passport` / `business` to direct canonical ownership
-- remove the compatibility views once no consumer needs them
+- migrate remaining convenience aliases such as `passport` / `business` away from older consumers
+- remove compatibility views once no consumer needs them
+- remove or archive stale, unused Job-era browser modules
 - add browser-level regression coverage for the most important journeys
 
-### Workshop completion
+### Workshop refinement
 - convert stage paths into explicit versioned Work Templates
 - structured task states: Done / Skipped / Blocked
-- stronger required-QC gating
-- consistent labour capture
-- consistent parts-used transaction capture
+- consistent labour capture throughout Work
+- richer inventory transaction history beyond fitted-part consumption
 
 ### Timegrapher
 - validate the incoming USB microphone on Android / DeX / desktop
-- tune only from real microphone evidence
+- tune detector behaviour only from real microphone evidence
 - retain BPH/rate/beat-error evidence history
-
-### Listing engine
-- remove remaining Job-shaped naming/assumptions from listing code
-- build canonical Item + Work + Media + Commerce listing input
-- generate channel-ready eBay / Facebook / public-site copy
-- evidence-safe claims and condition wording
 
 ### Acquisition engine
 - auction-lot intake
@@ -114,13 +128,12 @@
 ### Commerce automation
 - secure server-created Square checkout
 - verified Square webhook handling
-- automatic Sold state
-- ledger update
-- checkout disablement
+- webhook-authoritative automatic Sold state
+- payment/fee reconciliation
 - transactional customer email
 
 ### Operational inventory and finance
-- inventory receive / consume / fit / return / adjustment / stocktake / write-off transactions
+- inventory receive / return / adjustment / stocktake / write-off transactions
 - exact cost basis and location history where useful
 - marketplace/payment fees, postage, refunds and ledger reconciliation
 - explicit separation of projected and realised financial values
@@ -129,21 +142,23 @@
 - progressively move large operational collections from one state blob to queryable Supabase tables
 - preserve the existing Core contract and IndexedDB offline behaviour
 
-### Acceptance testing
-- complete one real watch end-to-end through intake, Work, media, diagnosis, repair, timing, QC, valuation, listing, publish and sold flow
-- add browser-level smoke tests for the critical user journeys
+### Real-device acceptance
+- run one real watch from intake through queue, bench, parts if needed, repair, timing, QC, valuation, listing, publish and sold flow
+- verify the same record on phone, DeX/workstation and a second device
+- verify private photo previews/public photo publishing using real captured media
+- verify backup restore and cloud-conflict behaviour in practice
+- add browser-level smoke tests for the critical journeys
 
 ## Immediate priority order
 
-1. Merge Foundation Lock finalisation with green CI.
-2. Run one end-to-end acceptance watch and log every friction point.
-3. Complete workshop templates and QC rules.
-4. Build Acquisition Engine.
-5. Complete canonical Listing Engine and commerce automation.
-6. Make operational inventory and finance transactional/reconcilable.
-7. Scale persistence beneath the existing Core.
-8. Expand customer outputs and controlled learning.
-9. Validate physical hardware workflows.
+1. Run a real physical end-to-end acceptance watch on the deployed build and log every friction point.
+2. Build the Acquisition Engine.
+3. Make inventory and finance fully transactional/reconcilable.
+4. Complete secure Square checkout creation + verified webhook automation.
+5. Introduce versioned Work Templates and richer task states.
+6. Scale persistence beneath the existing Core only when usage/data volume justifies it.
+7. Expand customer documents / Passport outputs and controlled learning.
+8. Validate USB timegrapher microphone and printing/QR hardware on phone + DeX.
 
 ## Release gate for primary business use
 
@@ -154,7 +169,7 @@ Calibre should become the primary operating system only when all of the followin
 - backup export and restore proven
 - cloud conflict behaviour proven
 - two-device sync proven
-- end-to-end acceptance watch passes
+- one real end-to-end acceptance watch passes
 - mobile / DeX / desktop smoke checks pass
 - finance totals reconcile against real transactions
 - no normal-runtime Job architecture remains
