@@ -18,9 +18,9 @@ For watches and clocks:
 
 ---
 
-## Phase 1 — Foundation cleanup
+## Phase 1 — Foundation Lock finalisation
 
-Goal: finish removing compatibility scaffolding without destabilising the working Core.
+Goal: finish removing the remaining compatibility scaffolding without destabilising the working Core.
 
 Remaining work:
 
