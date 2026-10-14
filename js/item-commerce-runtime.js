@@ -5,21 +5,6 @@ const $=id=>document.getElementById(id);
 const saleFields=['targetSale','minSale','actualSale','saleChannel','listedAt','soldAt'];
 let timer=null,saving=false;
 
-function linkedJobs(state,item){
-  return Array.isArray(state.jobs)?state.jobs.filter(job=>String(job?.itemId||'')===String(item.id)):[];
-}
-function copyCommercialToLegacyJobs(state,item){
-  const c=item.commercial||{};
-  for(const job of linkedJobs(state,item)){
-    job.business=job.business&&typeof job.business==='object'?job.business:{};
-    for(const key of ['purchasePrice','buyerPremium','postage','partsCost','consumables','externalService','marketplaceFees','shippingToBuyer','otherCost','labourMinutes','labourRate','minSale','targetSale','actualSale']){
-      if(c[key]!==undefined)job.business[key]=c[key];
-    }
-    job.business.soldDate=c.soldAt||job.business.soldDate||'';
-    job.channel=c.saleChannel||job.channel||'Not listed';
-    job.updatedAt=new Date().toISOString();
-  }
-}
 async function mutateCurrent(mutator,message='Saved'){
   if(!itemId||saving)return;
   saving=true;
@@ -32,7 +17,6 @@ async function mutateCurrent(mutator,message='Saved'){
     item.commercial=item.commercial&&typeof item.commercial==='object'?item.commercial:{};
     await mutator(item,state);
     item.updatedAt=new Date().toISOString();
-    copyCommercialToLegacyJobs(state,item);
     await saveState(state);
     const msg=$('msg');if(msg)msg.textContent=message;
   }catch(error){
