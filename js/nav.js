@@ -31,7 +31,7 @@ if(!document.querySelector('script[data-calibre-cloud-auto]')){
 }
 if(here==='work.html'){
   if(!document.querySelector('link[data-calibre-work-workspace]')){const workCss=document.createElement('link');workCss.rel='stylesheet';workCss.href='css/work-workspace.css?v=1';workCss.dataset.calibreWorkWorkspace='1';document.head.appendChild(workCss);}
-  if(!document.querySelector('script[data-calibre-work-workspace]')){const workUi=document.createElement('script');workUi.type='module';workUi.src='js/work-ui-runtime.js?v=1';workUi.dataset.calibreWorkWorkspace='1';document.head.appendChild(workUi);}
+  if(!document.querySelector('script[data-calibre-work-workspace]')){const workUi=document.createElement('script');workUi.type='module';workUi.src='js/work-ui-runtime.js?v=2';workUi.dataset.calibreWorkWorkspace='1';document.head.appendChild(workUi);}
 }
 if(here==='item.html'){
   if(!document.querySelector('link[data-calibre-item-workspace]')){const itemCss=document.createElement('link');itemCss.rel='stylesheet';itemCss.href='css/item-workspace.css?v=1';itemCss.dataset.calibreItemWorkspace='1';document.head.appendChild(itemCss);}
@@ -39,7 +39,7 @@ if(here==='item.html'){
   if(!document.querySelector('script[data-calibre-item-commerce]')){const commerceUi=document.createElement('script');commerceUi.type='module';commerceUi.src='js/item-commerce-runtime.js?v=1';commerceUi.dataset.calibreItemCommerce='1';document.head.appendChild(commerceUi);}
 }
 if(here==='suppliers.html'){
-  if(!document.querySelector('script[data-calibre-parts-intelligence]')){const partsUi=document.createElement('script');partsUi.type='module';partsUi.src='js/parts-ui-runtime.js?v=1';partsUi.dataset.calibrePartsIntelligence='1';document.head.appendChild(partsUi);}
+  if(!document.querySelector('script[data-calibre-parts-intelligence]')){const partsUi=document.createElement('script');partsUi.type='module';partsUi.src='js/parts-ui-runtime.js?v=2';partsUi.dataset.calibrePartsIntelligence='1';document.head.appendChild(partsUi);}
   if(!document.querySelector('script[data-calibre-reference-intelligence]')){const refUi=document.createElement('script');refUi.type='module';refUi.src='js/reference-ui-runtime.js?v=1';refUi.dataset.calibreReferenceIntelligence='1';document.head.appendChild(refUi);}
 }
 if(here==='timegrapher.html'&&!document.querySelector('script[data-calibre-timegrapher-audit]')){const timingUi=document.createElement('script');timingUi.type='module';timingUi.src='js/timegrapher-audit-runtime.js?v=1';timingUi.dataset.calibreTimegrapherAudit='1';document.head.appendChild(timingUi);}
