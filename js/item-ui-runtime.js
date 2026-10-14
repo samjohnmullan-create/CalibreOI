@@ -1,5 +1,6 @@
-import {loadState} from './store.js?v=26';
+import {loadState,saveState} from './store.js?v=26';
 import {submitResearchRequest} from './research-request.js?v=3';
+import {writeOffItemToDonor} from './item-lifecycle.js?v=1';
 
 const tabs=document.getElementById('itemTabs');
 const head=document.querySelector('.item-head');
@@ -25,6 +26,33 @@ if(tabs&&head){
   quick.innerHTML=`${itemId?`<button class="btn" id="requestResearch" type="button">Request research</button><a class="btn secondary" href="workbench.html">Workbench</a><a class="btn secondary" href="passport.html?id=${encodeURIComponent(itemId)}">Passport</a><a class="btn secondary" href="capture.html?item=${encodeURIComponent(itemId)}">Capture</a>`:`<a class="btn secondary" href="workbench.html">Workbench</a>`}`;
   if(back){back.replaceWith(quick);quick.appendChild(back);back.textContent='Items';}
   else head.appendChild(quick);
+
+  const bottomActions=document.querySelector('.item-actions');
+  const archiveButton=document.getElementById('archive');
+  if(itemId&&bottomActions&&archiveButton&&!document.getElementById('moveToDonor')){
+    const donorButton=document.createElement('button');
+    donorButton.id='moveToDonor';
+    donorButton.type='button';
+    donorButton.className='btn secondary';
+    donorButton.textContent='Move to donor/spares';
+    donorButton.title='Keep this Item as owned donor stock and close any active Work';
+    bottomActions.insertBefore(donorButton,archiveButton);
+    donorButton.onclick=async()=>{
+      if(!confirm('Move this Item to donor/spares? Active Work will be cancelled, but all history will be kept.'))return;
+      donorButton.disabled=true;donorButton.textContent='Moving…';
+      try{
+        const state=await loadState();
+        const result=writeOffItemToDonor(state,itemId,{reason:'Closed when Item moved to donor/spares'});
+        await saveState(state);
+        location.href=`item.html?id=${encodeURIComponent(result.item.id)}&tab=record`;
+      }catch(error){
+        console.warn('Donor/spares write-off failed',error);
+        const msg=document.getElementById('msg');
+        if(msg)msg.textContent=error?.message||'Item could not be moved to donor/spares.';
+        donorButton.disabled=false;donorButton.textContent='Move to donor/spares';
+      }
+    };
+  }
 
   const researchBar=document.createElement('div');
   researchBar.className='item-research-ref';
