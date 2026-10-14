@@ -73,6 +73,53 @@ Existing source record IDs were preserved where possible. Workspace/user ownersh
 
 The Waltham's 16 historical checklist snapshots and five Work events were preserved. Historical checklist rows are intentionally not rebound to newly seeded template IDs.
 
+## Checkpoint 2 — Parts / tools / consumables foundation
+
+**Status: complete for current live data**
+
+### Schema now present on the target
+
+- parts
+- tools
+- consumables
+- work_part_needs
+
+All four tables use workspace-scoped RLS and explicit authenticated grants. The tables include archive fields needed by the planned Archive / Trash UI.
+
+Migration applied:
+
+- `005_inventory_parts_tools_foundation`
+
+The `parts.knowledge_part_ref_id` column is retained as a bridge field but deliberately has no FK. The consolidated backend's authoritative Knowledge system remains the existing `calibre_kb_*` model, so v2's separate `knowledge_part_refs` table was not recreated merely to satisfy an old foreign key.
+
+### Inventory reconciliation
+
+Current live v2 data for this slice is intentionally small:
+
+| Record | Source v2 | Target | Result |
+| --- | ---: | ---: | --- |
+| Parts | 1 | 1 | Match |
+| Work part needs | 1 | 1 | Match |
+| Tools | 0 | 0 | Match |
+| Consumables | 0 | 0 | Match |
+| Part allocations | 0 | 0 | No transfer required |
+| Part applications | 0 | 0 | No transfer required |
+| Part fit evidence | 0 | 0 | No transfer required |
+| Part fit verifications | 0 | 0 | No transfer required |
+| Item relationships | 0 | 0 | No transfer required |
+
+The single live Part and single open Part Need were transferred with their existing IDs preserved.
+
+### Security check
+
+Supabase Security Advisor was run after the inventory migration. It reported no new warnings caused by these tables. Remaining warnings are pre-existing items concerning:
+
+- a legacy function with mutable `search_path`
+- the existing research media grant `SECURITY DEFINER` function
+- leaked-password protection being disabled in Auth
+
+Those are being kept separate from the reconciliation work so unrelated security changes are not mixed into migration checkpoints.
+
 ## Safety boundary retained
 
 The following existing systems have not been replaced or destructively modified:
@@ -88,11 +135,9 @@ The separate `Calibre v2` project remains intact as the reference source.
 
 ## Next consolidation slice
 
-1. Parts / donor inventory and compatibility evidence.
-2. Tools and consumables.
-3. Purchases / invoices / receiving / storage-move history.
-4. Costs / valuations / sales / business ledger.
-5. Safe archive/restore RPCs on the consolidated target.
-6. Reconcile counts and financial totals again before frontend ownership changes.
-
-Only after those checks should the app bridge begin reading structured records for Bench Mode, Archive/Restore and bench sessions.
+1. Purchases / invoices / receiving / storage-move history.
+2. Costs / valuations / sales / business ledger.
+3. Safe archive/restore RPCs on the consolidated target.
+4. Reconcile counts and financial totals again.
+5. Add the application bridge for structured reads/writes.
+6. Begin Bench Mode, Archive/Restore and bench-session UI only after that reconciliation passes.
