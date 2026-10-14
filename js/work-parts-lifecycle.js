@@ -15,15 +15,7 @@ export function partReadiness(state={},work={}){
   const open=requirements.filter(part=>!['received','fitted','used'].includes(part.status));
   const ready=requirements.filter(part=>['received','fitted','used'].includes(part.status));
   const fitted=requirements.filter(part=>['fitted','used'].includes(part.status));
-  return {
-    requirements,
-    total:requirements.length,
-    open:open.length,
-    ready:ready.length,
-    fitted:fitted.length,
-    allReady:requirements.length>0&&open.length===0,
-    allFitted:requirements.length>0&&fitted.length===requirements.length
-  };
+  return {requirements,total:requirements.length,open:open.length,ready:ready.length,fitted:fitted.length,allReady:requirements.length>0&&open.length===0,allFitted:requirements.length>0&&fitted.length===requirements.length};
 }
 
 function requirementById(state,work,requirementId){
@@ -49,15 +41,10 @@ function sourceLabel(state,source={}){
 export function assignRequirementSource(state,work,requirementId,source={}){
   if(!['stock','donorItem','external'].includes(source.sourceType))throw new Error('Choose a valid part source.');
   if(source.sourceType!=='external'&&!source.sourceId)throw new Error('Choose a source first.');
-  const requirement=requirementById(state,work,requirementId),at=now();
-  requirement.fulfilment={
-    sourceType:source.sourceType,
-    sourceId:text(source.sourceId),
-    sourcePartId:text(source.sourcePartId||source.partId),
-    label:source.label||sourceLabel(state,source),
-    selectedAt:at,
-    receivedAt:source.sourceType==='external'?'':at
-  };
+  const requirement=requirementById(state,work,requirementId);
+  if(['fitted','used'].includes(requirement.status))throw new Error('A fitted part source cannot be changed.');
+  const at=now();
+  requirement.fulfilment={sourceType:source.sourceType,sourceId:text(source.sourceId),sourcePartId:text(source.sourcePartId||source.partId),label:source.label||sourceLabel(state,source),selectedAt:at,receivedAt:source.sourceType==='external'?'':at};
   requirement.status=source.sourceType==='external'?'sourced':'received';
   requirement.updatedAt=at;
   work.updatedAt=at;
@@ -67,24 +54,14 @@ export function assignRequirementSource(state,work,requirementId,source={}){
 function recordUsedPart(work,requirement,fulfilment,at){
   work.partsUsed=Array.isArray(work.partsUsed)?work.partsUsed:[];
   const existing=work.partsUsed.find(row=>String(row.requirementId)===String(requirement.id));
-  const entry={
-    requirementId:String(requirement.id),
-    name:requirement.name||'Part',
-    reference:requirement.reference||'',
-    quantity:qty(requirement.quantity),
-    sourceType:fulfilment?.sourceType||'external',
-    sourceId:text(fulfilment?.sourceId),
-    sourceLabel:fulfilment?.label||'External source',
-    fittedAt:at
-  };
+  const entry={requirementId:String(requirement.id),name:requirement.name||'Part',reference:requirement.reference||'',quantity:qty(requirement.quantity),sourceType:fulfilment?.sourceType||'external',sourceId:text(fulfilment?.sourceId),sourceLabel:fulfilment?.label||'External source',fittedAt:at};
   if(existing)Object.assign(existing,entry);else work.partsUsed.push(entry);
   return entry;
 }
 
 function consumeStock(state,requirement,fulfilment,at){
   const source=(state.inventory?.parts||[]).find(row=>String(row.id)===String(fulfilment.sourceId));
-  if(!source||source.workId)return;
-  if(fulfilment.consumedAt)return;
+  if(!source||source.workId||fulfilment.consumedAt)return;
   const remaining=Math.max(0,(Number(source.quantity)||0)-qty(requirement.quantity));
   source.quantity=remaining;
   if(remaining===0)source.status='used';
@@ -97,24 +74,17 @@ function consumeDonor(state,work,requirement,fulfilment,at){
   if(!donor||fulfilment.consumedAt)return;
   donor.watch=donor.watch&&typeof donor.watch==='object'?donor.watch:{};
   donor.watch.sparesParts=Array.isArray(donor.watch.sparesParts)?donor.watch.sparesParts:[];
-  donor.watch.sparesParts.push({
-    id:`donor-use-${Date.now().toString(36)}${Math.random().toString(36).slice(2,6)}`,
-    name:requirement.name||'Part',
-    reference:requirement.reference||'',
-    quantity:0,
-    used:true,
-    keep:false,
-    targetWorkId:String(work.id||''),
-    removedAt:at
-  });
+  donor.watch.sparesParts.push({id:`donor-use-${Date.now().toString(36)}${Math.random().toString(36).slice(2,6)}`,name:requirement.name||'Part',reference:requirement.reference||'',quantity:0,used:true,keep:false,targetWorkId:String(work.id||''),removedAt:at});
   donor.updatedAt=at;
   fulfilment.consumedAt=at;
 }
 
 export function setRequirementStatus(state,work,requirementId,status){
   if(!STATUS_ORDER.includes(status))throw new Error('Invalid part status.');
-  const requirement=requirementById(state,work,requirementId),at=now();
-  if(requirement.status==='fitted'&&status!=='fitted')throw new Error('A fitted part cannot be moved backwards.');
+  const requirement=requirementById(state,work,requirementId);
+  if(requirement.status==='fitted'&&status==='fitted')return requirement;
+  if(['fitted','used'].includes(requirement.status)&&status!=='fitted')throw new Error('A fitted part cannot be moved backwards.');
+  const at=now();
   requirement.fulfilment=requirement.fulfilment&&typeof requirement.fulfilment==='object'?requirement.fulfilment:{};
   if(status==='received')requirement.fulfilment.receivedAt=requirement.fulfilment.receivedAt||at;
   if(status==='fitted'){
@@ -124,14 +94,7 @@ export function setRequirementStatus(state,work,requirementId,status){
     if(requirement.fulfilment.sourceType==='stock')consumeStock(state,requirement,requirement.fulfilment,at);
     if(requirement.fulfilment.sourceType==='donorItem')consumeDonor(state,work,requirement,requirement.fulfilment,at);
     if(['stock','donorItem'].includes(requirement.fulfilment.sourceType)&&requirement.fulfilment.sourceId){
-      recordFitEvidence(state,work,{
-        sourceType:requirement.fulfilment.sourceType,
-        sourceId:requirement.fulfilment.sourceId,
-        partId:requirement.fulfilment.sourceType==='stock'?requirement.fulfilment.sourceId:'',
-        partName:requirement.name||'',
-        result:'used',
-        note:`Fitted to ${work.title||'Work'}`
-      });
+      recordFitEvidence(state,work,{sourceType:requirement.fulfilment.sourceType,sourceId:requirement.fulfilment.sourceId,partId:requirement.fulfilment.sourceType==='stock'?requirement.fulfilment.sourceId:'',partName:requirement.name||'',result:'used',note:`Fitted to ${work.title||'Work'}`});
     }
   }
   requirement.status=status;
@@ -144,8 +107,7 @@ export function resumeWorkAfterParts(state,work){
   const readiness=partReadiness(state,work);
   if(!readiness.allReady)throw new Error('All required parts must be received before Work can resume.');
   const at=now();
-  work.status='In progress';
-  work.workbenchHidden=false;
+  work.status='In progress';work.workbenchHidden=false;
   if(/part|waiting/i.test(work.blocker||''))work.blocker='';
   if(!work.nextAction||/part|wait/i.test(work.nextAction))work.nextAction='Continue repair';
   work.updatedAt=at;
