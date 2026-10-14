@@ -1,18 +1,37 @@
 # Calibre & Co. — Current Status
 
-**Last reviewed:** 14 October 2026  
-**Baseline:** `main` after PR #86, Acquisition Engine v1.  
-**Rule:** a feature is only marked shipped here when it is present on `main` and the repository test suite is green.
+**Last reviewed:** 15 October 2026  
+**Repo baseline:** `main` after PR #87 / Acquisition Engine v1.  
+**Live database:** Supabase project `Calibre v2` is ahead of `main`; later database migrations are live and are being reconciled back into the repository.  
+**Rule:** repo-shipped UI capability and live-database capability are tracked separately until both sides are reconciled and regression-tested.
 
 ## Release state
 
 - Canonical domain: **Item + Work + Media + Inventory + Knowledge + Ledger**
-- Persisted schema: **6**
 - Primary navigation: **Home · Items · Workbench · Business · Calibre**
-- CI: **green**
-- Internal deployment: **test-gated**
-- Public catalogue deployment: **test-gated**
+- Repo CI: **green** at the PR #87 baseline
+- Internal/public deployment: **test-gated**
 - Current maturity: **internal alpha / operational workshop and resale system**
+- Current foundation task: **reconcile live Supabase v2 schema with GitHub, then expose archive/restore and bench-session capability safely in the app**
+
+## Live Supabase v2 capability beyond the current repo baseline
+
+The production `Calibre v2` project contains migrations through **14 October 2026 21:40 UTC**, including:
+
+- acquisition invoice, purchase, receiving and allocation hardening
+- storage-location movement history
+- purchase search/source normalisation and reconciliation protection
+- work Final-QC hardening and parts evidence-chain hardening
+- **bench work sessions** with `work_sessions`, `start_work_session(...)` and `finish_work_session(...)`
+- media links from Work checklist steps
+- **safe archive / restore primitives** for Item, Part, Tool and Consumable inventory via `archive_inventory_entity(...)` and `restore_inventory_entity(...)`
+- append-only business-ledger protection
+
+Generated TypeScript database types have been refreshed from the live project during this reconciliation pass and confirm the current tables, views and RPC signatures, including `work_sessions`, archive/restore RPCs and the append-only ledger model.
+
+### Security review
+
+Supabase Security Advisor currently reports two warnings for `start_work_session` and `finish_work_session` because they are authenticated-callable `SECURITY DEFINER` RPCs. Their current implementation intentionally performs explicit workspace owner/editor checks, restricts active-session ownership, uses a fixed empty `search_path`, and execution is granted only to `authenticated` plus the database owner. They are therefore being retained pending regression coverage rather than changed merely to silence the advisory. Leaked-password protection is also currently disabled in Supabase Auth and should be enabled in the dashboard.
 
 ## Shipped and repo-confirmed
 
@@ -21,7 +40,7 @@
 - canonical Work records linked to Items
 - first-class Media ownership by Item with optional Work context
 - canonical Inventory, Knowledge, Incoming and Ledger collections
-- schema migrations through version 6
+- schema migrations through the repo's local state schema
 - no normal-runtime `state.jobs` architecture
 - explicit persistence boundary for retired Job-era top-level fields
 - protection against silently discarding Job-only legacy data
@@ -118,13 +137,17 @@
 
 ## In progress / incomplete
 
-### Foundation cleanup
-- migrate remaining convenience aliases such as `passport` / `business` away from older consumers
-- remove compatibility views once no consumer needs them
-- remove or archive stale, unused Job-era browser modules
-- add browser-level regression coverage for the most important journeys
+### Foundation reconciliation
+- commit or otherwise pin a generated database-type snapshot for the live Supabase v2 project
+- audit database migrations against repo assumptions and document the authoritative schema boundary
+- add browser-level regression coverage for the highest-value journeys
+- expose live archive/restore primitives in the UI with an explicit Archived/Trash view
+- make sure normal list/search/compatibility queries exclude archived records unless explicitly viewing archive
+- add restore actions and prevent destructive delete where history/cost/provenance exists
+- bring repo documentation back into lock-step with the live database after each merged slice
 
 ### Workshop refinement
+- connect the live bench-session model into Work/Workbench UX
 - convert stage paths into explicit versioned Work Templates
 - structured task states: Done / Skipped / Blocked
 - consistent labour capture throughout Work
@@ -152,6 +175,7 @@
 - transactional customer email
 
 ### Operational inventory and finance
+- surface the live archive/restore and storage history safely in the UI
 - inventory receive / return / adjustment / stocktake / write-off transactions
 - exact cost basis and location history where useful
 - marketplace/payment fees, postage, refunds and ledger reconciliation
@@ -170,14 +194,15 @@
 
 ## Immediate priority order
 
-1. Run a real physical end-to-end acceptance watch on the deployed build and log every friction point.
-2. Make inventory and finance fully transactional/reconcilable.
-3. Extend Acquisition with photo/research intake and lower-friction auction capture.
-4. Complete secure Square checkout creation + verified webhook automation.
-5. Introduce versioned Work Templates and richer task states.
-6. Scale persistence beneath the existing Core only when usage/data volume justifies it.
-7. Expand customer documents / Passport outputs and controlled learning.
-8. Validate USB timegrapher microphone and printing/QR hardware on phone + DeX.
+1. **Finish repo ↔ live Supabase reconciliation**: generated types/schema snapshot, migration audit, archive/restore UI contract and regression coverage.
+2. Wire **bench sessions / labour capture** into Workbench and Work using the already-live database primitives.
+3. Run a real physical end-to-end acceptance watch on the reconciled deployed build and log every friction point.
+4. Make inventory and finance fully transactional/reconcilable.
+5. Extend Acquisition with photo/research intake and lower-friction auction capture.
+6. Complete secure Square checkout creation + verified webhook automation.
+7. Introduce versioned Work Templates and richer task states.
+8. Expand customer documents / Passport outputs and controlled learning.
+9. Validate USB timegrapher microphone and printing/QR hardware on phone + DeX.
 
 ## Release gate for primary business use
 
@@ -185,11 +210,13 @@ Calibre should become the primary operating system only when all of the followin
 
 - repository tests green
 - deployment blocked on failed tests
+- repo and live Supabase schema/documentation agree
 - backup export and restore proven
 - cloud conflict behaviour proven
 - two-device sync proven
 - one real end-to-end acceptance watch passes
 - mobile / DeX / desktop smoke checks pass
 - finance totals reconcile against real transactions
+- archive/restore behaviour is proven and destructive deletion is controlled
 - no normal-runtime Job architecture remains
-- project documentation reflects the actual `main` branch
+- project documentation reflects the actual deployed system
