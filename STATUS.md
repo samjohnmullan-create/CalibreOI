@@ -80,6 +80,7 @@ Live features:
 - **Part** quick action through the structured Parts / Donor Finder
 - **Timing** quick action through the structured Bench Timegrapher
 - evidence-based Bench exception engine
+- active, provenance-aware Knowledge suggestions
 
 All six core Bench quick actions are now connected:
 
@@ -92,6 +93,8 @@ The Parts / Donor Finder can create Part Needs, mark Work waiting on parts, upda
 The structured Bench Timegrapher reuses the existing timing engine and AudioWorklet detector. It saves reliable runs directly to `timing_runs` with Item/Work/checklist-step ownership, phase, position, BPH, rate, beat error, confidence, sample count, jitter, duration and microphone/sample-rate context. It intentionally leaves amplitude null because the current signal model does not measure amplitude defensibly. It also shows positional spread and latest-versus-previous rate change.
 
 The Bench exception engine now surfaces only explainable structured evidence. Current rules cover explicit blockers, blocked checklist steps, unresolved Part Needs, failed QC, reliable pre/post timing deterioration, missing final timing at QC, readiness for Final QC and readiness to complete Work. Each exception links directly to the relevant Bench action or workflow section. It does not infer missing photo/measurement evidence until templates explicitly encode those requirements.
+
+Active Knowledge suggestions now appear inside Bench Mode. They reuse the existing `calibre_kb_*` Knowledge layer and part-intelligence RPC rather than creating a second advice store. Exact movement records and technical documents are labelled as verified/documented; Part Need matches retain their evidence strength; fault/timing-triggered references are explicitly labelled as relevant context rather than proof of cause. Source links are shown when the underlying Knowledge record has one, and Bench Mode stays quiet when there is not enough movement identity or sourced evidence to justify a suggestion.
 
 ### Archive / Restore
 
@@ -112,10 +115,9 @@ No URL flip to the separate v2 Supabase project is planned.
 
 ## Immediate next implementation order
 
-1. Active Knowledge suggestions inside Bench Mode
-2. Invoice Storage migration / v2 retirement gate
-3. real-device Samsung phone + DeX acceptance
-4. monthly Business Reports and deeper finance after workshop bridge stabilizes
-5. deeper donor economics / cost allocation evidence
+1. Invoice Storage migration / v2 retirement gate
+2. real-device Samsung phone + DeX acceptance
+3. monthly Business Reports and deeper finance after workshop bridge stabilizes
+4. deeper donor economics / cost allocation evidence
 
 See `docs/BACKEND_RECONCILIATION_PROGRESS.md` for live checkpoint detail and `ROADMAP.md` for the wider product sequence.
