@@ -120,6 +120,95 @@ Supabase Security Advisor was run after the inventory migration. It reported no 
 
 Those are being kept separate from the reconciliation work so unrelated security changes are not mixed into migration checkpoints.
 
+## Checkpoint 3 — acquisition / receiving / finance foundation
+
+**Status: complete and reconciled for current structured data**
+
+Migration applied:
+
+- `006_commercial_purchase_finance_foundation`
+
+### Schema now present on the target
+
+- acquisition_invoices
+- acquisition_invoice_lines
+- purchases
+- purchase_lots
+- purchase_item_links
+- purchase_item_cost_links
+- purchase_stock_links
+- purchase_receiving_exceptions
+- storage_location_events
+- cost_entries
+- valuations
+- sales
+- business_ledger_entries
+
+The commercial tables use workspace-scoped RLS and explicit authenticated grants. The original broad v2 privilege migration was not replayed.
+
+Two canonical acquisition-source rows used by Purchase history were also transferred so purchase provenance is preserved:
+
+- Hannams Auctioneers
+- Gowans Auctions
+
+### Commercial reconciliation
+
+Counts now match exactly between `Calibre v2` and the consolidated target:
+
+| Record | Source v2 | Target | Result |
+| --- | ---: | ---: | --- |
+| Acquisition invoices | 9 | 9 | Match |
+| Acquisition invoice lines | 29 | 29 | Match |
+| Purchases | 5 | 5 | Match |
+| Purchase lots | 21 | 21 | Match |
+| Purchase → Item links | 14 | 14 | Match |
+| Purchase item cost links | 32 | 32 | Match |
+| Purchase stock links | 0 | 0 | Match |
+| Receiving exceptions | 0 | 0 | Match |
+| Storage movement events | 4 | 4 | Match |
+| Cost entries | 33 | 33 | Match |
+| Valuations | 3 | 3 | Match |
+| Sales | 0 | 0 | Match |
+| Business ledger entries | 0 | 0 | Match |
+
+Financial aggregates also reconcile exactly:
+
+| Aggregate | Source v2 | Target | Result |
+| --- | ---: | ---: | --- |
+| Purchase total (AUD) | $1,471.59 | $1,471.59 | Match |
+| Allocated purchase cost (AUD) | $722.99 | $722.99 | Match |
+| Allocated shared cost (AUD) | $249.06 | $249.06 | Match |
+| Cost-entry total (AUD) | $984.05 | $984.05 | Match |
+
+The cost allocation graph was preserved rather than flattened. Purchase cost, buyer premium, postage and unclassified invoice charges remain separate cost entries and are linked back to the relevant Purchase/lot/Item where v2 had that evidence.
+
+Original purchase statuses and reconciliation notes were retained, including small invoice-total discrepancies rather than silently correcting source documents.
+
+### Invoice-storage boundary
+
+Invoice metadata is consolidated, but the actual invoice files still physically live in the v2 Storage project. Their original storage paths and file hashes were retained for reconciliation. File bytes have **not** yet been copied to target Storage.
+
+The very large raw invoice `extraction_payload` JSON blobs were also left in v2 for this checkpoint. The target retains the structured invoice lines and all core invoice metadata. This avoids mangling large historical extraction blobs during the cross-project move while the source remains intact.
+
+A later storage bridge/copy step must either:
+
+1. copy the invoice files and any required raw extraction payloads into the target, or
+2. explicitly mark those historical fields as source-only archival evidence before v2 can be retired.
+
+### Security check
+
+Supabase Security Advisor was run after the commercial migration and reported no new findings caused by the new commercial tables. Remaining warnings are unchanged:
+
+- legacy `calibre_sync_legacy_job_changes_to_items` has a mutable `search_path`
+- existing `resolve_research_media_grant` is a public/authenticated `SECURITY DEFINER` RPC by design and requires separate review
+- leaked-password protection is disabled in Auth
+
+Reference remediation pages:
+
+- https://supabase.com/docs/guides/database/database-linter?lint=0011_function_search_path_mutable
+- https://supabase.com/docs/guides/database/database-linter?lint=0028_anon_security_definer_function_executable
+- https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection
+
 ## Safety boundary retained
 
 The following existing systems have not been replaced or destructively modified:
@@ -135,9 +224,9 @@ The separate `Calibre v2` project remains intact as the reference source.
 
 ## Next consolidation slice
 
-1. Purchases / invoices / receiving / storage-move history.
-2. Costs / valuations / sales / business ledger.
-3. Safe archive/restore RPCs on the consolidated target.
-4. Reconcile counts and financial totals again.
+1. Port safe Archive / Restore RPCs to the consolidated target.
+2. Port the remaining receiving / stock / allocation helper RPCs actually required by current UI flows.
+3. Reconcile archive behavior and active-record filtering.
+4. Bridge/copy invoice Storage before v2 retirement.
 5. Add the application bridge for structured reads/writes.
-6. Begin Bench Mode, Archive/Restore and bench-session UI only after that reconciliation passes.
+6. Begin Bench Mode, Archive/Restore and bench-session UI after those checks pass.
