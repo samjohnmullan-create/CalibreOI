@@ -7,7 +7,7 @@ function toolRow(href,title,copy,label='OPEN →'){return `<a class="system-row"
 function deepLinks(state={}){
   const work=currentWork(state),item=work?(state.items||[]).find(x=>String(x.id)===String(work.itemId)):(state.items||[]).find(x=>String(x.id)===String(state.currentItemId));
   const itemId=item?.id?enc(item.id):'',workId=work?.id?enc(work.id):'';
-  return {work:workId?`work.html?id=${workId}`:'workbench.html',timing:workId?`timegrapher.html?work=${workId}`:'workbench.html',parts:workId?`suppliers.html?work=${workId}`:'suppliers.html',capture:itemId?`capture.html?item=${itemId}${workId?`&work=${workId}`:''}`:'capture.html',item:itemId?`item.html?id=${itemId}`:'inventory.html',finder:itemId?`movement-finder.html?item=${itemId}`:'movement-finder.html',library:'reference-library.html'};
+  return {work:workId?`work.html?id=${workId}`:'workbench.html',timing:workId?`timegrapher.html?work=${workId}`:'workbench.html',parts:workId?`suppliers.html?work=${workId}`:'suppliers.html',capture:itemId?`capture.html?item=${itemId}${workId?`&work=${workId}`:''}`:'capture.html',item:itemId?`item.html?id=${itemId}`:'inventory.html',finder:itemId?`movement-finder.html?item=${itemId}`:'movement-finder.html',library:'reference-library.html',archive:'archive.html'};
 }
 async function enhanceHome(){
   const aside=document.querySelector('.home-grid aside.stack');if(!aside||aside.querySelector('[data-workshop-tools]'))return;
@@ -22,7 +22,8 @@ async function enhanceCalibre(){
   const parts=document.createElement('a');parts.className='system-row';parts.href=links.parts;parts.dataset.partsIntelligenceTool='1';parts.innerHTML=`<div><strong>Parts intelligence</strong><span>Requirements, donor matching, reference evidence and technical PDF import.</span></div><div class="system-state">OPEN →</div>`;
   const finder=document.createElement('a');finder.className='system-row';finder.href=links.finder;finder.dataset.movementFinderTool='1';finder.innerHTML=`<div><strong>Movement Finder</strong><span>Rank calibre candidates from maker marks, size, BPH, jewels and winding type.</span></div><div class="system-state">OPEN →</div>`;
   const library=document.createElement('a');library.className='system-row';library.href=links.library;library.dataset.referenceLibraryTool='1';library.innerHTML=`<div><strong>Reference Library</strong><span>Search the technical documents and catalogues that feed compatibility intelligence.</span></div><div class="system-state">OPEN →</div>`;
-  const capture=list.querySelector('a[href^="capture.html"]');if(capture){capture.insertAdjacentElement('afterend',parts);parts.insertAdjacentElement('afterend',finder);finder.insertAdjacentElement('afterend',library);}else{list.prepend(library);list.prepend(finder);list.prepend(parts);}
+  const archive=document.createElement('a');archive.className='system-row';archive.href=links.archive;archive.dataset.archiveTool='1';archive.innerHTML=`<div><strong>Archive & Restore</strong><span>Hide Items and workshop inventory safely without deleting Work, costs or provenance.</span></div><div class="system-state">OPEN →</div>`;
+  const capture=list.querySelector('a[href^="capture.html"]');if(capture){capture.insertAdjacentElement('afterend',parts);parts.insertAdjacentElement('afterend',finder);finder.insertAdjacentElement('afterend',library);library.insertAdjacentElement('afterend',archive);}else{list.prepend(archive);list.prepend(library);list.prepend(finder);list.prepend(parts);}
 }
 if(here==='index.html')enhanceHome().catch(err=>console.warn('Home workshop tools unavailable',err));
 if(here==='calibre.html')enhanceCalibre().catch(err=>console.warn('Calibre tool visibility unavailable',err));
