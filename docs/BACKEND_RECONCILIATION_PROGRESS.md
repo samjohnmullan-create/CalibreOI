@@ -203,7 +203,28 @@ Supabase Security Advisor was run after the commercial migration and reported no
 - existing `resolve_research_media_grant` is a public/authenticated `SECURITY DEFINER` RPC by design and requires separate review
 - leaked-password protection is disabled in Auth
 
-Reference remediation pages:
+## Checkpoint 4 — safe inventory Archive / Restore RPCs
+
+**Status: complete at backend level**
+
+Migration applied:
+
+- `007_safe_inventory_archive_restore`
+
+The consolidated target now exposes authenticated RPCs for soft-archiving and restoring:
+
+- Items
+- Parts
+- Tools
+- Consumables
+
+Both functions are `SECURITY INVOKER` and use the normal workspace RLS/update policies. Anonymous execution is revoked. Archive records retain `archived_at`, `archived_by` and `archive_reason`; restore clears those archive fields without deleting identity, Work, cost or provenance history.
+
+No live inventory was archived while installing or verifying the functions. Current archive counts remain zero.
+
+Supabase Security Advisor was run again after this migration. No new findings were introduced.
+
+Reference remediation pages for the unchanged pre-existing warnings:
 
 - https://supabase.com/docs/guides/database/database-linter?lint=0011_function_search_path_mutable
 - https://supabase.com/docs/guides/database/database-linter?lint=0028_anon_security_definer_function_executable
@@ -222,11 +243,12 @@ The following existing systems have not been replaced or destructively modified:
 
 The separate `Calibre v2` project remains intact as the reference source.
 
-## Next consolidation slice
+## Next consolidation / bridge work
 
-1. Port safe Archive / Restore RPCs to the consolidated target.
-2. Port the remaining receiving / stock / allocation helper RPCs actually required by current UI flows.
-3. Reconcile archive behavior and active-record filtering.
-4. Bridge/copy invoice Storage before v2 retirement.
-5. Add the application bridge for structured reads/writes.
-6. Begin Bench Mode, Archive/Restore and bench-session UI after those checks pass.
+1. Port only the remaining receiving / stock / allocation helper RPCs that current UI flows actually require.
+2. Make active structured queries exclude archived records by default and provide explicit Archive queries.
+3. Bridge/copy invoice Storage before v2 retirement.
+4. Add the browser application bridge for structured reads/writes.
+5. Expose Archive / Restore in Items, Parts, Tools and Consumables.
+6. Wire Start / Finish Bench Session into Work / Workbench.
+7. Build the Bench Command Centre and integrated timing workflow on top of the consolidated backend.
