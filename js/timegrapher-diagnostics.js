@@ -5,6 +5,7 @@ const median=values=>{const rows=values.filter(finite).map(Number).sort((a,b)=>a
 export function timingLockState(result={}){
   const stage=String(result?.stage||'').toLowerCase();
   const samples=Number(result?.samples||0),confidence=Number(result?.confidence||0);
+  if(stage.includes('idle')||stage.includes('stopped'))return {key:'idle',label:'IDLE',progress:0,detail:'Microphone is not running.'};
   if(result?.ready&&samples>=10&&confidence>=0.60)return {key:'locked',label:'LOCKED',progress:100,detail:`${Math.round(confidence*100)}% confidence · ${samples} samples`};
   if(stage.includes('stabil'))return {key:'stabilising',label:'STABILISING',progress:clamp(48+samples*2,48,78),detail:'Beat rate found; waiting for a cleaner interval set.'};
   if(stage.includes('beat rate')||stage.includes('determin'))return {key:'bph',label:'FINDING BPH',progress:36,detail:'Comparing detected intervals with standard beat rates.'};
