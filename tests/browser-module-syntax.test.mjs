@@ -36,7 +36,8 @@ const modules=[
   'js/structured-cloud.js',
   'js/structured-media.js',
   'js/structured-parts.js',
-  'js/structured-timing.js'
+  'js/structured-timing.js',
+  'js/structured-archive.js'
 ];
 
 for(const file of modules){
