@@ -195,7 +195,7 @@ Live structured actions implemented:
 - show recent measurements
 - show recent timing results already stored against the Work
 
-The first Bench Mode intentionally keeps Photo, Part Finder and full Timegrapher integration as follow-on bridges rather than pretending the existing legacy-context tools are already structured-aware.
+Photo, Part Finder and Timegrapher buttons are visible as Bench quick-action targets but are explicitly deferred; they show a status message rather than opening a legacy-context workflow that could attach evidence to the wrong record.
 
 ### Safety boundary retained
 
