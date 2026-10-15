@@ -102,23 +102,6 @@ Current live v2 data for this slice is intentionally small:
 | Work part needs | 1 | 1 | Match |
 | Tools | 0 | 0 | Match |
 | Consumables | 0 | 0 | Match |
-| Part allocations | 0 | 0 | No transfer required |
-| Part applications | 0 | 0 | No transfer required |
-| Part fit evidence | 0 | 0 | No transfer required |
-| Part fit verifications | 0 | 0 | No transfer required |
-| Item relationships | 0 | 0 | No transfer required |
-
-The single live Part and single open Part Need were transferred with their existing IDs preserved.
-
-### Security check
-
-Supabase Security Advisor was run after the inventory migration. It reported no new warnings caused by these tables. Remaining warnings are pre-existing items concerning:
-
-- a legacy function with mutable `search_path`
-- the existing research media grant `SECURITY DEFINER` function
-- leaked-password protection being disabled in Auth
-
-Those are being kept separate from the reconciliation work so unrelated security changes are not mixed into migration checkpoints.
 
 ## Checkpoint 3 — acquisition / receiving / finance foundation
 
@@ -128,32 +111,7 @@ Migration applied:
 
 - `006_commercial_purchase_finance_foundation`
 
-### Schema now present on the target
-
-- acquisition_invoices
-- acquisition_invoice_lines
-- purchases
-- purchase_lots
-- purchase_item_links
-- purchase_item_cost_links
-- purchase_stock_links
-- purchase_receiving_exceptions
-- storage_location_events
-- cost_entries
-- valuations
-- sales
-- business_ledger_entries
-
-The commercial tables use workspace-scoped RLS and explicit authenticated grants. The original broad v2 privilege migration was not replayed.
-
-Two canonical acquisition-source rows used by Purchase history were also transferred so purchase provenance is preserved:
-
-- Hannams Auctioneers
-- Gowans Auctions
-
 ### Commercial reconciliation
-
-Counts now match exactly between `Calibre v2` and the consolidated target:
 
 | Record | Source v2 | Target | Result |
 | --- | ---: | ---: | --- |
@@ -163,8 +121,6 @@ Counts now match exactly between `Calibre v2` and the consolidated target:
 | Purchase lots | 21 | 21 | Match |
 | Purchase → Item links | 14 | 14 | Match |
 | Purchase item cost links | 32 | 32 | Match |
-| Purchase stock links | 0 | 0 | Match |
-| Receiving exceptions | 0 | 0 | Match |
 | Storage movement events | 4 | 4 | Match |
 | Cost entries | 33 | 33 | Match |
 | Valuations | 3 | 3 | Match |
@@ -180,28 +136,9 @@ Financial aggregates also reconcile exactly:
 | Allocated shared cost (AUD) | $249.06 | $249.06 | Match |
 | Cost-entry total (AUD) | $984.05 | $984.05 | Match |
 
-The cost allocation graph was preserved rather than flattened. Purchase cost, buyer premium, postage and unclassified invoice charges remain separate cost entries and are linked back to the relevant Purchase/lot/Item where v2 had that evidence.
-
-Original purchase statuses and reconciliation notes were retained, including small invoice-total discrepancies rather than silently correcting source documents.
-
 ### Invoice-storage boundary
 
-Invoice metadata is consolidated, but the actual invoice files still physically live in the v2 Storage project. Their original storage paths and file hashes were retained for reconciliation. File bytes have **not** yet been copied to target Storage.
-
-The very large raw invoice `extraction_payload` JSON blobs were also left in v2 for this checkpoint. The target retains the structured invoice lines and all core invoice metadata. This avoids mangling large historical extraction blobs during the cross-project move while the source remains intact.
-
-A later storage bridge/copy step must either:
-
-1. copy the invoice files and any required raw extraction payloads into the target, or
-2. explicitly mark those historical fields as source-only archival evidence before v2 can be retired.
-
-### Security check
-
-Supabase Security Advisor was run after the commercial migration and reported no new findings caused by the new commercial tables. Remaining warnings are unchanged:
-
-- legacy `calibre_sync_legacy_job_changes_to_items` has a mutable `search_path`
-- existing `resolve_research_media_grant` is a public/authenticated `SECURITY DEFINER` RPC by design and requires separate review
-- leaked-password protection is disabled in Auth
+Invoice metadata is consolidated, but the actual invoice files still physically live in the v2 Storage project. The large historical raw extraction payloads also remain source-side for now. v2 must remain intact until that storage boundary is explicitly resolved.
 
 ## Checkpoint 4 — safe inventory Archive / Restore RPCs
 
@@ -211,44 +148,65 @@ Migration applied:
 
 - `007_safe_inventory_archive_restore`
 
-The consolidated target now exposes authenticated RPCs for soft-archiving and restoring:
+Items, Parts, Tools and Consumables can now be soft archived/restored through authenticated `SECURITY INVOKER` RPCs. Archive history is retained and no live inventory was archived during installation.
 
-- Items
-- Parts
-- Tools
-- Consumables
+## Checkpoint 5 — application bridge + first Bench Mode slice
 
-Both functions are `SECURITY INVOKER` and use the normal workspace RLS/update policies. Anonymous execution is revoked. Archive records retain `archived_at`, `archived_by` and `archive_reason`; restore clears those archive fields without deleting identity, Work, cost or provenance history.
+**Status: first browser bridge implemented on PR branch**
 
-No live inventory was archived while installing or verifying the functions. Current archive counts remain zero.
+New browser module:
 
-Supabase Security Advisor was run again after this migration. No new findings were introduced.
+- `js/structured-cloud.js`
 
-Reference remediation pages for the unchanged pre-existing warnings:
+The bridge deliberately overlays structured records onto the existing app state instead of replacing the legacy/cloud-state document wholesale. Structured records are authoritative where the same IDs exist; unmatched legacy records remain visible so the transition does not make non-migrated records disappear.
 
-- https://supabase.com/docs/guides/database/database-linter?lint=0011_function_search_path_mutable
-- https://supabase.com/docs/guides/database/database-linter?lint=0028_anon_security_definer_function_executable
-- https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection
+### Workbench bridge
 
-## Safety boundary retained
+`workbench.html` now:
 
-The following existing systems have not been replaced or destructively modified:
+- loads the existing app state first
+- overlays structured Item / Work data from the consolidated backend
+- marks structured Work cards visibly
+- writes Queue / On bench / Waiting / Priority changes directly to structured `work_records`
+- keeps legacy Work actions on the existing `saveState` path
+- never persists the structured overlay back into `calibre_state`
+- routes structured Work to `bench.html` rather than legacy `work.html`
 
-- `calibre_state`
-- current browser Auth/session
-- Knowledge / Movement Finder tables
-- research request/media infrastructure
-- public catalogue/public-watch infrastructure
-- current browser sync/conflict path
+The overlay currently pulls structured Items, identity, Work, checklist steps, part needs, costs, valuations and bench sessions. Costs and valuation are projected into the existing Workbench card model so the current UI can show invested/target/potential values during the transition.
 
-The separate `Calibre v2` project remains intact as the reference source.
+### First Bench Mode
 
-## Next consolidation / bridge work
+New page:
 
-1. Port only the remaining receiving / stock / allocation helper RPCs that current UI flows actually require.
-2. Make active structured queries exclude archived records by default and provide explicit Archive queries.
-3. Bridge/copy invoice Storage before v2 retirement.
-4. Add the browser application bridge for structured reads/writes.
-5. Expose Archive / Restore in Items, Parts, Tools and Consumables.
-6. Wire Start / Finish Bench Session into Work / Workbench.
-7. Build the Bench Command Centre and integrated timing workflow on top of the consolidated backend.
+- `bench.html`
+
+Live structured actions implemented:
+
+- Start Bench Session
+- Finish Bench Session with optional note
+- live session elapsed-time display
+- current checklist step
+- next checklist step
+- mark checklist step Done
+- add/update Work note
+- record/clear a Work problem/blocker
+- add a numeric measurement with unit
+- surface open Part Needs
+- show recent measurements
+- show recent timing results already stored against the Work
+
+The first Bench Mode intentionally keeps Photo, Part Finder and full Timegrapher integration as follow-on bridges rather than pretending the existing legacy-context tools are already structured-aware.
+
+### Safety boundary retained
+
+The existing `calibre_state`, browser Auth/session, Knowledge/Movement Finder, research/media and public catalogue paths remain in place. The bridge is additive and reversible.
+
+## Current next work
+
+1. Make Capture Station structured-Work aware and wire the Bench Photo quick action.
+2. Wire Part / Donor Finder into Bench context.
+3. Bridge the existing Timegrapher to structured Work and write full timing runs directly to `timing_runs`.
+4. Expose Archive / Restore in Item and inventory UI.
+5. Add active exception rules to Bench Mode.
+6. Complete invoice Storage migration before retiring v2.
+7. Run real-device acceptance on Samsung phone + DeX using a physical watch.
