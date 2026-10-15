@@ -35,7 +35,8 @@ const modules=[
   'js/knowledge-admin-prefill.js',
   'js/structured-cloud.js',
   'js/structured-media.js',
-  'js/structured-parts.js'
+  'js/structured-parts.js',
+  'js/structured-timing.js'
 ];
 
 for(const file of modules){
