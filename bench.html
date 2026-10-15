@@ -19,7 +19,7 @@
 </div><script src="js/nav.js?v=63"></script><script type="module">
 import {loadStructuredBenchDetail,startStructuredBenchSession,finishStructuredBenchSession,patchStructuredWork,addStructuredMeasurement,updateStructuredStep} from './js/structured-cloud.js?v=4';
 const $=id=>document.getElementById(id),params=new URLSearchParams(location.search),workId=params.get('work')||params.get('id')||'';let detail=null,timer=null;
-const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[c]));
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmtSeconds=n=>{n=Math.max(0,Math.floor(n||0));const h=Math.floor(n/3600),m=Math.floor(n%3600/60),s=n%60;return h?`${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`:`${m}:${String(s).padStart(2,'0')}`;};
 function setStatus(text){$('status').textContent=text||'';}
 function paintClock(){if(timer)clearInterval(timer);const active=detail?.activeSession;if(!active){$('sessionClock').textContent='No active session';$('sessionBtn').textContent='Start Bench Session';return;}const start=Date.parse(active.started_at)||Date.now();const tick=()=>{$('sessionClock').textContent=`Bench ${fmtSeconds((Date.now()-start)/1000)}`;};tick();timer=setInterval(tick,1000);$('sessionBtn').textContent='Finish Session';}
