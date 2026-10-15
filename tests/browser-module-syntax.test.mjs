@@ -30,6 +30,7 @@ const modules=[
   'js/visibility-ui-runtime.js',
   'js/timing-runs.js',
   'js/timegrapher-audit-runtime.js',
+  'js/timegrapher-diagnostics.js',
   'js/knowledge-learning.js',
   'js/knowledge-learning-ui.js',
   'js/knowledge-admin-prefill.js',
