@@ -38,7 +38,9 @@ const modules=[
   'js/structured-parts.js',
   'js/structured-timing.js',
   'js/structured-archive.js',
-  'js/bench-exceptions.js'
+  'js/bench-exceptions.js',
+  'js/bench-knowledge.js',
+  'js/bench-knowledge-runtime.js'
 ];
 
 for(const file of modules){
