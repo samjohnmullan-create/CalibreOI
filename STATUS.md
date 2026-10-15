@@ -28,6 +28,7 @@ The existing browser/backend project remains the long-term Calibre backend. The 
 - costs + valuations + Sales + business ledger schema
 - safe Archive / Restore RPCs for Items, Parts, Tools and Consumables
 - structured media ownership for Item + optional Work + optional checklist step
+- structured timing evidence including phase, confidence score, sample count, jitter, device/sample-rate and checklist-step context
 
 Current structured data has been reconciled from the separate v2 project. Counts and financial aggregates match for the migrated slices.
 
@@ -77,12 +78,17 @@ Live features:
 - recent structured timing-run display
 - **Photo** quick action through structured Bench Capture
 - **Part** quick action through the structured Parts / Donor Finder
+- **Timing** quick action through the structured Bench Timegrapher
+
+All six core Bench quick actions are now connected:
+
+**Photo · Note · Measure · Part · Timing · Problem**
 
 Bench Capture reuses the existing private media bucket, thumbnail generation and retry queue, then records structured ownership against Item + Work + current checklist step.
 
 The Parts / Donor Finder can create Part Needs, mark Work waiting on parts, update need status, rank loose stock, and show donor candidates using recorded calibre/family/maker evidence. Maker-only matches remain low-confidence leads rather than claimed interchangeability.
 
-The **Timegrapher** quick action is the remaining major Bench action still awaiting structured Work integration.
+The structured Bench Timegrapher reuses the existing timing engine and AudioWorklet detector. It saves reliable runs directly to `timing_runs` with Item/Work/checklist-step ownership, phase, position, BPH, rate, beat error, confidence, sample count, jitter, duration and microphone/sample-rate context. It intentionally leaves amplitude null because the current signal model does not measure amplitude defensibly. It also shows positional spread and latest-versus-previous rate change.
 
 ## Important safety boundaries
 
@@ -99,11 +105,10 @@ No URL flip to the separate v2 Supabase project is planned.
 
 ## Immediate next implementation order
 
-1. Comprehensive structured Timegrapher integration
-2. Archive / Restore UI
-3. Bench exception engine
-4. Invoice Storage migration / v2 retirement gate
-5. real-device Samsung phone + DeX acceptance
-6. monthly Business Reports and deeper finance after workshop bridge stabilizes
+1. Archive / Restore UI
+2. Bench exception engine
+3. Invoice Storage migration / v2 retirement gate
+4. real-device Samsung phone + DeX acceptance
+5. monthly Business Reports and deeper finance after workshop bridge stabilizes
 
 See `docs/BACKEND_RECONCILIATION_PROGRESS.md` for live checkpoint detail and `ROADMAP.md` for the wider product sequence.
