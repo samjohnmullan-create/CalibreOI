@@ -66,3 +66,25 @@ export async function archiveStructuredEntity(entityType,entityId,reason=''){con
 export async function restoreStructuredEntity(entityType,entityId){const workspaceId=await structuredWorkspaceId();if(!workspaceId)throw new Error('Structured workspace unavailable');const {data,error}=await supabaseClient().rpc('restore_inventory_entity',{p_workspace_id:workspaceId,p_entity_type:entityType,p_entity_id:entityId});if(error)throw error;return data;}
 export async function startStructuredBenchSession(workId){const workspaceId=await structuredWorkspaceId();if(!workspaceId)throw new Error('Structured workspace unavailable');const {data,error}=await supabaseClient().rpc('start_work_session',{p_workspace_id:workspaceId,p_work_id:workId});if(error)throw error;return Array.isArray(data)?data[0]:data;}
 export async function finishStructuredBenchSession(sessionId,note=''){const workspaceId=await structuredWorkspaceId();if(!workspaceId)throw new Error('Structured workspace unavailable');const {data,error}=await supabaseClient().rpc('finish_work_session',{p_workspace_id:workspaceId,p_session_id:sessionId,p_note:note||''});if(error)throw error;return Array.isArray(data)?data[0]:data;}
+
+export async function transitionStructuredWork(workId,action,{reason=''}={}){
+  const workspaceId=await structuredWorkspaceId();if(!workspaceId)throw new Error('Structured workspace unavailable');
+  const s=await session();const sb=supabaseClient(),now=new Date().toISOString();
+  const {data:work,error:workError}=await sb.from('work_records').select('id,item_id,status,next_action').eq('workspace_id',workspaceId).eq('id',workId).maybeSingle();
+  if(workError)throw workError;if(!work)throw new Error('Work record not found');
+  const {data:active,error:sessionError}=await sb.from('work_sessions').select('id').eq('workspace_id',workspaceId).eq('work_id',workId).is('ended_at',null).order('started_at',{ascending:false}).limit(1).maybeSingle();
+  if(sessionError)throw sessionError;
+  if(active?.id){const labels={pause:'Work paused',queue:'Removed from bench',cancel:'Work cancelled',cancel_qc:'QC cancelled',resume:'Work resumed'};const {error}=await sb.rpc('finish_work_session',{p_workspace_id:workspaceId,p_session_id:active.id,p_note:labels[action]||'Work state changed'});if(error)throw error;}
+  const patch={updated_at:now};let summary='Work state changed',eventType='work_state_changed';
+  if(action==='pause'){patch.status='waiting';patch.waiting_reason='other';patch.blocker='';patch.completed_at=null;summary='Work paused';eventType='work_paused';}
+  else if(action==='resume'){patch.status='on_bench';patch.waiting_reason=null;patch.blocker='';patch.completed_at=null;summary='Work resumed';eventType='work_resumed';}
+  else if(action==='queue'){patch.status='queued';patch.waiting_reason=null;patch.blocker='';patch.completed_at=null;summary='Removed from bench';eventType='work_removed_from_bench';}
+  else if(action==='cancel'){patch.status='cancelled';patch.waiting_reason=null;patch.blocker='';patch.next_action='';patch.completed_at=now;summary='Work cancelled';eventType='work_cancelled';}
+  else if(action==='cancel_qc'){if(String(work.status)!=='qc')throw new Error('Work is not currently in Final QC');patch.status='on_bench';patch.waiting_reason=null;patch.blocker='';patch.completed_at=null;summary='Final QC cancelled';eventType='qc_cancelled';}
+  else throw new Error(`Unsupported structured Work transition: ${action}`);
+  const {error:updateError}=await sb.from('work_records').update(patch).eq('workspace_id',workspaceId).eq('id',workId);if(updateError)throw updateError;
+  const details={from_status:work.status,to_status:patch.status,reason:String(reason||'')};
+  const {error:eventError}=await sb.from('work_events').insert({workspace_id:workspaceId,work_id:work.id,item_id:work.item_id,event_type:eventType,summary,details,actor_id:s?.user?.id||null,actor_type:s?.user?'user':'system'});
+  if(eventError)console.warn('Work lifecycle event could not be recorded',eventError);
+  return {status:patch.status,summary};
+}
