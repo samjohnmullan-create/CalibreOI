@@ -32,7 +32,10 @@ const modules=[
   'js/timegrapher-audit-runtime.js',
   'js/knowledge-learning.js',
   'js/knowledge-learning-ui.js',
-  'js/knowledge-admin-prefill.js'
+  'js/knowledge-admin-prefill.js',
+  'js/structured-cloud.js',
+  'js/structured-media.js',
+  'js/structured-parts.js'
 ];
 
 for(const file of modules){
