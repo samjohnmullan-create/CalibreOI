@@ -1,103 +1,16 @@
-name: Deploy Pages
+name: Legacy Calibre repository retired
+
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
+
 permissions:
   contents: read
-  pages: write
-  id-token: write
-concurrency:
-  group: pages
-  cancel-in-progress: true
+
 jobs:
-  test:
+  retired:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-      - run: npm test
-
-  deploy:
-    needs: test
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Build clean app artifact
-        shell: bash
+      - name: Retirement notice
         run: |
-          set -euo pipefail
-          python - <<'PY'
-          from pathlib import Path
-          import json, os, re, shutil
-
-          sha = os.environ['GITHUB_SHA']
-          freshness_tag = f'<script type="module" src="js/build-refresh.js?v={sha}"></script>'
-
-          # Make every app page reference one coherent build.
-          for p in Path('.').glob('*.html'):
-              text = p.read_text(encoding='utf-8')
-              if 'http-equiv="Cache-Control"' not in text:
-                  text = text.replace(
-                      '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">',
-                      '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">'
-                  )
-              if 'js/build-refresh.js' not in text:
-                  text = text.replace('</head>', freshness_tag + '</head>')
-              text = re.sub(
-                  r'((?:src|href)=["\'](?:\./)?(?:js|css)/[^"\'?]+\.(?:js|css))(?:\?v=[^"\']+)?',
-                  rf'\1?v={sha}', text
-              )
-              text = re.sub(
-                  r'(["\'])(\./js/[^"\'?]+\.js)(?:\?v=[^"\']+)?\1',
-                  lambda m: f'{m.group(1)}{m.group(2)}?v={sha}{m.group(1)}', text
-              )
-              text = re.sub(r'href="([A-Za-z0-9_-]+\.html)"', rf'href="\1?v={sha}"', text)
-              p.write_text(text, encoding='utf-8')
-
-          # Rewrite old hand-maintained module version numbers in the deployment copy.
-          for p in Path('js').glob('*.js'):
-              text = p.read_text(encoding='utf-8')
-              text = re.sub(
-                  r'(["\'])(\./[^"\'?]+\.js)(?:\?v=[^"\']+)?\1',
-                  lambda m: f'{m.group(1)}{m.group(2)}?v={sha}{m.group(1)}', text
-              )
-              # Also catch scripts loaded dynamically with paths such as
-              # sync.src='js/cloud-auto.js?v=8'. These were previously left with a
-              # stale fixed cache key, which meant newly deployed runtime features
-              # could remain invisible on phones even though Pages deployed cleanly.
-              text = re.sub(
-                  r'(["\'])(js/[^"\'?]+\.js)(?:\?v=[^"\']+)?\1',
-                  lambda m: f'{m.group(1)}{m.group(2)}?v={sha}{m.group(1)}', text
-              )
-              p.write_text(text, encoding='utf-8')
-
-          site = Path('_site')
-          if site.exists(): shutil.rmtree(site)
-          site.mkdir()
-
-          # Internal Calibre app only. Repository docs, workflows, hosting files and
-          # the separately deployed public catalogue are deliberately excluded.
-          for p in Path('.').glob('*.html'):
-              shutil.copy2(p, site / p.name)
-          for name in ('CNAME','manifest.json'):
-              p=Path(name)
-              if p.exists(): shutil.copy2(p, site / name)
-          for name in ('assets','css','js','cards'):
-              src=Path(name)
-              if src.exists(): shutil.copytree(src, site/name)
-          (site / 'build.json').write_text(json.dumps({'sha': sha}), encoding='utf-8')
-          PY
-      - uses: actions/configure-pages@v5
-        with:
-          enablement: true
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: _site
-      - id: deployment
-        uses: actions/deploy-pages@v4
+          echo "CalibreOI is retired. Production development has moved to samjohnmullan-create/Calibre-v2."
+          echo "Do not deploy this repository."
