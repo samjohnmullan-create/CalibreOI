@@ -1,195 +1,123 @@
-# Calibre & Co. — Current Status
+# Calibre & Co. — Status
 
-**Last reviewed:** 14 October 2026  
-**Baseline:** `main` after PR #86, Acquisition Engine v1.  
-**Rule:** a feature is only marked shipped here when it is present on `main` and the repository test suite is green.
+_Last updated: 15 October 2026_
 
-## Release state
+Calibre is an internal workshop and resale operating system. The canonical model is **Item + Work + Media + Inventory + Knowledge + Ledger**. The browser app is in active internal alpha.
 
-- Canonical domain: **Item + Work + Media + Inventory + Knowledge + Ledger**
-- Persisted schema: **6**
-- Primary navigation: **Home · Items · Workbench · Business · Calibre**
-- CI: **green**
-- Internal deployment: **test-gated**
-- Public catalogue deployment: **test-gated**
-- Current maturity: **internal alpha / operational workshop and resale system**
+## Current state
 
-## Shipped and repo-confirmed
+The major pre-existing foundations are still in place: Item identity, Work records, Workbench queue/bench flow, parts/donor intelligence, Final QC, Movement Finder, Knowledge, Capture Station, QR, finance/profit, listings/sales, Acquisition Engine v1, global search, mobile/DeX tuning and device-aware layouts.
 
-### Foundation
-- canonical permanent Item identity
-- canonical Work records linked to Items
-- first-class Media ownership by Item with optional Work context
-- canonical Inventory, Knowledge, Incoming and Ledger collections
-- schema migrations through version 6
-- no normal-runtime `state.jobs` architecture
-- explicit persistence boundary for retired Job-era top-level fields
-- protection against silently discarding Job-only legacy data
-- non-persisted compatibility views for older Item-page consumers
-- integrity checks and recovery tooling
-- atomic cloud revision protection
-- local safety snapshots and portable backup
-- test-gated deployment
+The Foundation Lock remains intact: there is **no normal-runtime `state.jobs` architecture**, and deployment remains **test-gated deployment** rather than an unchecked direct publish path.
 
-### Workshop lifecycle
-- Workbench based on canonical Work
-- newly planned Work defaults to Queue rather than active bench work
-- explicit Queue → Add to bench → In progress lifecycle
-- cancelling Work preserves workshop history
-- explicit Item write-off to Donor / Spares without deleting Work history
-- donor Items remain visible to compatibility intelligence
-- manual, automatic, pocket-watch, quartz, clock and inspection workflow routing
-- bench measurements and diagnostic intelligence
-- parts-needed workflow
-- donor intelligence and donor-combine leads
-- required-part lifecycle: Needed → Sourced → Received → Fitted
-- loose-stock consumption on fitting
-- donor-part usage recorded against the donor Item
-- fitted parts preserved on Work as parts-used history
-- successful fitted sources automatically become bench compatibility evidence
-- Waiting Work resumes only when all required parts are on hand
-- real Final QC completion gate
-- completion blocked by unanswered/failed QC, unfitted required parts, Waiting state or unresolved blockers
-- claimed final timing requires a usable saved timing run
-- both Complete and Status=Complete-save routes use the same completion gate
-- service-history / repair-timeline support
+A live backend reconciliation is now underway because the deployed browser app and the newer normalized `Calibre v2` schema had diverged across two Supabase projects.
 
-### Identification and knowledge
-- Movement Finder
-- server-side knowledge catalogue with offline fallback
-- Knowledge Editor and Research Inbox
-- Reference Library
-- PDF/OCR reference ingestion
-- sourced compatibility and reference evidence
+### Backend consolidation completed so far
 
-### Capture and hardware foundations
-- Capture Station
-- Item / Work media attachment
-- queued media retry
-- QR entity identities
-- QR labels and scanner routes
-- device-mode handling for phone / touch / workstation-style use
-- hardware capability layer
+The existing browser/backend project remains the long-term Calibre backend. The following normalized structures have now been added there without replacing `calibre_state`, browser Auth/session, Knowledge, research/media or the public catalogue:
 
-### Business and commercial lifecycle
-- canonical Item Costs / Valuation page
-- Item-first economics and profit intelligence
-- finance dashboard
-- Business Brain prioritisation
-- potential and realised profit calculations
-- labour-aware profit measures
-- stock age / capital tied-up signals
-- canonical Sale workspace based on Item + Work rather than legacy Job ownership
-- Item-owned listing copy, pricing, offers, channel strategy and commercial state
-- Item-media listing photo pack with private archive thumbnail support
-- Sale readiness tied to completed Work/QC, final condition, workshop record, listing copy, photo pack and target price
-- channel-ready Facebook, eBay and Calibre & Co. website copy generation
-- public catalogue / public Passport publishing from Item data plus selected Work evidence
-- explicit public fact and photo controls
-- Square Payment Link support keyed to Item identity
-- legacy public rows keyed to Work ID are migrated when encountered
-- Sold updates the permanent Item and creates one idempotent sale ledger receipt
-- manually marking Sold closes public availability and removes public checkout
-- public `for_sale` publication is blocked until canonical sale readiness passes
+- workspace + membership
+- storage locations + sources
+- Items + identity + Passports + facts/evidence
+- Work + events + templates + checklist + QC
+- measurements + timing runs + bench sessions
+- Parts + Tools + Consumables + Work Part Needs
+- acquisition invoices + invoice lines
+- purchases + lots + Item/cost links
+- storage movement history
+- costs + valuations + Sales + business ledger schema
+- safe Archive / Restore RPCs for Items, Parts, Tools and Consumables
+- structured media ownership for Item + optional Work + optional checklist step
+- structured timing evidence including phase, confidence score, sample count, jitter, device/sample-rate and checklist-step context
 
-### Acquisition Engine v1
-- Acquisition lives beneath **Business**, not as a new primary system
-- auction / private / marketplace / dealer opportunities persist as canonical Incoming records
-- watches-first intake with support for clock, jewellery, accessory, collectible and other categories
-- explicit assumptions for buyer premium, postage/collection, parts, consumables, outside work and repair contingency
-- explicit labour estimate and labour value
-- explicit selling fee and outbound shipping assumptions
-- low / expected / high resale scenarios
-- capital-at-risk, cash profit, profit-after-labour and ROI calculations
-- conservative / expected / optimistic maximum hammer-bid calculations
-- explainable **BUY · WATCH · PASS** recommendation
-- high repair risk and low identity confidence remain visible decision warnings rather than hidden score adjustments
-- candidate calibre/maker compared against owned Items, active Work, donors and loose parts for usefulness
-- saved acquisition watchlist / decision records
-- Purchased converts a candidate into a permanent Item while preserving the acquisition snapshot
-- purchase conversion is idempotent and deliberately does **not** create Work automatically
+Current structured data has been reconciled from the separate v2 project. Counts and financial aggregates match for the migrated slices.
 
-### Search and usability
-- canonical navigation shell
-- global command/search layer
-- Item workspace
-- Work workspace
-- mobile / touch tuning
+Commercial reconciliation currently includes:
 
-## In progress / incomplete
+- 9 acquisition invoices
+- 29 invoice lines
+- 5 purchases
+- 21 purchase lots
+- 14 purchase-to-Item links
+- 32 component cost links
+- 33 cost entries
+- 4 storage movement events
+- 3 valuations
+- AUD $1,471.59 total purchases
+- AUD $984.05 total Item cost entries
 
-### Foundation cleanup
-- migrate remaining convenience aliases such as `passport` / `business` away from older consumers
-- remove compatibility views once no consumer needs them
-- remove or archive stale, unused Job-era browser modules
-- add browser-level regression coverage for the most important journeys
+The separate v2 project remains intact until invoice file storage and any remaining source-only archival evidence are explicitly handled.
 
-### Workshop refinement
-- convert stage paths into explicit versioned Work Templates
-- structured task states: Done / Skipped / Blocked
-- consistent labour capture throughout Work
-- richer inventory transaction history beyond fitted-part consumption
+## Browser bridge now underway
 
-### Timegrapher
-- validate the incoming USB microphone on Android / DeX / desktop
-- tune detector behaviour only from real microphone evidence
-- retain BPH/rate/beat-error evidence history
+A structured browser adapter now exists in `js/structured-cloud.js`.
 
-### Acquisition Engine — next slices
-- attach durable lot photographs/media to Incoming opportunities
-- create a research handoff so lot photos/text can be identified and enriched without retyping
-- record evidence/provenance behind identity, condition and resale assumptions
-- import or paste auction listings with less manual field entry
-- auction closing-time / watchlist workflow and optional alerts
-- category-specific risk/value rules for jewellery, accessories and other small collectibles
-- feed realised purchase, labour and sale outcomes back into acquisition-source performance
+The bridge is intentionally additive: structured records overlay the existing state where their IDs are known, while unmatched legacy records remain visible. Structured rows are not written back into the legacy `calibre_state` blob.
 
-### Commerce automation
-- secure server-created Square checkout
-- verified Square webhook handling
-- webhook-authoritative automatic Sold state
-- payment/fee reconciliation
-- transactional customer email
+### Workbench
 
-### Operational inventory and finance
-- inventory receive / return / adjustment / stocktake / write-off transactions
-- exact cost basis and location history where useful
-- marketplace/payment fees, postage, refunds and ledger reconciliation
-- explicit separation of projected and realised financial values
+`workbench.html` can now overlay structured Item / Work data and write structured Workbench actions directly to the consolidated tables while preserving the legacy path for older records.
 
-### Persistence scale
-- progressively move large operational collections from one state blob to queryable Supabase tables
-- preserve the existing Core contract and IndexedDB offline behaviour
+Structured Work cards are visibly identified and open the new Bench Mode instead of legacy `work.html`.
 
-### Real-device acceptance
-- run one real watch from intake through queue, bench, parts if needed, repair, timing, QC, valuation, listing, publish and sold flow
-- verify the same record on phone, DeX/workstation and a second device
-- verify private photo previews/public photo publishing using real captured media
-- verify backup restore and cloud-conflict behaviour in practice
-- add browser-level smoke tests for the critical journeys
+### Bench Mode
 
-## Immediate priority order
+`bench.html` is now the first structured-native workshop screen.
 
-1. Run a real physical end-to-end acceptance watch on the deployed build and log every friction point.
-2. Make inventory and finance fully transactional/reconcilable.
-3. Extend Acquisition with photo/research intake and lower-friction auction capture.
-4. Complete secure Square checkout creation + verified webhook automation.
-5. Introduce versioned Work Templates and richer task states.
-6. Scale persistence beneath the existing Core only when usage/data volume justifies it.
-7. Expand customer documents / Passport outputs and controlled learning.
-8. Validate USB timegrapher microphone and printing/QR hardware on phone + DeX.
+Live features:
 
-## Release gate for primary business use
+- Start / Finish Bench Session
+- live elapsed bench timer
+- current / next checklist task
+- mark checklist steps Done
+- Work notes
+- Work problem/blocker capture
+- measurements
+- open Part Needs
+- recent measurements
+- recent structured timing-run display
+- **Photo** quick action through structured Bench Capture
+- **Part** quick action through the structured Parts / Donor Finder
+- **Timing** quick action through the structured Bench Timegrapher
+- evidence-based Bench exception engine
+- active, provenance-aware Knowledge suggestions
 
-Calibre should become the primary operating system only when all of the following are true:
+All six core Bench quick actions are now connected:
 
-- repository tests green
-- deployment blocked on failed tests
-- backup export and restore proven
-- cloud conflict behaviour proven
-- two-device sync proven
-- one real end-to-end acceptance watch passes
-- mobile / DeX / desktop smoke checks pass
-- finance totals reconcile against real transactions
-- no normal-runtime Job architecture remains
-- project documentation reflects the actual `main` branch
+**Photo · Note · Measure · Part · Timing · Problem**
+
+Bench Capture reuses the existing private media bucket, thumbnail generation and retry queue, then records structured ownership against Item + Work + current checklist step.
+
+The Parts / Donor Finder can create Part Needs, mark Work waiting on parts, update need status, rank loose stock, and show donor candidates using recorded calibre/family/maker evidence. Maker-only matches remain low-confidence leads rather than claimed interchangeability.
+
+The structured Bench Timegrapher reuses the existing timing engine and AudioWorklet detector. It saves reliable runs directly to `timing_runs` with Item/Work/checklist-step ownership, phase, position, BPH, rate, beat error, confidence, sample count, jitter, duration and microphone/sample-rate context. It intentionally leaves amplitude null because the current signal model does not measure amplitude defensibly. It also shows positional spread and latest-versus-previous rate change.
+
+The Bench exception engine now surfaces only explainable structured evidence. Current rules cover explicit blockers, blocked checklist steps, unresolved Part Needs, failed QC, reliable pre/post timing deterioration, missing final timing at QC, readiness for Final QC and readiness to complete Work. Each exception links directly to the relevant Bench action or workflow section. It does not infer missing photo/measurement evidence until templates explicitly encode those requirements.
+
+Active Knowledge suggestions now appear inside Bench Mode. They reuse the existing `calibre_kb_*` Knowledge layer and part-intelligence RPC rather than creating a second advice store. Exact movement records and technical documents are labelled as verified/documented; Part Need matches retain their evidence strength; fault/timing-triggered references are explicitly labelled as relevant context rather than proof of cause. Source links are shown when the underlying Knowledge record has one, and Bench Mode stays quiet when there is not enough movement identity or sourced evidence to justify a suggestion.
+
+### Archive / Restore
+
+A structured Archive & Restore workspace is now available for Items, Parts, Tools and Consumables. Archive is soft and reversible, preserves history and provenance, and Items with active Work are blocked from archival until that Work is completed or cancelled.
+
+## Important safety boundaries
+
+The following remain authoritative and untouched by the structured bridge unless explicitly migrated later:
+
+- current Auth/session
+- `calibre_state` sync/conflict path
+- current Knowledge / Movement Finder (`calibre_kb_*`)
+- existing private media storage bucket and upload queue
+- research infrastructure
+- public catalogue/public-watch infrastructure
+
+No URL flip to the separate v2 Supabase project is planned.
+
+## Immediate next implementation order
+
+1. Invoice Storage migration / v2 retirement gate
+2. real-device Samsung phone + DeX acceptance
+3. monthly Business Reports and deeper finance after workshop bridge stabilizes
+4. deeper donor economics / cost allocation evidence
+
+See `docs/BACKEND_RECONCILIATION_PROGRESS.md` for live checkpoint detail and `ROADMAP.md` for the wider product sequence.
