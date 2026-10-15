@@ -79,6 +79,7 @@ Live features:
 - **Photo** quick action through structured Bench Capture
 - **Part** quick action through the structured Parts / Donor Finder
 - **Timing** quick action through the structured Bench Timegrapher
+- evidence-based Bench exception engine
 
 All six core Bench quick actions are now connected:
 
@@ -89,6 +90,12 @@ Bench Capture reuses the existing private media bucket, thumbnail generation and
 The Parts / Donor Finder can create Part Needs, mark Work waiting on parts, update need status, rank loose stock, and show donor candidates using recorded calibre/family/maker evidence. Maker-only matches remain low-confidence leads rather than claimed interchangeability.
 
 The structured Bench Timegrapher reuses the existing timing engine and AudioWorklet detector. It saves reliable runs directly to `timing_runs` with Item/Work/checklist-step ownership, phase, position, BPH, rate, beat error, confidence, sample count, jitter, duration and microphone/sample-rate context. It intentionally leaves amplitude null because the current signal model does not measure amplitude defensibly. It also shows positional spread and latest-versus-previous rate change.
+
+The Bench exception engine now surfaces only explainable structured evidence. Current rules cover explicit blockers, blocked checklist steps, unresolved Part Needs, failed QC, reliable pre/post timing deterioration, missing final timing at QC, readiness for Final QC and readiness to complete Work. Each exception links directly to the relevant Bench action or workflow section. It does not infer missing photo/measurement evidence until templates explicitly encode those requirements.
+
+### Archive / Restore
+
+A structured Archive & Restore workspace is now available for Items, Parts, Tools and Consumables. Archive is soft and reversible, preserves history and provenance, and Items with active Work are blocked from archival until that Work is completed or cancelled.
 
 ## Important safety boundaries
 
@@ -105,10 +112,10 @@ No URL flip to the separate v2 Supabase project is planned.
 
 ## Immediate next implementation order
 
-1. Archive / Restore UI
-2. Bench exception engine
-3. Invoice Storage migration / v2 retirement gate
-4. real-device Samsung phone + DeX acceptance
-5. monthly Business Reports and deeper finance after workshop bridge stabilizes
+1. Active Knowledge suggestions inside Bench Mode
+2. Invoice Storage migration / v2 retirement gate
+3. real-device Samsung phone + DeX acceptance
+4. monthly Business Reports and deeper finance after workshop bridge stabilizes
+5. deeper donor economics / cost allocation evidence
 
 See `docs/BACKEND_RECONCILIATION_PROGRESS.md` for live checkpoint detail and `ROADMAP.md` for the wider product sequence.
