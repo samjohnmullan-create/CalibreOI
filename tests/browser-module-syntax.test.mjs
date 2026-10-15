@@ -37,7 +37,8 @@ const modules=[
   'js/structured-media.js',
   'js/structured-parts.js',
   'js/structured-timing.js',
-  'js/structured-archive.js'
+  'js/structured-archive.js',
+  'js/bench-exceptions.js'
 ];
 
 for(const file of modules){
