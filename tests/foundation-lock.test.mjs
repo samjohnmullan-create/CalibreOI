@@ -24,12 +24,12 @@ test('Foundation Lock is complete through FL-6',()=>{for(const phase of ['FL-2 �
 
 test('runtime compatibility proxy scaffolding is retired',()=>{assert.doesNotMatch(storeSource,/attachCompatibilityAliases/);assert.doesNotMatch(storeSource,/typedAlias\(/);const body=canonicalStateBody(storeSource);for(const legacy of ['partsStock','partFitEvidence','referenceFacts','referenceDocuments','purchaseReview','workshopAssets'])assert.doesNotMatch(body,new RegExp(`Object\\.defineProperty\\([^)]*${legacy}`));});
 
-test('repo status records the shipped Foundation while Roadmap keeps final cleanup ahead of intelligence work',()=>{
+test('repo status records the shipped Foundation while Roadmap keeps reconciliation ahead of later expansion',()=>{
   assert.match(status,/no normal-runtime `state\.jobs` architecture/i);
   assert.match(status,/test-gated deployment/i);
-  const foundationIndex=roadmap.indexOf('## Phase 1 — Foundation Lock finalisation');
-  const acquisitionIndex=roadmap.indexOf('## Phase 4 — Acquisition Engine');
-  assert.notEqual(foundationIndex,-1,'Roadmap must retain Foundation Lock finalisation work');
-  assert.notEqual(acquisitionIndex,-1,'Roadmap must retain Acquisition Engine work');
-  assert.ok(foundationIndex<acquisitionIndex,'Foundation cleanup must stay ahead of new intelligence work');
+  const foundationIndex=roadmap.indexOf('## Phase 1 — Backend reconciliation and release foundation');
+  const acquisitionIndex=roadmap.indexOf('## Phase 11 — Acquisition Engine expansion');
+  assert.notEqual(foundationIndex,-1,'Roadmap must retain backend/Foundation reconciliation work');
+  assert.notEqual(acquisitionIndex,-1,'Roadmap must retain Acquisition Engine expansion work');
+  assert.ok(foundationIndex<acquisitionIndex,'Foundation/backend reconciliation must stay ahead of later acquisition expansion');
 });
