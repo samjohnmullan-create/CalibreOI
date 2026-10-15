@@ -43,18 +43,19 @@ export async function overlayStructuredWorkbenchState(baseState={}){
 export async function loadStructuredBenchDetail(workId){
   const workspaceId=await structuredWorkspaceId();if(!workspaceId)throw new Error('Structured workspace unavailable');const sb=supabaseClient();
   const {data:work,error:workError}=await sb.from('work_records').select('*').eq('workspace_id',workspaceId).eq('id',workId).maybeSingle();if(workError)throw workError;if(!work)throw new Error('Work record not found');
-  const [itemQ,identityQ,passportQ,stepsQ,needsQ,sessionsQ,timingQ,measureQ]=await Promise.all([
+  const [itemQ,identityQ,passportQ,stepsQ,needsQ,sessionsQ,timingQ,measureQ,qcQ]=await Promise.all([
     sb.from('items').select('*').eq('workspace_id',workspaceId).eq('id',work.item_id).maybeSingle(),
     sb.from('item_identity').select('*').eq('workspace_id',workspaceId).eq('item_id',work.item_id).maybeSingle(),
     sb.from('passports').select('*').eq('workspace_id',workspaceId).eq('item_id',work.item_id).maybeSingle(),
     sb.from('work_checklist_steps').select('*').eq('workspace_id',workspaceId).eq('work_id',workId).order('sequence',{ascending:true}),
     sb.from('work_part_needs').select('*').eq('workspace_id',workspaceId).eq('work_record_id',workId),
     sb.from('work_sessions').select('*').eq('workspace_id',workspaceId).eq('work_id',workId).order('started_at',{ascending:false}),
-    sb.from('timing_runs').select('*').eq('workspace_id',workspaceId).eq('work_id',workId).order('recorded_at',{ascending:false}).limit(5),
-    sb.from('measurements').select('*').eq('workspace_id',workspaceId).eq('work_id',workId).order('measured_at',{ascending:false}).limit(5)
-  ]);for(const q of [itemQ,identityQ,passportQ,stepsQ,needsQ,sessionsQ,timingQ,measureQ])if(q.error)throw q.error;
-  const steps=stepsQ.data||[],currentIndex=steps.findIndex(step=>!['done','skipped','not_applicable'].includes(String(step.status||'').toLowerCase())),idx=currentIndex<0?Math.max(0,steps.length-1):currentIndex;
-  return {workspaceId,work,item:itemQ.data||{},identity:identityQ.data||{},passport:passportQ.data||{},steps,currentStep:steps[idx]||null,nextStep:steps[idx+1]||null,partNeeds:(needsQ.data||[]).filter(row=>!['fitted','cancelled','not_needed'].includes(String(row.status||'').toLowerCase())),sessions:sessionsQ.data||[],activeSession:(sessionsQ.data||[]).find(row=>!row.ended_at)||null,timing:timingQ.data||[],measurements:measureQ.data||[]};
+    sb.from('timing_runs').select('*').eq('workspace_id',workspaceId).eq('work_id',workId).order('recorded_at',{ascending:false}).limit(30),
+    sb.from('measurements').select('*').eq('workspace_id',workspaceId).eq('work_id',workId).order('measured_at',{ascending:false}).limit(5),
+    sb.from('work_qc_checks').select('*').eq('workspace_id',workspaceId).eq('work_id',workId).order('created_at',{ascending:true})
+  ]);for(const q of [itemQ,identityQ,passportQ,stepsQ,needsQ,sessionsQ,timingQ,measureQ,qcQ])if(q.error)throw q.error;
+  const steps=stepsQ.data||[],currentIndex=steps.findIndex(step=>!['done','skipped','not_applicable','na'].includes(String(step.status||'').toLowerCase())),idx=currentIndex<0?Math.max(0,steps.length-1):currentIndex;
+  return {workspaceId,work,item:itemQ.data||{},identity:identityQ.data||{},passport:passportQ.data||{},steps,currentStep:steps[idx]||null,nextStep:steps[idx+1]||null,partNeeds:(needsQ.data||[]).filter(row=>!['fitted','fulfilled','cancelled','not_needed'].includes(String(row.status||'').toLowerCase())),sessions:sessionsQ.data||[],activeSession:(sessionsQ.data||[]).find(row=>!row.ended_at)||null,timing:timingQ.data||[],measurements:measureQ.data||[],qcChecks:qcQ.data||[]};
 }
 
 export async function mutateStructuredWork(workId,action){const workspaceId=await structuredWorkspaceId();if(!workspaceId)throw new Error('Structured workspace unavailable');const sb=supabaseClient();const {data:row,error:readError}=await sb.from('work_records').select('id,status,priority,blocker,waiting_reason').eq('workspace_id',workspaceId).eq('id',workId).maybeSingle();if(readError)throw readError;if(!row)throw new Error('Work record not found');const patch={updated_at:new Date().toISOString()};if(action==='priority')patch.priority=num(row.priority)>0?0:1;else if(action==='bench')patch.status=String(row.status)==='queued'?'on_bench':'queued';else if(action==='wait'){patch.status='waiting';patch.waiting_reason=row.waiting_reason||'parts';patch.blocker=row.blocker||'Waiting on parts';}else throw new Error(`Unsupported structured Work action: ${action}`);const {error}=await sb.from('work_records').update(patch).eq('workspace_id',workspaceId).eq('id',workId);if(error)throw error;return true;}
