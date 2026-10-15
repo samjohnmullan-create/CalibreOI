@@ -1,4 +1,4 @@
-const terminalStep=status=>['done','na','not_applicable'].includes(String(status||'').toLowerCase());
+const terminalStep=value=>['done','na','not_applicable'].includes(String(value?.status??value??'').toLowerCase());
 const qcLike=step=>/\b(qc|quality|final check|final inspection)\b/i.test([step?.section,step?.label,step?.description].filter(Boolean).join(' '));
 const confidenceScore=run=>{const n=Number(run?.confidence_score);if(Number.isFinite(n))return n;return ({confirmed:1,strong:.9,probable:.75,possible:.55,unknown:0}[String(run?.confidence||'').toLowerCase()]??0);};
 const byNewest=(a,b)=>(Date.parse(b?.recorded_at||b?.created_at||'')||0)-(Date.parse(a?.recorded_at||a?.created_at||'')||0);
